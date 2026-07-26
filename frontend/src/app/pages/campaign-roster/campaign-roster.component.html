@@ -14,6 +14,7 @@
       <div class="header-actions">
         <a routerLink="/" class="btn btn-secondary">All Campaigns</a>
         <a [routerLink]="['/campaigns', campaign.id, 'edit']" class="btn btn-secondary">Edit</a>
+        <a [routerLink]="['/campaigns', campaign.id, 'sessions']" class="btn btn-secondary">Sessions</a>
         <button type="button" class="btn btn-danger" (click)="deleteCampaign()" [disabled]="deleting">
           {{ deleting ? 'Deleting…' : 'Delete' }}
         </button>

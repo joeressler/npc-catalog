@@ -2,13 +2,17 @@ from fastapi import Request
 
 from app.constants import ALIGNMENT_DISPLAY
 from app.media import build_media_url
-from app.models import Campaign, NPC
+from app.models import Campaign, GameSession, NPC
 from app.schemas import (
     AliasRead,
     CampaignListRead,
     CampaignRead,
     NPCDetailRead,
     NPCListRead,
+    SessionCharacterRead,
+    SessionDetailRead,
+    SessionLineItemRead,
+    SessionListRead,
     TagRead,
 )
 
@@ -60,4 +64,51 @@ def serialize_npc_detail(npc: NPC) -> NPCDetailRead:
         inventory=npc.inventory,
         dm_notes=npc.dm_notes,
         session_log=npc.session_log,
+    )
+
+
+def serialize_session_list(session: GameSession, *, character_count: int | None = None) -> SessionListRead:
+    count = character_count if character_count is not None else len(session.characters)
+    return SessionListRead(
+        id=session.id,
+        campaign=session.campaign_id,
+        number=session.number,
+        title=session.title,
+        character_count=count,
+        created_at=session.created_at,
+        updated_at=session.updated_at,
+    )
+
+
+def serialize_session_detail(session: GameSession) -> SessionDetailRead:
+    return SessionDetailRead(
+        id=session.id,
+        campaign=session.campaign_id,
+        number=session.number,
+        title=session.title,
+        overall_notes=session.overall_notes,
+        story_beats=[
+            SessionLineItemRead(id=beat.id, text=beat.text, sort_order=beat.sort_order)
+            for beat in session.beats
+        ],
+        clues=[
+            SessionLineItemRead(id=clue.id, text=clue.text, sort_order=clue.sort_order)
+            for clue in session.clues
+        ],
+        secrets=[
+            SessionLineItemRead(id=secret.id, text=secret.text, sort_order=secret.sort_order)
+            for secret in session.secrets
+        ],
+        characters=[
+            SessionCharacterRead(
+                id=npc.id,
+                name=npc.name,
+                role_occupation=npc.role_occupation,
+                alignment=npc.alignment,
+                alignment_display=ALIGNMENT_DISPLAY[npc.alignment],
+            )
+            for npc in session.characters
+        ],
+        created_at=session.created_at,
+        updated_at=session.updated_at,
     )

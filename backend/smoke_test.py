@@ -82,6 +82,53 @@ def main() -> int:
     assert status == 200 and patched["attitude"] == "Gruff"
     print("PATCH /npcs/{id}/ OK")
 
+    session_payload = {
+        "title": "The Grey Council",
+        "overall_notes": "Party met Gandalf at the crossroads.",
+        "story_beats": ["Arrival at camp", "Gandalf reveals the quest", "Departure at dawn"],
+        "clues": ["Strange tracks near the river"],
+        "secrets": ["Gandalf knows more than he admits"],
+        "character_ids": [npc_id],
+    }
+    status, session = request("POST", f"/campaigns/{campaign_id}/sessions/", data=session_payload)
+    assert status == 201, session
+    assert session["number"] == 1
+    assert session["title"] == "The Grey Council"
+    assert len(session["story_beats"]) == 3
+    assert session["story_beats"][0]["text"] == "Arrival at camp"
+    assert session["story_beats"][0]["sort_order"] == 0
+    assert len(session["characters"]) == 1
+    assert session["characters"][0]["id"] == npc_id
+    session_id = session["id"]
+    print(f"POST /campaigns/{{id}}/sessions/ OK id={session_id}")
+
+    status, sessions = request("GET", f"/campaigns/{campaign_id}/sessions/")
+    assert status == 200 and sessions["count"] == 1
+    assert sessions["results"][0]["character_count"] == 1
+    print("GET /campaigns/{id}/sessions/ OK")
+
+    status, session2 = request("POST", f"/campaigns/{campaign_id}/sessions/", data={"title": "Session Two"})
+    assert status == 201 and session2["number"] == 2
+    print("POST auto-number session 2 OK")
+
+    reordered_beats = ["Departure at dawn", "Arrival at camp", "Gandalf reveals the quest"]
+    status, updated = request(
+        "PATCH",
+        f"/sessions/{session_id}/",
+        data={"story_beats": reordered_beats},
+    )
+    assert status == 200, updated
+    assert [beat["text"] for beat in updated["story_beats"]] == reordered_beats
+    print("PATCH /sessions/{id}/ reorder beats OK")
+
+    status, detail = request("GET", f"/sessions/{session_id}/")
+    assert status == 200 and detail["overall_notes"] == "Party met Gandalf at the crossroads."
+    print("GET /sessions/{id}/ OK")
+
+    status, _ = request("DELETE", f"/sessions/{session_id}/")
+    assert status == 204
+    print("DELETE /sessions/{id}/ OK")
+
     status, global_list = request("GET", "/npcs/?alignment=NG")
     assert status == 200 and global_list["count"] >= 1
     print("GET /npcs/ OK")

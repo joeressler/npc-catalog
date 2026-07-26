@@ -127,3 +127,65 @@ class NPCDetailRead(NPCListRead):
 
 def dump_partial(payload: NPCWritePartial) -> dict[str, Any]:
     return payload.model_dump(exclude_unset=True)
+
+
+class SessionLineItemRead(BaseModel):
+    id: int
+    text: str
+    sort_order: int
+
+
+class SessionCharacterRead(BaseModel):
+    id: int
+    name: str
+    role_occupation: str
+    alignment: str
+    alignment_display: str
+
+
+class SessionListRead(BaseModel):
+    id: int
+    campaign: int
+    number: int
+    title: str
+    character_count: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class SessionDetailRead(BaseModel):
+    id: int
+    campaign: int
+    number: int
+    title: str
+    overall_notes: str
+    story_beats: list[SessionLineItemRead]
+    clues: list[SessionLineItemRead]
+    secrets: list[SessionLineItemRead]
+    characters: list[SessionCharacterRead]
+    created_at: datetime
+    updated_at: datetime
+
+
+class SessionWrite(BaseModel):
+    number: int | None = None
+    title: str = ""
+    overall_notes: str = ""
+    story_beats: list[str] = Field(default_factory=list)
+    clues: list[str] = Field(default_factory=list)
+    secrets: list[str] = Field(default_factory=list)
+    character_ids: list[int] = Field(default_factory=list)
+
+
+class SessionWritePartial(BaseModel):
+    number: int | None = None
+    title: str | None = None
+    overall_notes: str | None = None
+    story_beats: list[str] | None = None
+    clues: list[str] | None = None
+    secrets: list[str] | None = None
+    character_ids: list[int] | None = None
+
+
+def dump_session_partial(payload: SessionWritePartial) -> dict[str, Any]:
+    return payload.model_dump(exclude_unset=True)

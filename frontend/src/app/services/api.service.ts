@@ -8,6 +8,9 @@ import {
   NPCFilters,
   NPCWritePayload,
   PaginatedResponse,
+  SessionDetail,
+  SessionSummary,
+  SessionWritePayload,
   Tag,
 } from '../models/npc.models';
 
@@ -80,6 +83,28 @@ export class ApiService {
 
   getTags(): Observable<PaginatedResponse<Tag>> {
     return this.http.get<PaginatedResponse<Tag>>(`${this.base}/tags/`);
+  }
+
+  getCampaignSessions(campaignId: number): Observable<PaginatedResponse<SessionSummary>> {
+    return this.http.get<PaginatedResponse<SessionSummary>>(
+      `${this.base}/campaigns/${campaignId}/sessions/`,
+    );
+  }
+
+  getSession(id: number): Observable<SessionDetail> {
+    return this.http.get<SessionDetail>(`${this.base}/sessions/${id}/`);
+  }
+
+  createSession(campaignId: number, payload: SessionWritePayload): Observable<SessionDetail> {
+    return this.http.post<SessionDetail>(`${this.base}/campaigns/${campaignId}/sessions/`, payload);
+  }
+
+  updateSession(id: number, payload: Partial<SessionWritePayload>): Observable<SessionDetail> {
+    return this.http.patch<SessionDetail>(`${this.base}/sessions/${id}/`, payload);
+  }
+
+  deleteSession(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/sessions/${id}/`);
   }
 
   mediaUrl(path: string | null | undefined): string | null {

@@ -94,3 +94,45 @@ export const ALIGNMENTS: { code: AlignmentCode; label: string }[] = [
   { code: 'NE', label: 'Neutral Evil' },
   { code: 'CE', label: 'Chaotic Evil' },
 ];
+
+export interface SessionLineItem {
+  id: number;
+  text: string;
+  sort_order: number;
+}
+
+export interface SessionCharacter {
+  id: number;
+  name: string;
+  role_occupation: string;
+  alignment: AlignmentCode;
+  alignment_display: string;
+}
+
+export interface SessionSummary {
+  id: number;
+  campaign: number;
+  number: number;
+  title: string;
+  character_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SessionDetail extends SessionSummary {
+  overall_notes: string;
+  story_beats: SessionLineItem[];
+  clues: SessionLineItem[];
+  secrets: SessionLineItem[];
+  characters: SessionCharacter[];
+}
+
+export interface SessionWritePayload {
+  number?: number | null;
+  title?: string;
+  overall_notes?: string;
+  story_beats?: string[];
+  clues?: string[];
+  secrets?: string[];
+  character_ids?: number[];
+}

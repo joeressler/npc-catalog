@@ -17,6 +17,26 @@ export const routes: Routes = [
       import('./pages/campaign-form/campaign-form.component').then((m) => m.CampaignFormComponent),
   },
   {
+    path: 'campaigns/:campaignId/sessions/new',
+    loadComponent: () =>
+      import('./pages/session-form/session-form.component').then((m) => m.SessionFormComponent),
+  },
+  {
+    path: 'campaigns/:campaignId/sessions/:sessionId/edit',
+    loadComponent: () =>
+      import('./pages/session-form/session-form.component').then((m) => m.SessionFormComponent),
+  },
+  {
+    path: 'campaigns/:campaignId/sessions/:sessionId',
+    loadComponent: () =>
+      import('./pages/session-detail/session-detail.component').then((m) => m.SessionDetailComponent),
+  },
+  {
+    path: 'campaigns/:campaignId/sessions',
+    loadComponent: () =>
+      import('./pages/session-list/session-list.component').then((m) => m.SessionListComponent),
+  },
+  {
     path: 'campaigns/:id',
     loadComponent: () =>
       import('./pages/campaign-roster/campaign-roster.component').then((m) => m.CampaignRosterComponent),

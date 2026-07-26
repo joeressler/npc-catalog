@@ -121,6 +121,11 @@ textarea {
   background: linear-gradient(180deg, #e05a8a 0%, var(--aero-danger) 100%);
 }
 
+.btn-sm {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+}
+
 .field {
   display: flex;
   flex-direction: column;
