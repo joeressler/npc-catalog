@@ -3,9 +3,9 @@ set -e
 
 mkdir -p /data/media
 
-python manage.py migrate --noinput
+alembic upgrade head
 
-exec gunicorn config.wsgi:application \
-  --bind 0.0.0.0:8000 \
-  --workers 2 \
-  --timeout 120
+exec uvicorn app.main:app \
+  --host 0.0.0.0 \
+  --port 8000 \
+  --workers 2

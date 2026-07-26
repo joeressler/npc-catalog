@@ -8,9 +8,18 @@ A purple Frutiger Aero D&D NPC catalog for Dungeon Masters. Create campaigns, ca
 docker compose up --build
 ```
 
-Open **http://localhost:8080**
+Open **http://localhost:0314**
 
 Data persists in the `npc_data` Docker volume (SQLite database + campaign images).
+
+### Fresh cutover (wipe existing data)
+
+When migrating from the old Django backend or resetting all data:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
 
 ## Development
 
@@ -25,8 +34,8 @@ cp .env.example .env
 ```bash
 cd backend
 pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
+alembic upgrade head
+uvicorn app.main:app --reload --port 8000
 ```
 
 ### Frontend only
@@ -53,6 +62,6 @@ The dev server proxies `/api` and `/media` to the backend when configured in `pr
 ## Stack
 
 - **Frontend:** Angular (standalone), SCSS
-- **Backend:** Django + Django REST Framework
+- **Backend:** FastAPI + SQLAlchemy + Alembic
 - **Database:** SQLite on Docker volume
 - **Auth:** None (single-user local tool)
