@@ -204,6 +204,10 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       this.actionError = 'Enter a player character name.';
       return;
     }
+    if (!this.hasPartyNode()) {
+      this.actionError = 'Add the Party node before adding player characters.';
+      return;
+    }
     this.actionError = '';
     this.api.addGraphNode(this.graphId, { kind: 'pc', label: name }).subscribe({
       next: () => {
@@ -211,7 +215,9 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadGraph(true);
       },
       error: (err) => {
-        this.actionError = err.error?.detail ?? 'Could not add player character.';
+        const detail = err.error?.detail;
+        this.actionError =
+          typeof detail === 'string' ? detail : 'Could not add player character.';
       },
     });
   }
@@ -451,13 +457,16 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
             selector: 'node[kind = "party"]',
             style: {
               shape: 'round-rectangle',
-              width: 100,
-              height: 60,
               'background-color': '#e8dcff',
+              'background-opacity': 0.45,
               'border-color': '#4a2d7a',
               'border-width': 3,
               'font-size': 13,
               'font-weight': 700,
+              'text-valign': 'top',
+              'text-halign': 'center',
+              'text-margin-y': 10,
+              padding: '36px',
             },
           },
           {
@@ -567,20 +576,35 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     const sortedNodes = [...graph.nodes].sort(
       (a, b) => (kindOrder[a.kind] ?? 9) - (kindOrder[b.kind] ?? 9) || a.id - b.id,
     );
+    const party = sortedNodes.find((node) => node.kind === 'party');
 
-    const nodes: ElementDefinition[] = sortedNodes.map((node, index) => ({
-      data: {
+    const nodes: ElementDefinition[] = sortedNodes.map((node, index) => {
+      const data: Record<string, string | number | null> = {
         id: `node-${node.id}`,
         label: node.label,
         kind: node.kind,
         npcId: node.npc_id,
-      },
-      // No compound parents: absolute positions stay valid across reloads.
-      position:
-        node.pos_x !== null && node.pos_y !== null
-          ? { x: node.pos_x, y: node.pos_y }
-          : { x: 140 + (index % 5) * 150, y: 140 + Math.floor(index / 5) * 130 },
-    }));
+      };
+      // Nest PCs under Party for the "sub-node" UX. Party must be first in elements
+      // (ensured by sort) so the parent exists before children are added.
+      if (node.kind === 'pc' && party) {
+        data['parent'] = `node-${party.id}`;
+      }
+
+      let position: { x: number; y: number };
+      if (node.pos_x !== null && node.pos_y !== null) {
+        position = { x: node.pos_x, y: node.pos_y };
+      } else if (node.kind === 'pc' && party?.pos_x != null && party?.pos_y != null) {
+        position = { x: 70, y: 40 + index * 30 };
+      } else {
+        position = {
+          x: 140 + (index % 5) * 150,
+          y: 140 + Math.floor(index / 5) * 130,
+        };
+      }
+
+      return { data, position };
+    });
 
     const nodeIds = new Set(sortedNodes.map((node) => `node-${node.id}`));
     const edges: ElementDefinition[] = graph.edges

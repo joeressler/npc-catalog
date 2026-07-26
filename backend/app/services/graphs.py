@@ -157,6 +157,15 @@ def find_party_node(db: Session, graph_id: int) -> GraphNode | None:
     )
 
 
+def _count_pcs(db: Session, graph_id: int) -> int:
+    return db.scalar(
+        select(func.count()).select_from(GraphNode).where(
+            GraphNode.graph_id == graph_id,
+            GraphNode.kind == "pc",
+        )
+    ) or 0
+
+
 def get_node_on_graph(db: Session, graph: CharacterGraph, node_id: int) -> GraphNode:
     node = db.get(GraphNode, node_id)
     if node is None or node.graph_id != graph.id:
@@ -210,6 +219,9 @@ def create_graph_node(
                 detail="A player character with this name is already on the graph.",
             )
         node = GraphNode(graph_id=graph.id, kind="pc", npc_id=None, label=name)
+        # Child positions are relative to the Party compound parent in the UI.
+        node.pos_x = 70.0
+        node.pos_y = 40.0 + (36.0 * _count_pcs(db, graph.id))
 
     else:
         if npc_id is None:
