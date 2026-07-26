@@ -1,10 +1,16 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormArray,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 
 import { ApiService } from '../../services/api.service';
-import { NPC, SessionWritePayload } from '../../models/npc.models';
+import { NPC, SessionStoryPath, SessionWritePayload } from '../../models/npc.models';
 
 @Component({
   selector: 'app-session-form',
@@ -31,7 +37,7 @@ export class SessionFormComponent implements OnInit {
     number: [{ value: '', disabled: true }],
     title: [''],
     overall_notes: [''],
-    story_beats: this.fb.array<string>([]),
+    story_paths: this.fb.array<FormGroup>([]),
     clues: this.fb.array<string>([]),
     secrets: this.fb.array<string>([]),
   });
@@ -61,7 +67,7 @@ export class SessionFormComponent implements OnInit {
             title: session.title,
             overall_notes: session.overall_notes,
           });
-          this.setLineItems('story_beats', session.story_beats.map((item) => item.text));
+          this.setStoryPaths(session.story_paths);
           this.setLineItems('clues', session.clues.map((item) => item.text));
           this.setLineItems('secrets', session.secrets.map((item) => item.text));
           this.selectedCharacterIds = new Set(session.characters.map((character) => character.id));
@@ -73,8 +79,8 @@ export class SessionFormComponent implements OnInit {
     }
   }
 
-  get storyBeats(): FormArray {
-    return this.form.controls.story_beats;
+  get storyPaths(): FormArray<FormGroup> {
+    return this.form.controls.story_paths;
   }
 
   get clues(): FormArray {
@@ -85,23 +91,44 @@ export class SessionFormComponent implements OnInit {
     return this.form.controls.secrets;
   }
 
-  addLineItem(field: 'story_beats' | 'clues' | 'secrets'): void {
+  pathBeats(pathIndex: number): FormArray {
+    return this.storyPaths.at(pathIndex).controls['beats'] as FormArray;
+  }
+
+  addStoryPath(): void {
+    this.storyPaths.push(this.createPathGroup('', []));
+  }
+
+  removeStoryPath(pathIndex: number): void {
+    this.storyPaths.removeAt(pathIndex);
+  }
+
+  moveStoryPath(pathIndex: number, direction: -1 | 1): void {
+    this.moveFormArrayItem(this.storyPaths, pathIndex, direction);
+  }
+
+  addPathBeat(pathIndex: number): void {
+    this.pathBeats(pathIndex).push(this.fb.control(''));
+  }
+
+  removePathBeat(pathIndex: number, beatIndex: number): void {
+    this.pathBeats(pathIndex).removeAt(beatIndex);
+  }
+
+  movePathBeat(pathIndex: number, beatIndex: number, direction: -1 | 1): void {
+    this.moveFormArrayItem(this.pathBeats(pathIndex), beatIndex, direction);
+  }
+
+  addLineItem(field: 'clues' | 'secrets'): void {
     this.lineItems(field).push(this.fb.control(''));
   }
 
-  removeLineItem(field: 'story_beats' | 'clues' | 'secrets', index: number): void {
+  removeLineItem(field: 'clues' | 'secrets', index: number): void {
     this.lineItems(field).removeAt(index);
   }
 
-  moveLineItem(field: 'story_beats' | 'clues' | 'secrets', index: number, direction: -1 | 1): void {
-    const items = this.lineItems(field);
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= items.length) {
-      return;
-    }
-    const control = items.at(index);
-    items.removeAt(index);
-    items.insert(targetIndex, control);
+  moveLineItem(field: 'clues' | 'secrets', index: number, direction: -1 | 1): void {
+    this.moveFormArrayItem(this.lineItems(field), index, direction);
   }
 
   isCharacterSelected(npcId: number): boolean {
@@ -126,7 +153,7 @@ export class SessionFormComponent implements OnInit {
     const payload: SessionWritePayload = {
       title: raw.title?.trim() || '',
       overall_notes: raw.overall_notes?.trim() || '',
-      story_beats: this.lineItemValues('story_beats'),
+      story_paths: this.storyPathValues(),
       clues: this.lineItemValues('clues'),
       secrets: this.lineItemValues('secrets'),
       character_ids: [...this.selectedCharacterIds],
@@ -162,11 +189,39 @@ export class SessionFormComponent implements OnInit {
     return ['/'];
   }
 
-  private lineItems(field: 'story_beats' | 'clues' | 'secrets'): FormArray {
+  private createPathGroup(name: string, beats: string[]): FormGroup {
+    return this.fb.group({
+      name: [name, Validators.required],
+      beats: this.fb.array(beats.map((beat) => this.fb.control(beat))),
+    });
+  }
+
+  private setStoryPaths(paths: SessionStoryPath[]): void {
+    while (this.storyPaths.length) {
+      this.storyPaths.removeAt(0);
+    }
+    paths.forEach((path) => {
+      this.storyPaths.push(this.createPathGroup(path.name, path.beats.map((beat) => beat.text)));
+    });
+  }
+
+  private storyPathValues(): SessionWritePayload['story_paths'] {
+    return this.storyPaths.controls
+      .map((pathGroup) => {
+        const name = String(pathGroup.controls['name'].value || '').trim();
+        const beats = (pathGroup.controls['beats'] as FormArray).controls
+          .map((control) => String(control.value || '').trim())
+          .filter(Boolean);
+        return { name, beats };
+      })
+      .filter((path) => path.name.length > 0);
+  }
+
+  private lineItems(field: 'clues' | 'secrets'): FormArray {
     return this.form.controls[field];
   }
 
-  private setLineItems(field: 'story_beats' | 'clues' | 'secrets', values: string[]): void {
+  private setLineItems(field: 'clues' | 'secrets', values: string[]): void {
     const items = this.lineItems(field);
     while (items.length) {
       items.removeAt(0);
@@ -174,9 +229,19 @@ export class SessionFormComponent implements OnInit {
     values.forEach((value) => items.push(this.fb.control(value)));
   }
 
-  private lineItemValues(field: 'story_beats' | 'clues' | 'secrets'): string[] {
+  private lineItemValues(field: 'clues' | 'secrets'): string[] {
     return this.lineItems(field)
       .controls.map((control) => String(control.value || '').trim())
       .filter(Boolean);
+  }
+
+  private moveFormArrayItem(array: FormArray, index: number, direction: -1 | 1): void {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= array.length) {
+      return;
+    }
+    const current = array.at(index);
+    array.setControl(index, array.at(targetIndex));
+    array.setControl(targetIndex, current);
   }
 }

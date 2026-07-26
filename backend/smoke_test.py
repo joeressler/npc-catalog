@@ -85,7 +85,16 @@ def main() -> int:
     session_payload = {
         "title": "The Grey Council",
         "overall_notes": "Party met Gandalf at the crossroads.",
-        "story_beats": ["Arrival at camp", "Gandalf reveals the quest", "Departure at dawn"],
+        "story_paths": [
+            {
+                "name": "Main timeline",
+                "beats": ["Arrival at camp", "Gandalf reveals the quest", "Departure at dawn"],
+            },
+            {
+                "name": "If the party refuses the quest",
+                "beats": ["They linger in Bree", "A rival wizard intervenes"],
+            },
+        ],
         "clues": ["Strange tracks near the river"],
         "secrets": ["Gandalf knows more than he admits"],
         "character_ids": [npc_id],
@@ -94,9 +103,12 @@ def main() -> int:
     assert status == 201, session
     assert session["number"] == 1
     assert session["title"] == "The Grey Council"
-    assert len(session["story_beats"]) == 3
-    assert session["story_beats"][0]["text"] == "Arrival at camp"
-    assert session["story_beats"][0]["sort_order"] == 0
+    assert len(session["story_paths"]) == 2
+    assert session["story_paths"][0]["name"] == "Main timeline"
+    assert len(session["story_paths"][0]["beats"]) == 3
+    assert session["story_paths"][0]["beats"][0]["text"] == "Arrival at camp"
+    assert session["story_paths"][0]["beats"][0]["sort_order"] == 0
+    assert session["story_paths"][1]["beats"][0]["text"] == "They linger in Bree"
     assert len(session["characters"]) == 1
     assert session["characters"][0]["id"] == npc_id
     session_id = session["id"]
@@ -111,15 +123,25 @@ def main() -> int:
     assert status == 201 and session2["number"] == 2
     print("POST auto-number session 2 OK")
 
-    reordered_beats = ["Departure at dawn", "Arrival at camp", "Gandalf reveals the quest"]
+    reordered_paths = [
+        {
+            "name": "Main timeline",
+            "beats": ["Departure at dawn", "Arrival at camp", "Gandalf reveals the quest"],
+        },
+        {
+            "name": "If the party refuses the quest",
+            "beats": ["A rival wizard intervenes", "They linger in Bree"],
+        },
+    ]
     status, updated = request(
         "PATCH",
         f"/sessions/{session_id}/",
-        data={"story_beats": reordered_beats},
+        data={"story_paths": reordered_paths},
     )
     assert status == 200, updated
-    assert [beat["text"] for beat in updated["story_beats"]] == reordered_beats
-    print("PATCH /sessions/{id}/ reorder beats OK")
+    assert [beat["text"] for beat in updated["story_paths"][0]["beats"]] == reordered_paths[0]["beats"]
+    assert [beat["text"] for beat in updated["story_paths"][1]["beats"]] == reordered_paths[1]["beats"]
+    print("PATCH /sessions/{id}/ reorder story paths OK")
 
     status, detail = request("GET", f"/sessions/{session_id}/")
     assert status == 200 and detail["overall_notes"] == "Party met Gandalf at the crossroads."

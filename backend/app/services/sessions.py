@@ -2,17 +2,30 @@ from fastapi import HTTPException, status
 from sqlalchemy import Select, delete, func, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import GameSession, NPC, SessionBeat, SessionClue, SessionSecret
+from app.models import GameSession, NPC, SessionBeat, SessionClue, SessionSecret, SessionStoryPath
+from app.schemas import SessionStoryPathWrite
 
 
 def _clean_line_items(items: list[str]) -> list[str]:
     return [item.strip() for item in items if item.strip()]
 
 
-def sync_beats(db: Session, session: GameSession, texts: list[str]) -> None:
-    db.execute(delete(SessionBeat).where(SessionBeat.session_id == session.id))
-    for sort_order, text in enumerate(_clean_line_items(texts)):
-        db.add(SessionBeat(session_id=session.id, text=text, sort_order=sort_order))
+def sync_story_paths(db: Session, session: GameSession, paths: list[SessionStoryPathWrite]) -> None:
+    path_ids = db.scalars(
+        select(SessionStoryPath.id).where(SessionStoryPath.session_id == session.id)
+    ).all()
+    if path_ids:
+        db.execute(delete(SessionBeat).where(SessionBeat.path_id.in_(path_ids)))
+    db.execute(delete(SessionStoryPath).where(SessionStoryPath.session_id == session.id))
+    for path_order, path_data in enumerate(paths):
+        name = path_data.name.strip()
+        if not name:
+            continue
+        path = SessionStoryPath(session_id=session.id, name=name, sort_order=path_order)
+        db.add(path)
+        db.flush()
+        for beat_order, text in enumerate(_clean_line_items(path_data.beats)):
+            db.add(SessionBeat(path_id=path.id, text=text, sort_order=beat_order))
 
 
 def sync_clues(db: Session, session: GameSession, texts: list[str]) -> None:
@@ -56,7 +69,7 @@ def sync_characters(db: Session, session: GameSession, character_ids: list[int])
 
 def session_query_options(stmt: Select[tuple[GameSession]]) -> Select[tuple[GameSession]]:
     return stmt.options(
-        selectinload(GameSession.beats),
+        selectinload(GameSession.story_paths).selectinload(SessionStoryPath.beats),
         selectinload(GameSession.clues),
         selectinload(GameSession.secrets),
         selectinload(GameSession.characters),

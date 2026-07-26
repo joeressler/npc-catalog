@@ -101,6 +101,18 @@ export interface SessionLineItem {
   sort_order: number;
 }
 
+export interface SessionStoryPath {
+  id: number;
+  name: string;
+  sort_order: number;
+  beats: SessionLineItem[];
+}
+
+export interface SessionStoryPathWrite {
+  name: string;
+  beats: string[];
+}
+
 export interface SessionCharacter {
   id: number;
   name: string;
@@ -121,7 +133,7 @@ export interface SessionSummary {
 
 export interface SessionDetail extends SessionSummary {
   overall_notes: string;
-  story_beats: SessionLineItem[];
+  story_paths: SessionStoryPath[];
   clues: SessionLineItem[];
   secrets: SessionLineItem[];
   characters: SessionCharacter[];
@@ -131,7 +143,7 @@ export interface SessionWritePayload {
   number?: number | null;
   title?: string;
   overall_notes?: string;
-  story_beats?: string[];
+  story_paths?: SessionStoryPathWrite[];
   clues?: string[];
   secrets?: string[];
   character_ids?: number[];

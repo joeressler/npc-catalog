@@ -135,6 +135,18 @@ class SessionLineItemRead(BaseModel):
     sort_order: int
 
 
+class SessionStoryPathRead(BaseModel):
+    id: int
+    name: str
+    sort_order: int
+    beats: list[SessionLineItemRead]
+
+
+class SessionStoryPathWrite(BaseModel):
+    name: str = Field(max_length=200)
+    beats: list[str] = Field(default_factory=list)
+
+
 class SessionCharacterRead(BaseModel):
     id: int
     name: str
@@ -159,7 +171,7 @@ class SessionDetailRead(BaseModel):
     number: int
     title: str
     overall_notes: str
-    story_beats: list[SessionLineItemRead]
+    story_paths: list[SessionStoryPathRead]
     clues: list[SessionLineItemRead]
     secrets: list[SessionLineItemRead]
     characters: list[SessionCharacterRead]
@@ -171,7 +183,7 @@ class SessionWrite(BaseModel):
     number: int | None = None
     title: str = ""
     overall_notes: str = ""
-    story_beats: list[str] = Field(default_factory=list)
+    story_paths: list[SessionStoryPathWrite] = Field(default_factory=list)
     clues: list[str] = Field(default_factory=list)
     secrets: list[str] = Field(default_factory=list)
     character_ids: list[int] = Field(default_factory=list)
@@ -181,7 +193,7 @@ class SessionWritePartial(BaseModel):
     number: int | None = None
     title: str | None = None
     overall_notes: str | None = None
-    story_beats: list[str] | None = None
+    story_paths: list[SessionStoryPathWrite] | None = None
     clues: list[str] | None = None
     secrets: list[str] | None = None
     character_ids: list[int] | None = None

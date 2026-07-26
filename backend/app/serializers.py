@@ -13,6 +13,7 @@ from app.schemas import (
     SessionDetailRead,
     SessionLineItemRead,
     SessionListRead,
+    SessionStoryPathRead,
     TagRead,
 )
 
@@ -87,9 +88,17 @@ def serialize_session_detail(session: GameSession) -> SessionDetailRead:
         number=session.number,
         title=session.title,
         overall_notes=session.overall_notes,
-        story_beats=[
-            SessionLineItemRead(id=beat.id, text=beat.text, sort_order=beat.sort_order)
-            for beat in session.beats
+        story_paths=[
+            SessionStoryPathRead(
+                id=path.id,
+                name=path.name,
+                sort_order=path.sort_order,
+                beats=[
+                    SessionLineItemRead(id=beat.id, text=beat.text, sort_order=beat.sort_order)
+                    for beat in path.beats
+                ],
+            )
+            for path in session.story_paths
         ],
         clues=[
             SessionLineItemRead(id=clue.id, text=clue.text, sort_order=clue.sort_order)

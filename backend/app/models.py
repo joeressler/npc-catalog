@@ -142,10 +142,10 @@ class GameSession(Base):
     )
 
     campaign: Mapped["Campaign"] = relationship(back_populates="sessions")
-    beats: Mapped[list["SessionBeat"]] = relationship(
+    story_paths: Mapped[list["SessionStoryPath"]] = relationship(
         back_populates="session",
         cascade="all, delete-orphan",
-        order_by="SessionBeat.sort_order",
+        order_by="SessionStoryPath.sort_order",
     )
     clues: Mapped[list["SessionClue"]] = relationship(
         back_populates="session",
@@ -163,15 +163,31 @@ class GameSession(Base):
     )
 
 
+class SessionStoryPath(Base):
+    __tablename__ = "session_story_paths"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    session_id: Mapped[int] = mapped_column(ForeignKey("sessions.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(200))
+    sort_order: Mapped[int] = mapped_column()
+
+    session: Mapped["GameSession"] = relationship(back_populates="story_paths")
+    beats: Mapped[list["SessionBeat"]] = relationship(
+        back_populates="path",
+        cascade="all, delete-orphan",
+        order_by="SessionBeat.sort_order",
+    )
+
+
 class SessionBeat(Base):
     __tablename__ = "session_beats"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    session_id: Mapped[int] = mapped_column(ForeignKey("sessions.id", ondelete="CASCADE"))
+    path_id: Mapped[int] = mapped_column(ForeignKey("session_story_paths.id", ondelete="CASCADE"))
     text: Mapped[str] = mapped_column(Text)
     sort_order: Mapped[int] = mapped_column()
 
-    session: Mapped["GameSession"] = relationship(back_populates="beats")
+    path: Mapped["SessionStoryPath"] = relationship(back_populates="beats")
 
 
 class SessionClue(Base):

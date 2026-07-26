@@ -3,7 +3,7 @@
     <div>
       <h1 class="page-title">{{ editing ? 'Edit Session' : 'New Session' }}</h1>
       <p class="page-subtitle">
-        Capture story beats, clues, secrets, and the NPCs your players noticed.
+        Plan branching story paths, clues, secrets, and the NPCs your players noticed.
       </p>
     </div>
     <a [routerLink]="backLink()" class="btn btn-secondary">Back</a>
@@ -37,23 +37,54 @@
 
     <section class="form-section">
       <div class="section-head">
-        <h2>Story beats</h2>
-        <button type="button" class="btn btn-secondary btn-sm" (click)="addLineItem('story_beats')">Add beat</button>
+        <h2>Story paths</h2>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="addStoryPath()">Add path</button>
       </div>
-      @if (storyBeats.length === 0) {
-        <p class="hint">Add beats in the order they happened at the table.</p>
+      @if (storyPaths.length === 0) {
+        <p class="hint">
+          Create named paths for what might happen — e.g. “Main timeline” or “If the party goes to the tavern”.
+        </p>
       }
-      <div class="line-items" formArrayName="story_beats">
-        @for (control of storyBeats.controls; track $index) {
-          <div class="line-item">
-            <span class="line-index">{{ $index + 1 }}</span>
-            <input type="text" [formControlName]="$index" placeholder="What happened next?" />
-            <div class="line-actions">
-              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('story_beats', $index, -1)" [disabled]="$index === 0">Up</button>
-              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('story_beats', $index, 1)" [disabled]="$index === storyBeats.length - 1">Down</button>
-              <button type="button" class="btn btn-danger btn-sm" (click)="removeLineItem('story_beats', $index)">Remove</button>
+      <div class="path-list" formArrayName="story_paths">
+        @for (pathGroup of storyPaths.controls; track pathGroup; let pathIndex = $index) {
+          <article class="path-card" [formGroupName]="pathIndex">
+            <div class="path-header">
+              <div class="field path-name">
+                <label [for]="'path-name-' + pathIndex">Path name</label>
+                <input
+                  [id]="'path-name-' + pathIndex"
+                  type="text"
+                  formControlName="name"
+                  placeholder="If the party accepts the quest"
+                />
+              </div>
+              <div class="path-actions">
+                <button type="button" class="btn btn-secondary btn-sm" (click)="moveStoryPath(pathIndex, -1)" [disabled]="pathIndex === 0">Up</button>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="moveStoryPath(pathIndex, 1)" [disabled]="pathIndex === storyPaths.length - 1">Down</button>
+                <button type="button" class="btn btn-danger btn-sm" (click)="removeStoryPath(pathIndex)">Remove path</button>
+              </div>
             </div>
-          </div>
+
+            <div class="path-beats">
+              <div class="section-head">
+                <h3>Beats in this path</h3>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="addPathBeat(pathIndex)">Add beat</button>
+              </div>
+              <div class="line-items" formArrayName="beats">
+                @for (beatControl of pathBeats(pathIndex).controls; track beatControl; let beatIndex = $index) {
+                  <div class="line-item">
+                    <span class="line-index">{{ beatIndex + 1 }}</span>
+                    <input type="text" [formControlName]="beatIndex" placeholder="What happens on this path?" />
+                    <div class="line-actions">
+                      <button type="button" class="btn btn-secondary btn-sm" (click)="movePathBeat(pathIndex, beatIndex, -1)" [disabled]="beatIndex === 0">Up</button>
+                      <button type="button" class="btn btn-secondary btn-sm" (click)="movePathBeat(pathIndex, beatIndex, 1)" [disabled]="beatIndex === pathBeats(pathIndex).length - 1">Down</button>
+                      <button type="button" class="btn btn-danger btn-sm" (click)="removePathBeat(pathIndex, beatIndex)">Remove</button>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </article>
         }
       </div>
     </section>
@@ -64,13 +95,13 @@
         <button type="button" class="btn btn-secondary btn-sm" (click)="addLineItem('clues')">Add clue</button>
       </div>
       <div class="line-items" formArrayName="clues">
-        @for (control of clues.controls; track $index) {
+        @for (control of clues.controls; track control; let clueIndex = $index) {
           <div class="line-item">
-            <input type="text" [formControlName]="$index" placeholder="Clue the party discovered" />
+            <input type="text" [formControlName]="clueIndex" placeholder="Clue the party discovered" />
             <div class="line-actions">
-              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('clues', $index, -1)" [disabled]="$index === 0">Up</button>
-              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('clues', $index, 1)" [disabled]="$index === clues.length - 1">Down</button>
-              <button type="button" class="btn btn-danger btn-sm" (click)="removeLineItem('clues', $index)">Remove</button>
+              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('clues', clueIndex, -1)" [disabled]="clueIndex === 0">Up</button>
+              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('clues', clueIndex, 1)" [disabled]="clueIndex === clues.length - 1">Down</button>
+              <button type="button" class="btn btn-danger btn-sm" (click)="removeLineItem('clues', clueIndex)">Remove</button>
             </div>
           </div>
         }
@@ -83,13 +114,13 @@
         <button type="button" class="btn btn-secondary btn-sm" (click)="addLineItem('secrets')">Add secret</button>
       </div>
       <div class="line-items" formArrayName="secrets">
-        @for (control of secrets.controls; track $index) {
+        @for (control of secrets.controls; track control; let secretIndex = $index) {
           <div class="line-item">
-            <input type="text" [formControlName]="$index" placeholder="Secret only the DM should remember" />
+            <input type="text" [formControlName]="secretIndex" placeholder="Secret only the DM should remember" />
             <div class="line-actions">
-              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('secrets', $index, -1)" [disabled]="$index === 0">Up</button>
-              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('secrets', $index, 1)" [disabled]="$index === secrets.length - 1">Down</button>
-              <button type="button" class="btn btn-danger btn-sm" (click)="removeLineItem('secrets', $index)">Remove</button>
+              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('secrets', secretIndex, -1)" [disabled]="secretIndex === 0">Up</button>
+              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('secrets', secretIndex, 1)" [disabled]="secretIndex === secrets.length - 1">Down</button>
+              <button type="button" class="btn btn-danger btn-sm" (click)="removeLineItem('secrets', secretIndex)">Remove</button>
             </div>
           </div>
         }

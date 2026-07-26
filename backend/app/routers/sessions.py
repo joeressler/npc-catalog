@@ -13,7 +13,7 @@ from app.services.sessions import (
     get_session_or_404,
     next_session_number,
     session_query_options,
-    sync_beats,
+    sync_story_paths,
     sync_characters,
     sync_clues,
     sync_secrets,
@@ -43,8 +43,8 @@ def update_session(session_id: int, payload: SessionWritePartial, db: Session = 
         partial=True,
     )
 
-    if payload.story_beats is not None:
-        sync_beats(db, session, payload.story_beats)
+    if payload.story_paths is not None:
+        sync_story_paths(db, session, payload.story_paths)
     if payload.clues is not None:
         sync_clues(db, session, payload.clues)
     if payload.secrets is not None:
@@ -110,7 +110,7 @@ def create_campaign_session(
     )
     db.add(session)
     db.flush()
-    sync_beats(db, session, payload.story_beats)
+    sync_story_paths(db, session, payload.story_paths)
     sync_clues(db, session, payload.clues)
     sync_secrets(db, session, payload.secrets)
     sync_characters(db, session, payload.character_ids)

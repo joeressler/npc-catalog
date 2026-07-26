@@ -26,14 +26,25 @@
       </article>
     }
 
-    @if (session.story_beats.length) {
+    @if (session.story_paths.length) {
       <article class="section glass-panel">
-        <h2>Story beats</h2>
-        <ol class="ordered-list">
-          @for (beat of session.story_beats; track beat.id) {
-            <li>{{ beat.text }}</li>
+        <h2>Story paths</h2>
+        <div class="path-list">
+          @for (path of session.story_paths; track path.id) {
+            <div class="path-block">
+              <h3>{{ path.name }}</h3>
+              @if (path.beats.length) {
+                <ol class="ordered-list">
+                  @for (beat of path.beats; track beat.id) {
+                    <li>{{ beat.text }}</li>
+                  }
+                </ol>
+              } @else {
+                <p class="hint">No beats recorded for this path.</p>
+              }
+            </div>
           }
-        </ol>
+        </div>
       </article>
     }
 
@@ -75,7 +86,7 @@
 
     @if (
       !session.overall_notes.trim() &&
-      !session.story_beats.length &&
+      !session.story_paths.length &&
       !session.characters.length &&
       !session.clues.length &&
       !session.secrets.length
