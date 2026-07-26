@@ -1,5 +1,6 @@
 import {
   AfterViewInit,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   OnDestroy,
@@ -44,6 +45,7 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly api = inject(ApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   graph: GraphDetail | null = null;
   relationTypes: RelationType[] = [];
@@ -73,6 +75,9 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   private graphId = 0;
   private viewReady = false;
   private positionTimers = new Map<number, ReturnType<typeof setTimeout>>();
+  private pendingPositions = new Map<number, { x: number; y: number }>();
+  private renderRetryHandle: ReturnType<typeof setTimeout> | null = null;
+  private renderAttempts = 0;
 
   ngOnInit(): void {
     this.graphId = Number(this.route.snapshot.paramMap.get('graphId'));
@@ -82,14 +87,16 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.viewReady = true;
-    if (this.graph) {
-      this.renderGraph();
-    }
+    this.scheduleRender();
   }
 
   ngOnDestroy(): void {
-    this.positionTimers.forEach((timer) => clearTimeout(timer));
+    if (this.renderRetryHandle !== null) {
+      clearTimeout(this.renderRetryHandle);
+    }
+    this.flushPendingPositions();
     this.cy?.destroy();
+    this.cy = null;
   }
 
   loadGraph(silent = false): void {
@@ -103,9 +110,8 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         this.graph = graph;
         this.campaignId = graph.campaign;
         this.loading = false;
-        if (this.viewReady) {
-          this.renderGraph();
-        }
+        this.cdr.detectChanges();
+        this.scheduleRender();
       },
       error: () => {
         this.error = 'Graph not found.';
@@ -358,13 +364,14 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private renderGraph(): void {
-    if (!this.graph || !this.cyContainer) {
+    if (!this.graph || !this.cyContainer?.nativeElement) {
       return;
     }
 
     const elements = this.buildElements(this.graph);
     if (this.cy) {
       this.cy.destroy();
+      this.cy = null;
     }
 
     this.cy = cytoscape({
@@ -473,14 +480,43 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.cy.on('dragfree', 'node', (event) => {
       const nodeId = Number(event.target.id().replace('node-', ''));
+      if (Number.isNaN(nodeId)) {
+        return;
+      }
       this.persistNodePosition(nodeId, event.target.position());
     });
 
-    if (this.graph.nodes.every((node) => node.pos_x === null || node.pos_y === null)) {
+    const missingPositions = this.graph.nodes.every(
+      (node) => node.pos_x === null || node.pos_y === null,
+    );
+    if (missingPositions && this.graph.nodes.length > 0) {
       this.runLayout();
     } else {
       this.cy.fit(undefined, 48);
     }
+  }
+
+  private scheduleRender(): void {
+    if (this.renderRetryHandle !== null) {
+      clearTimeout(this.renderRetryHandle);
+    }
+    this.renderAttempts = 0;
+    // Wait until @if (graph) has created #cyContainer and ViewChild is bound.
+    const attempt = () => {
+      this.renderRetryHandle = null;
+      if (!this.graph) {
+        return;
+      }
+      if (!this.cyContainer?.nativeElement) {
+        this.renderAttempts += 1;
+        if (this.renderAttempts < 20) {
+          this.renderRetryHandle = setTimeout(attempt, 16);
+        }
+        return;
+      }
+      this.renderGraph();
+    };
+    this.renderRetryHandle = setTimeout(attempt, 0);
   }
 
   private buildElements(graph: GraphDetail): ElementDefinition[] {
@@ -531,16 +567,29 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private persistNodePosition(nodeId: number, position: { x: number; y: number }): void {
+    this.pendingPositions.set(nodeId, position);
     const existing = this.positionTimers.get(nodeId);
     if (existing) {
       clearTimeout(existing);
     }
     const timer = setTimeout(() => {
-      this.api
-        .updateGraphNodePosition(nodeId, { pos_x: position.x, pos_y: position.y })
-        .subscribe();
       this.positionTimers.delete(nodeId);
+      const pending = this.pendingPositions.get(nodeId);
+      if (!pending) {
+        return;
+      }
+      this.pendingPositions.delete(nodeId);
+      this.api.updateGraphNodePosition(nodeId, { pos_x: pending.x, pos_y: pending.y }).subscribe();
     }, 400);
     this.positionTimers.set(nodeId, timer);
+  }
+
+  private flushPendingPositions(): void {
+    this.positionTimers.forEach((timer) => clearTimeout(timer));
+    this.positionTimers.clear();
+    this.pendingPositions.forEach((position, nodeId) => {
+      this.api.updateGraphNodePosition(nodeId, { pos_x: position.x, pos_y: position.y }).subscribe();
+    });
+    this.pendingPositions.clear();
   }
 }
