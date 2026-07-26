@@ -1,23 +1,46 @@
-services:
-  backend:
-    build: ./backend
-    volumes:
-      - npc_data:/data
-    environment:
-      DEBUG: ${DEBUG:-true}
-      SQLITE_PATH: /data/db.sqlite3
-      MEDIA_ROOT: /data/media
-    expose:
-      - "8000"
-    restart: unless-stopped
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "0314:80"
-    depends_on:
-      - backend
-    restart: unless-stopped
-
-volumes:
-  npc_data:
+services:
+
+  backend:
+
+    build: ./backend
+
+    volumes:
+
+      - npc_data:/data
+
+    environment:
+
+      DEBUG: ${DEBUG:-true}
+
+      SQLITE_PATH: /data/db.sqlite3
+
+      MEDIA_ROOT: /data/media
+
+    expose:
+
+      - "8000"
+
+    restart: unless-stopped
+
+
+
+  frontend:
+
+    build: ./frontend
+
+    ports:
+
+      - "8080:80"
+
+    depends_on:
+
+      - backend
+
+    restart: unless-stopped
+
+
+
+volumes:
+
+  npc_data:
+
