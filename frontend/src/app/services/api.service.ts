@@ -80,12 +80,29 @@ export class ApiService {
     return this.http.get<NPC>(`${this.base}/npcs/${id}/`);
   }
 
-  createNpc(campaignId: number, payload: NPCWritePayload): Observable<NPC> {
-    return this.http.post<NPC>(`${this.base}/campaigns/${campaignId}/npcs/`, payload);
+  createNpc(campaignId: number, payload: NPCWritePayload, image?: File | null): Observable<NPC> {
+    const form = new FormData();
+    form.append('payload', JSON.stringify(payload));
+    if (image) {
+      form.append('image', image);
+    }
+    return this.http.post<NPC>(`${this.base}/campaigns/${campaignId}/npcs/`, form);
   }
 
-  updateNpc(id: number, payload: Partial<NPCWritePayload>): Observable<NPC> {
-    return this.http.patch<NPC>(`${this.base}/npcs/${id}/`, payload);
+  updateNpc(
+    id: number,
+    payload: Partial<NPCWritePayload>,
+    image?: File | null,
+    clearImage = false,
+  ): Observable<NPC> {
+    const form = new FormData();
+    form.append('payload', JSON.stringify(payload));
+    if (image) {
+      form.append('image', image);
+    } else if (clearImage) {
+      form.append('image', '');
+    }
+    return this.http.patch<NPC>(`${this.base}/npcs/${id}/`, form);
   }
 
   deleteNpc(id: number): Observable<void> {

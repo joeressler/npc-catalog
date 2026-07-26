@@ -7,6 +7,22 @@
   margin-bottom: 1rem;
 }
 
+.detail-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.npc-portrait {
+  width: 8rem;
+  height: 8rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+  border: 2px solid var(--aero-glass-border);
+  box-shadow: 0 8px 24px rgba(74, 45, 122, 0.2);
+}
+
 .eyebrow {
   margin: 0;
   font-size: 0.78rem;

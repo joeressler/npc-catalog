@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   ElementRef,
+  NgZone,
   OnDestroy,
   OnInit,
   ViewChild,
@@ -46,6 +47,7 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly zone = inject(NgZone);
 
   graph: GraphDetail | null = null;
   relationTypes: RelationType[] = [];
@@ -73,11 +75,11 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private cy: Core | null = null;
   private graphId = 0;
-  private viewReady = false;
   private positionTimers = new Map<number, ReturnType<typeof setTimeout>>();
   private pendingPositions = new Map<number, { x: number; y: number }>();
   private renderRetryHandle: ReturnType<typeof setTimeout> | null = null;
-  private renderAttempts = 0;
+  private resizeHandles: Array<ReturnType<typeof setTimeout>> = [];
+  private viewReady = false;
 
   ngOnInit(): void {
     this.graphId = Number(this.route.snapshot.paramMap.get('graphId'));
@@ -94,9 +96,9 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.renderRetryHandle !== null) {
       clearTimeout(this.renderRetryHandle);
     }
+    this.resizeHandles.forEach((handle) => clearTimeout(handle));
     this.flushPendingPositions();
-    this.cy?.destroy();
-    this.cy = null;
+    this.destroyCy();
   }
 
   loadGraph(silent = false): void {
@@ -107,27 +109,35 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.api.getGraph(this.graphId).subscribe({
       next: (graph) => {
-        this.graph = graph;
-        this.campaignId = graph.campaign;
-        this.loading = false;
-        this.cdr.detectChanges();
-        this.scheduleRender();
+        this.zone.run(() => {
+          this.graph = graph;
+          this.campaignId = graph.campaign;
+          this.loading = false;
+          this.cdr.detectChanges();
+          this.scheduleRender();
+        });
       },
       error: () => {
-        this.error = 'Graph not found.';
-        this.loading = false;
+        this.zone.run(() => {
+          this.error = 'Graph not found.';
+          this.loading = false;
+        });
       },
     });
 
     this.api.getCampaignRelationTypes(this.campaignId).subscribe({
       next: (response) => {
-        this.relationTypes = response.results;
+        this.zone.run(() => {
+          this.relationTypes = response.results;
+        });
       },
     });
 
     this.api.getCampaignNpcs(this.campaignId).subscribe({
       next: (response) => {
-        this.campaignNpcs = response.results;
+        this.zone.run(() => {
+          this.campaignNpcs = response.results;
+        });
       },
     });
   }
@@ -320,27 +330,31 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   fitView(): void {
+    this.cy?.resize();
     this.cy?.fit(undefined, 48);
   }
 
   runLayout(): void {
-    if (!this.cy) {
+    if (!this.cy || this.cy.nodes().length === 0) {
       return;
     }
     const layout = this.cy.layout({
       name: 'cose',
-      animate: true,
+      animate: false,
       padding: 48,
-      nodeRepulsion: 8000,
-      idealEdgeLength: 120,
+      randomize: true,
+      componentSpacing: 80,
     });
-    layout.run();
     layout.one('layoutstop', () => {
       this.cy?.nodes().forEach((node) => {
         const nodeId = Number(node.id().replace('node-', ''));
-        this.persistNodePosition(nodeId, node.position());
+        if (!Number.isNaN(nodeId)) {
+          this.persistNodePosition(nodeId, node.position());
+        }
       });
+      this.fitView();
     });
+    layout.run();
   }
 
   selectedNode(): GraphNode | null {
@@ -363,154 +377,32 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private renderGraph(): void {
-    if (!this.graph || !this.cyContainer?.nativeElement) {
-      return;
-    }
-
-    const elements = this.buildElements(this.graph);
+  private destroyCy(): void {
     if (this.cy) {
       this.cy.destroy();
       this.cy = null;
     }
-
-    this.cy = cytoscape({
-      container: this.cyContainer.nativeElement,
-      elements,
-      minZoom: 0.3,
-      maxZoom: 2.5,
-      wheelSensitivity: 0.25,
-      style: [
-        {
-          selector: 'node',
-          style: {
-            label: 'data(label)',
-            'text-valign': 'center',
-            'text-halign': 'center',
-            'background-color': '#ffffff',
-            'border-color': '#7b5cff',
-            'border-width': 2,
-            color: '#2a1f4a',
-            'font-family': 'Figtree, sans-serif',
-            'font-size': 12,
-            width: 72,
-            height: 72,
-            'text-wrap': 'wrap',
-            'text-max-width': '64px',
-            'overlay-padding': 6,
-          },
-        },
-        {
-          selector: 'node[kind = "party"]',
-          style: {
-            shape: 'round-rectangle',
-            'background-color': '#e8dcff',
-            'background-opacity': 0.5,
-            'border-color': '#4a2d7a',
-            'border-width': 3,
-            'font-size': 13,
-            'font-weight': 700,
-            'text-valign': 'top',
-            'text-margin-y': 8,
-            padding: '28px',
-          },
-        },
-        {
-          selector: 'node[kind = "pc"]',
-          style: {
-            shape: 'ellipse',
-            width: 64,
-            height: 64,
-            'background-color': '#d8e8ff',
-            'border-color': '#4a2d7a',
-            'border-width': 2,
-            'font-size': 11,
-          },
-        },
-        {
-          selector: 'node:selected',
-          style: {
-            'border-width': 4,
-            'border-color': '#4a2d7a',
-          },
-        },
-        {
-          selector: 'edge',
-          style: {
-            label: 'data(label)',
-            'curve-style': 'bezier',
-            'target-arrow-shape': 'triangle',
-            width: 2,
-            'line-color': 'data(color)',
-            'target-arrow-color': 'data(color)',
-            color: '#2a1f4a',
-            'font-size': 10,
-            'text-background-color': 'rgba(255,255,255,0.75)',
-            'text-background-opacity': 1,
-            'text-background-padding': '2px',
-            'text-rotation': 'autorotate',
-          },
-        },
-        {
-          selector: 'edge:selected',
-          style: {
-            width: 3,
-          },
-        },
-      ],
-      layout: { name: 'preset' },
-    });
-
-    this.cy.on('tap', 'node', (event) => {
-      this.selectedEdgeId = null;
-      this.selectedNodeId = Number(event.target.id().replace('node-', ''));
-    });
-
-    this.cy.on('tap', 'edge', (event) => {
-      this.selectedNodeId = null;
-      this.selectedEdgeId = Number(event.target.id().replace('edge-', ''));
-    });
-
-    this.cy.on('tap', (event) => {
-      if (event.target === this.cy) {
-        this.selectedNodeId = null;
-        this.selectedEdgeId = null;
-      }
-    });
-
-    this.cy.on('dragfree', 'node', (event) => {
-      const nodeId = Number(event.target.id().replace('node-', ''));
-      if (Number.isNaN(nodeId)) {
-        return;
-      }
-      this.persistNodePosition(nodeId, event.target.position());
-    });
-
-    const missingPositions = this.graph.nodes.every(
-      (node) => node.pos_x === null || node.pos_y === null,
-    );
-    if (missingPositions && this.graph.nodes.length > 0) {
-      this.runLayout();
-    } else {
-      this.cy.fit(undefined, 48);
-    }
   }
 
   private scheduleRender(): void {
+    if (!this.viewReady) {
+      return;
+    }
     if (this.renderRetryHandle !== null) {
       clearTimeout(this.renderRetryHandle);
     }
-    this.renderAttempts = 0;
-    // Wait until @if (graph) has created #cyContainer and ViewChild is bound.
+
+    let attempts = 0;
     const attempt = () => {
       this.renderRetryHandle = null;
-      if (!this.graph) {
+      if (!this.graph || this.loading) {
         return;
       }
-      if (!this.cyContainer?.nativeElement) {
-        this.renderAttempts += 1;
-        if (this.renderAttempts < 20) {
-          this.renderRetryHandle = setTimeout(attempt, 16);
+      const el = this.cyContainer?.nativeElement;
+      if (!el || el.clientWidth < 8 || el.clientHeight < 8) {
+        attempts += 1;
+        if (attempts < 40) {
+          this.renderRetryHandle = setTimeout(attempt, 50);
         }
         return;
       }
@@ -519,36 +411,193 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     this.renderRetryHandle = setTimeout(attempt, 0);
   }
 
+  private renderGraph(): void {
+    if (!this.graph || !this.cyContainer?.nativeElement) {
+      return;
+    }
+
+    const container = this.cyContainer.nativeElement;
+    const elements = this.buildElements(this.graph);
+    this.destroyCy();
+
+    this.zone.runOutsideAngular(() => {
+      this.cy = cytoscape({
+        container,
+        elements,
+        minZoom: 0.2,
+        maxZoom: 2.5,
+        wheelSensitivity: 0.25,
+        style: [
+          {
+            selector: 'node',
+            style: {
+              label: 'data(label)',
+              'text-valign': 'center',
+              'text-halign': 'center',
+              'background-color': '#ffffff',
+              'border-color': '#7b5cff',
+              'border-width': 2,
+              color: '#2a1f4a',
+              'font-family': 'Figtree, sans-serif',
+              'font-size': 12,
+              width: 72,
+              height: 72,
+              'text-wrap': 'wrap',
+              'text-max-width': '64px',
+              'overlay-padding': 6,
+            },
+          },
+          {
+            selector: 'node[kind = "party"]',
+            style: {
+              shape: 'round-rectangle',
+              width: 100,
+              height: 60,
+              'background-color': '#e8dcff',
+              'border-color': '#4a2d7a',
+              'border-width': 3,
+              'font-size': 13,
+              'font-weight': 700,
+            },
+          },
+          {
+            selector: 'node[kind = "pc"]',
+            style: {
+              shape: 'ellipse',
+              width: 64,
+              height: 64,
+              'background-color': '#d8e8ff',
+              'border-color': '#4a2d7a',
+              'border-width': 2,
+              'font-size': 11,
+            },
+          },
+          {
+            selector: 'node:selected',
+            style: {
+              'border-width': 4,
+              'border-color': '#4a2d7a',
+            },
+          },
+          {
+            selector: 'edge',
+            style: {
+              label: 'data(label)',
+              'curve-style': 'bezier',
+              'target-arrow-shape': 'triangle',
+              width: 2,
+              'line-color': 'data(color)',
+              'target-arrow-color': 'data(color)',
+              color: '#2a1f4a',
+              'font-size': 10,
+              'text-background-color': 'rgba(255,255,255,0.75)',
+              'text-background-opacity': 1,
+              'text-background-padding': '2px',
+              'text-rotation': 'autorotate',
+            },
+          },
+          {
+            selector: 'edge:selected',
+            style: {
+              width: 3,
+            },
+          },
+        ],
+        layout: { name: 'preset' },
+      });
+
+      this.cy.on('tap', 'node', (event) => {
+        this.zone.run(() => {
+          this.selectedEdgeId = null;
+          this.selectedNodeId = Number(event.target.id().replace('node-', ''));
+        });
+      });
+
+      this.cy.on('tap', 'edge', (event) => {
+        this.zone.run(() => {
+          this.selectedNodeId = null;
+          this.selectedEdgeId = Number(event.target.id().replace('edge-', ''));
+        });
+      });
+
+      this.cy.on('tap', (event) => {
+        if (event.target === this.cy) {
+          this.zone.run(() => {
+            this.selectedNodeId = null;
+            this.selectedEdgeId = null;
+          });
+        }
+      });
+
+      this.cy.on('dragfree', 'node', (event) => {
+        const nodeId = Number(event.target.id().replace('node-', ''));
+        if (Number.isNaN(nodeId)) {
+          return;
+        }
+        this.persistNodePosition(nodeId, event.target.position());
+      });
+    });
+
+    const missingPositions =
+      this.graph.nodes.length > 0 &&
+      this.graph.nodes.every((node) => node.pos_x === null || node.pos_y === null);
+
+    if (missingPositions) {
+      this.runLayout();
+    } else {
+      this.queueResizeAndFit();
+    }
+  }
+
+  private queueResizeAndFit(): void {
+    this.resizeHandles.forEach((handle) => clearTimeout(handle));
+    this.resizeHandles = [0, 100, 350, 700].map((delay) =>
+      setTimeout(() => {
+        if (!this.cy) {
+          return;
+        }
+        this.cy.resize();
+        this.cy.fit(undefined, 48);
+      }, delay),
+    );
+  }
+
   private buildElements(graph: GraphDetail): ElementDefinition[] {
-    const party = graph.nodes.find((node) => node.kind === 'party');
-    const nodes: ElementDefinition[] = graph.nodes.map((node, index) => {
-      const data: Record<string, string | number | null> = {
+    const kindOrder: Record<string, number> = { party: 0, pc: 1, npc: 2 };
+    const sortedNodes = [...graph.nodes].sort(
+      (a, b) => (kindOrder[a.kind] ?? 9) - (kindOrder[b.kind] ?? 9) || a.id - b.id,
+    );
+
+    const nodes: ElementDefinition[] = sortedNodes.map((node, index) => ({
+      data: {
         id: `node-${node.id}`,
         label: node.label,
         kind: node.kind,
         npcId: node.npc_id,
-      };
-      if (node.kind === 'pc' && party) {
-        data['parent'] = `node-${party.id}`;
-      }
-      return {
-        data,
-        position:
-          node.pos_x !== null && node.pos_y !== null
-            ? { x: node.pos_x, y: node.pos_y }
-            : { x: 120 + (index % 4) * 140, y: 120 + Math.floor(index / 4) * 120 },
-      };
-    });
-
-    const edges: ElementDefinition[] = graph.edges.map((edge) => ({
-      data: {
-        id: `edge-${edge.id}`,
-        source: `node-${edge.from_endpoint.node_id}`,
-        target: `node-${edge.to_endpoint.node_id}`,
-        label: edge.relation_type.name,
-        color: this.polarityColor(edge.relation_type.polarity),
       },
+      // No compound parents: absolute positions stay valid across reloads.
+      position:
+        node.pos_x !== null && node.pos_y !== null
+          ? { x: node.pos_x, y: node.pos_y }
+          : { x: 140 + (index % 5) * 150, y: 140 + Math.floor(index / 5) * 130 },
     }));
+
+    const nodeIds = new Set(sortedNodes.map((node) => `node-${node.id}`));
+    const edges: ElementDefinition[] = graph.edges
+      .filter(
+        (edge) =>
+          nodeIds.has(`node-${edge.from_endpoint.node_id}`) &&
+          nodeIds.has(`node-${edge.to_endpoint.node_id}`),
+      )
+      .map((edge) => ({
+        data: {
+          id: `edge-${edge.id}`,
+          source: `node-${edge.from_endpoint.node_id}`,
+          target: `node-${edge.to_endpoint.node_id}`,
+          label: edge.relation_type.name,
+          color: this.polarityColor(edge.relation_type.polarity),
+        },
+      }));
 
     return [...nodes, ...edges];
   }

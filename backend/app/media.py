@@ -11,13 +11,13 @@ ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
 
 def ensure_media_root() -> Path:
     root = settings.media_root
-    campaigns_dir = root / "campaigns"
-    campaigns_dir.mkdir(parents=True, exist_ok=True)
-    return campaigns_dir
+    (root / "campaigns").mkdir(parents=True, exist_ok=True)
+    (root / "npcs").mkdir(parents=True, exist_ok=True)
+    return root
 
 
-def save_campaign_image(upload: UploadFile) -> str:
-    """Persist a validated campaign image and return its relative storage path."""
+def _save_image(upload: UploadFile, subdirectory: str) -> str:
+    """Persist a validated image under subdirectory and return its relative path."""
     if not upload.filename:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Image filename is required.")
 
@@ -25,9 +25,10 @@ def save_campaign_image(upload: UploadFile) -> str:
     if suffix not in ALLOWED_EXTENSIONS:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Unsupported image format.")
 
-    campaigns_dir = ensure_media_root()
+    media_dir = ensure_media_root() / subdirectory
+    media_dir.mkdir(parents=True, exist_ok=True)
     filename = f"{uuid.uuid4().hex}{suffix}"
-    destination = campaigns_dir / filename
+    destination = media_dir / filename
 
     try:
         image = Image.open(upload.file)
@@ -40,10 +41,28 @@ def save_campaign_image(upload: UploadFile) -> str:
     finally:
         upload.file.close()
 
-    return f"campaigns/{filename}"
+    return f"{subdirectory}/{filename}"
+
+
+def save_campaign_image(upload: UploadFile) -> str:
+    """Persist a validated campaign image and return its relative storage path."""
+    return _save_image(upload, "campaigns")
 
 
 def delete_campaign_image(image_path: str | None) -> None:
+    _delete_image(image_path)
+
+
+def save_npc_image(upload: UploadFile) -> str:
+    """Persist a validated NPC image and return its relative storage path."""
+    return _save_image(upload, "npcs")
+
+
+def delete_npc_image(image_path: str | None) -> None:
+    _delete_image(image_path)
+
+
+def _delete_image(image_path: str | None) -> None:
     if not image_path:
         return
     full_path = settings.media_root / image_path
@@ -54,4 +73,5 @@ def delete_campaign_image(image_path: str | None) -> None:
 def build_media_url(base_url: str, image_path: str | None) -> str | None:
     if not image_path:
         return None
-    return f"{base_url.rstrip('/')}/media/{image_path.lstrip('/')}"
+    # Relative path so the SPA host/port (e.g. localhost:314) serves /media via nginx.
+    return f"/media/{image_path.lstrip('/')}"

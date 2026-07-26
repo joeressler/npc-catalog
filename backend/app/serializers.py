@@ -40,7 +40,8 @@ def serialize_campaign(campaign: Campaign, request: Request, *, npc_count: int |
     return CampaignRead(**data)
 
 
-def serialize_npc_list(npc: NPC) -> NPCListRead:
+def serialize_npc_list(npc: NPC, request: Request | None = None) -> NPCListRead:
+    image = build_media_url(str(request.base_url), npc.image_path) if request else None
     return NPCListRead(
         id=npc.id,
         campaign=npc.campaign_id,
@@ -52,6 +53,7 @@ def serialize_npc_list(npc: NPC) -> NPCListRead:
         faction=npc.faction,
         attitude=npc.attitude,
         party_relationship=npc.party_relationship,
+        image=image,
         aliases=[AliasRead.model_validate(alias) for alias in npc.aliases],
         tags=[TagRead.model_validate(tag) for tag in npc.tags],
         created_at=npc.created_at,
@@ -59,8 +61,8 @@ def serialize_npc_list(npc: NPC) -> NPCListRead:
     )
 
 
-def serialize_npc_detail(npc: NPC) -> NPCDetailRead:
-    base = serialize_npc_list(npc)
+def serialize_npc_detail(npc: NPC, request: Request | None = None) -> NPCDetailRead:
+    base = serialize_npc_list(npc, request)
     return NPCDetailRead(
         **base.model_dump(),
         appearance=npc.appearance,

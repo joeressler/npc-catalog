@@ -52,6 +52,24 @@
   color: var(--aero-danger);
 }
 
+.image-preview {
+  margin-top: 0.5rem;
+  max-width: 180px;
+}
+
+.image-preview img {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--aero-glass-border);
+  object-fit: cover;
+  max-height: 220px;
+}
+
+.btn-clear-image {
+  margin-top: 0.5rem;
+}
+
 @media (max-width: 720px) {
   .grid {
     grid-template-columns: 1fr;

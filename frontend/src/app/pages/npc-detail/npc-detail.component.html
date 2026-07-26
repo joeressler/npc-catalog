@@ -5,23 +5,28 @@
     <p class="empty-state">{{ error }}</p>
   } @else if (npc) {
     <header class="detail-header glass-panel">
-      <div>
-        <p class="eyebrow">NPC Dossier</p>
-        <h1 class="page-title">{{ npc.name }}</h1>
-        @if (npc.aliases.length) {
-          <p class="aliases">Also known as {{ aliasList() }}</p>
+      <div class="detail-identity">
+        @if (portraitUrl) {
+          <img class="npc-portrait" [src]="portraitUrl" [alt]="npc.name" />
         }
-        <p class="role">{{ npc.role_occupation }} · {{ npc.location }}</p>
-        <div class="chips">
-          <span class="chip">{{ npc.alignment_display }}</span>
-          <span class="chip">{{ npc.attitude }}</span>
-          <span class="chip">{{ npc.party_relationship }}</span>
-          @if (npc.faction) {
-            <span class="chip">{{ npc.faction }}</span>
+        <div>
+          <p class="eyebrow">NPC Dossier</p>
+          <h1 class="page-title">{{ npc.name }}</h1>
+          @if (npc.aliases.length) {
+            <p class="aliases">Also known as {{ aliasList() }}</p>
           }
-          @for (tag of npc.tags; track tag.id) {
-            <span class="chip">{{ tag.name }}</span>
-          }
+          <p class="role">{{ npc.role_occupation }} · {{ npc.location }}</p>
+          <div class="chips">
+            <span class="chip">{{ npc.alignment_display }}</span>
+            <span class="chip">{{ npc.attitude }}</span>
+            <span class="chip">{{ npc.party_relationship }}</span>
+            @if (npc.faction) {
+              <span class="chip">{{ npc.faction }}</span>
+            }
+            @for (tag of npc.tags; track tag.id) {
+              <span class="chip">{{ tag.name }}</span>
+            }
+          </div>
         </div>
       </div>
       <div class="actions">

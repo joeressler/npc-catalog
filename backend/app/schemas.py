@@ -107,6 +107,7 @@ class NPCListRead(BaseModel):
     faction: str
     attitude: str
     party_relationship: str
+    image: str | None = None
     aliases: list[AliasRead]
     tags: list[TagRead]
     created_at: datetime

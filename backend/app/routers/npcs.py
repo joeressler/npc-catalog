@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+import json
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
 from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.deps import get_db
+from app.media import delete_npc_image, save_npc_image
 from app.models import NPC
 from app.schemas import NPCWrite, NPCWritePartial, dump_partial
 from app.serializers import serialize_npc_detail, serialize_npc_list
@@ -36,6 +39,18 @@ def _parse_partial_payload(data: dict) -> NPCWritePartial:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=exc.errors()) from exc
 
 
+def _parse_json_form_payload(raw: str | None) -> dict:
+    if raw is None or not str(raw).strip():
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Payload is required.")
+    try:
+        data = json.loads(str(raw))
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Invalid JSON payload.") from exc
+    if not isinstance(data, dict):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Payload must be a JSON object.")
+    return data
+
+
 def _apply_write_fields(npc: NPC, payload: NPCWrite | NPCWritePartial, *, partial: bool = False) -> None:
     if partial:
         data = dump_partial(payload)
@@ -51,6 +66,18 @@ def _apply_write_fields(npc: NPC, payload: NPCWrite | NPCWritePartial, *, partia
     data = payload.model_dump(exclude={"aliases", "tags", "campaign"})
     for key, value in data.items():
         setattr(npc, key, value)
+
+
+def _apply_image_from_form(npc: NPC, form) -> None:
+    if "image" not in form:
+        return
+    image_field = form.get("image")
+    if image_field == "" or (isinstance(image_field, str) and image_field == ""):
+        delete_npc_image(npc.image_path)
+        npc.image_path = None
+    elif isinstance(image_field, UploadFile) and image_field.filename:
+        delete_npc_image(npc.image_path)
+        npc.image_path = save_npc_image(image_field)
 
 
 @router.get("/npcs/")
@@ -82,26 +109,29 @@ def list_npcs(
         request,
         stmt,
         page,
-        lambda npc: serialize_npc_list(npc).model_dump(),
+        lambda npc: serialize_npc_list(npc, request).model_dump(),
         id_column=NPC.id,
     )
 
 
 @router.get("/npcs/{npc_id}/")
-def get_npc(npc_id: int, db: Session = Depends(get_db)):
+def get_npc(npc_id: int, request: Request, db: Session = Depends(get_db)):
     npc = get_npc_or_404(db, npc_id)
-    return serialize_npc_detail(npc)
+    return serialize_npc_detail(npc, request)
 
 
 @router.patch("/npcs/{npc_id}/")
-def update_npc(npc_id: int, payload: NPCWritePartial, db: Session = Depends(get_db)):
+async def update_npc(npc_id: int, request: Request, db: Session = Depends(get_db)):
     npc = get_npc_or_404(db, npc_id)
-    data = dump_partial(payload)
+    form = await request.form()
+    data = _parse_json_form_payload(form.get("payload"))
+    payload = _parse_partial_payload(data)
 
-    if "campaign" in data and data["campaign"] is not None:
-        get_campaign_or_404(db, data["campaign"])
+    if payload.campaign is not None:
+        get_campaign_or_404(db, payload.campaign)
 
     _apply_write_fields(npc, payload, partial=True)
+    _apply_image_from_form(npc, form)
 
     if payload.aliases is not None:
         sync_aliases(db, npc, payload.aliases)
@@ -110,12 +140,13 @@ def update_npc(npc_id: int, payload: NPCWritePartial, db: Session = Depends(get_
 
     db.commit()
     npc = get_npc_or_404(db, npc_id)
-    return serialize_npc_detail(npc)
+    return serialize_npc_detail(npc, request)
 
 
 @router.delete("/npcs/{npc_id}/", status_code=status.HTTP_204_NO_CONTENT)
 def delete_npc(npc_id: int, db: Session = Depends(get_db)):
     npc = get_npc_or_404(db, npc_id)
+    delete_npc_image(npc.image_path)
     db.delete(npc)
     db.commit()
 
@@ -150,19 +181,29 @@ def list_campaign_npcs(
         request,
         stmt,
         page,
-        lambda npc: serialize_npc_list(npc).model_dump(),
+        lambda npc: serialize_npc_list(npc, request).model_dump(),
         id_column=NPC.id,
     )
 
 
 @campaign_npcs_router.post("/", status_code=status.HTTP_201_CREATED)
-def create_campaign_npc(campaign_id: int, payload: NPCWrite, db: Session = Depends(get_db)):
+async def create_campaign_npc(
+    campaign_id: int,
+    request: Request,
+    payload: str = Form(...),
+    image: UploadFile | None = File(default=None),
+    db: Session = Depends(get_db),
+):
     get_campaign_or_404(db, campaign_id)
-    data = payload.model_dump()
+    data = _parse_json_form_payload(payload)
     data["campaign"] = campaign_id
     write_payload = _parse_write_payload(data)
 
-    npc = NPC(campaign_id=campaign_id)
+    image_path = None
+    if image and image.filename:
+        image_path = save_npc_image(image)
+
+    npc = NPC(campaign_id=campaign_id, image_path=image_path)
     _apply_write_fields(npc, write_payload)
     db.add(npc)
     db.flush()
@@ -170,4 +211,4 @@ def create_campaign_npc(campaign_id: int, payload: NPCWrite, db: Session = Depen
     sync_tags(db, npc, write_payload.tags)
     db.commit()
     npc = get_npc_or_404(db, npc.id)
-    return serialize_npc_detail(npc)
+    return serialize_npc_detail(npc, request)

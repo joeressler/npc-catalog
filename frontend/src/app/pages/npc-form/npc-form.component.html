@@ -51,6 +51,18 @@
           <label for="tags">Tags / Keywords (comma-separated)</label>
           <input id="tags" type="text" formControlName="tags" placeholder="informant, dockside, quest-giver" />
         </div>
+        <div class="field span-2">
+          <label for="image">Portrait (optional)</label>
+          <input id="image" type="file" accept="image/*" (change)="onFileSelected($event)" />
+          @if (previewUrl || currentImage) {
+            <div class="image-preview">
+              <img [src]="previewUrl || currentImage" alt="NPC portrait" />
+              <button type="button" class="btn btn-secondary btn-clear-image" (click)="clearImage()">
+                Remove
+              </button>
+            </div>
+          }
+        </div>
       </div>
     </section>
 

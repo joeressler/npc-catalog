@@ -14,11 +14,19 @@
   gap: 0.65rem;
 }
 
+.loading-banner {
+  margin: 1rem 0;
+}
+
 .graph-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 20rem;
   gap: 1rem;
   align-items: start;
+}
+
+.graph-workspace.is-hidden {
+  display: none;
 }
 
 .canvas-panel {

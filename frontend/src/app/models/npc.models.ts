@@ -28,6 +28,7 @@ export interface NPC {
   faction: string;
   attitude: string;
   party_relationship: string;
+  image: string | null;
   appearance?: string;
   voice_mannerisms?: string;
   personality_traits?: string;

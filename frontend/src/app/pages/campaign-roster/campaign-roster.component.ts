@@ -96,6 +96,10 @@ export class CampaignRosterComponent implements OnInit {
     return this.campaign ? this.api.mediaUrl(this.campaign.image) : null;
   }
 
+  npcImageUrl(npc: NPC): string | null {
+    return this.api.mediaUrl(npc.image);
+  }
+
   aliasList(npc: NPC): string {
     return npc.aliases.map((alias) => alias.name).join(', ');
   }

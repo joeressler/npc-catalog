@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -13,7 +13,7 @@ import { ALIGNMENTS, AlignmentCode, NPCWritePayload } from '../../models/npc.mod
   templateUrl: './npc-form.component.html',
   styleUrl: './npc-form.component.scss',
 })
-export class NpcFormComponent implements OnInit {
+export class NpcFormComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ApiService);
   private readonly route = inject(ActivatedRoute);
@@ -26,6 +26,10 @@ export class NpcFormComponent implements OnInit {
   error = '';
   dossierOpen = false;
   alignments = ALIGNMENTS;
+  currentImage: string | null = null;
+  selectedFile: File | null = null;
+  previewUrl: string | null = null;
+  imageCleared = false;
 
   form = this.fb.group({
     name: ['', Validators.required],
@@ -58,6 +62,7 @@ export class NpcFormComponent implements OnInit {
       this.api.getNpc(this.npcId).subscribe({
         next: (npc) => {
           this.campaignId = npc.campaign;
+          this.currentImage = this.api.mediaUrl(npc.image);
           this.form.patchValue({
             name: npc.name,
             aliases: npc.aliases.map((a) => a.name).join(', '),
@@ -89,8 +94,35 @@ export class NpcFormComponent implements OnInit {
     }
   }
 
+  ngOnDestroy(): void {
+    if (this.previewUrl) {
+      URL.revokeObjectURL(this.previewUrl);
+    }
+  }
+
   toggleDossier(): void {
     this.dossierOpen = !this.dossierOpen;
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.selectedFile = file;
+    this.imageCleared = false;
+    if (this.previewUrl) {
+      URL.revokeObjectURL(this.previewUrl);
+    }
+    this.previewUrl = file ? URL.createObjectURL(file) : null;
+  }
+
+  clearImage(): void {
+    this.selectedFile = null;
+    this.imageCleared = true;
+    this.currentImage = null;
+    if (this.previewUrl) {
+      URL.revokeObjectURL(this.previewUrl);
+      this.previewUrl = null;
+    }
   }
 
   submit(): void {
@@ -126,8 +158,13 @@ export class NpcFormComponent implements OnInit {
 
     const request$ =
       this.editing && this.npcId
-        ? this.api.updateNpc(this.npcId, payload)
-        : this.api.createNpc(this.campaignId!, payload);
+        ? this.api.updateNpc(
+            this.npcId,
+            payload,
+            this.selectedFile,
+            this.imageCleared && !this.selectedFile,
+          )
+        : this.api.createNpc(this.campaignId!, payload, this.selectedFile);
 
     request$.subscribe({
       next: (npc) => {

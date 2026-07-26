@@ -20,6 +20,7 @@ interface DossierSection {
 })
 export class NpcDetailComponent implements OnInit {
   npc: NPC | null = null;
+  portraitUrl: string | null = null;
   sections: DossierSection[] = [];
   loading = true;
   error = '';
@@ -36,6 +37,7 @@ export class NpcDetailComponent implements OnInit {
     this.api.getNpc(id).subscribe({
       next: (npc) => {
         this.npc = npc;
+        this.portraitUrl = this.api.mediaUrl(npc.image);
         this.sections = [
           { title: 'Appearance', content: npc.appearance || '', open: true },
           { title: 'Voice / Accent / Mannerisms', content: npc.voice_mannerisms || '', open: false },

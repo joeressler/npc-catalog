@@ -70,12 +70,17 @@
       <div class="npc-list">
         @for (npc of npcs; track npc.id) {
           <a [routerLink]="['/npcs', npc.id]" class="npc-row glass-panel">
-            <div>
-              <h2>{{ npc.name }}</h2>
-              <p class="role">{{ npc.role_occupation }} · {{ npc.location }}</p>
-              @if (npc.aliases.length) {
-                <p class="aliases">Also known as {{ aliasList(npc) }}</p>
+            <div class="npc-identity">
+              @if (npcImageUrl(npc); as src) {
+                <img class="npc-thumb" [src]="src" [alt]="npc.name" />
               }
+              <div>
+                <h2>{{ npc.name }}</h2>
+                <p class="role">{{ npc.role_occupation }} · {{ npc.location }}</p>
+                @if (npc.aliases.length) {
+                  <p class="aliases">Also known as {{ aliasList(npc) }}</p>
+                }
+              </div>
             </div>
             <div class="meta">
               <span class="chip">{{ npc.alignment_display }}</span>
