@@ -148,3 +148,92 @@ export interface SessionWritePayload {
   secrets?: string[];
   character_ids?: number[];
 }
+
+export type RelationPolarity = 'positive' | 'negative' | 'neutral' | 'complex';
+export type GraphNodeKind = 'npc' | 'party';
+
+export interface RelationType {
+  id: number;
+  name: string;
+  polarity: RelationPolarity;
+}
+
+export interface RelationTypeWritePayload {
+  name: string;
+  polarity: RelationPolarity;
+}
+
+export interface GraphEndpoint {
+  kind: GraphNodeKind;
+  npc_id: number | null;
+  label: string;
+}
+
+export interface GraphNode {
+  id: number;
+  kind: GraphNodeKind;
+  npc_id: number | null;
+  label: string;
+  pos_x: number | null;
+  pos_y: number | null;
+}
+
+export interface GraphEdge {
+  id: number;
+  relation_type: RelationType;
+  from_endpoint: GraphEndpoint;
+  to_endpoint: GraphEndpoint;
+  notes: string;
+}
+
+export interface GraphSummary {
+  id: number;
+  campaign: number;
+  name: string;
+  notes: string;
+  node_count: number;
+  edge_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GraphDetail extends Omit<GraphSummary, 'node_count' | 'edge_count'> {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
+export interface GraphWritePayload {
+  name: string;
+  notes?: string;
+}
+
+export interface GraphNodeWritePayload {
+  kind: GraphNodeKind;
+  npc_id?: number | null;
+}
+
+export interface GraphNodePositionPayload {
+  pos_x: number;
+  pos_y: number;
+}
+
+export interface GraphEdgeWritePayload {
+  relation_type_id: number;
+  from_kind: GraphNodeKind;
+  from_npc_id?: number | null;
+  to_kind: GraphNodeKind;
+  to_npc_id?: number | null;
+  notes?: string;
+}
+
+export interface GraphEdgeUpdatePayload {
+  relation_type_id?: number;
+  notes?: string;
+}
+
+export const RELATION_POLARITIES: { value: RelationPolarity; label: string }[] = [
+  { value: 'positive', label: 'Positive' },
+  { value: 'negative', label: 'Negative' },
+  { value: 'neutral', label: 'Neutral' },
+  { value: 'complex', label: 'Complex' },
+];

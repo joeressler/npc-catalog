@@ -4,10 +4,21 @@ import { Observable } from 'rxjs';
 
 import {
   Campaign,
+  GraphDetail,
+  GraphEdge,
+  GraphEdgeUpdatePayload,
+  GraphEdgeWritePayload,
+  GraphNode,
+  GraphNodePositionPayload,
+  GraphNodeWritePayload,
+  GraphSummary,
+  GraphWritePayload,
   NPC,
   NPCFilters,
   NPCWritePayload,
   PaginatedResponse,
+  RelationType,
+  RelationTypeWritePayload,
   SessionDetail,
   SessionSummary,
   SessionWritePayload,
@@ -105,6 +116,69 @@ export class ApiService {
 
   deleteSession(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/sessions/${id}/`);
+  }
+
+  getCampaignGraphs(campaignId: number): Observable<PaginatedResponse<GraphSummary>> {
+    return this.http.get<PaginatedResponse<GraphSummary>>(
+      `${this.base}/campaigns/${campaignId}/graphs/`,
+    );
+  }
+
+  getGraph(id: number): Observable<GraphDetail> {
+    return this.http.get<GraphDetail>(`${this.base}/graphs/${id}/`);
+  }
+
+  createGraph(campaignId: number, payload: GraphWritePayload): Observable<GraphDetail> {
+    return this.http.post<GraphDetail>(`${this.base}/campaigns/${campaignId}/graphs/`, payload);
+  }
+
+  updateGraph(id: number, payload: Partial<GraphWritePayload>): Observable<GraphDetail> {
+    return this.http.patch<GraphDetail>(`${this.base}/graphs/${id}/`, payload);
+  }
+
+  deleteGraph(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/graphs/${id}/`);
+  }
+
+  getCampaignRelationTypes(campaignId: number): Observable<PaginatedResponse<RelationType>> {
+    return this.http.get<PaginatedResponse<RelationType>>(
+      `${this.base}/campaigns/${campaignId}/relation-types/`,
+    );
+  }
+
+  createRelationType(campaignId: number, payload: RelationTypeWritePayload): Observable<RelationType> {
+    return this.http.post<RelationType>(
+      `${this.base}/campaigns/${campaignId}/relation-types/`,
+      payload,
+    );
+  }
+
+  deleteRelationType(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/relation-types/${id}/`);
+  }
+
+  addGraphNode(graphId: number, payload: GraphNodeWritePayload): Observable<GraphNode> {
+    return this.http.post<GraphNode>(`${this.base}/graphs/${graphId}/nodes/`, payload);
+  }
+
+  updateGraphNodePosition(nodeId: number, payload: GraphNodePositionPayload): Observable<GraphNode> {
+    return this.http.patch<GraphNode>(`${this.base}/graph-nodes/${nodeId}/`, payload);
+  }
+
+  deleteGraphNode(nodeId: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/graph-nodes/${nodeId}/`);
+  }
+
+  addGraphEdge(graphId: number, payload: GraphEdgeWritePayload): Observable<GraphEdge> {
+    return this.http.post<GraphEdge>(`${this.base}/graphs/${graphId}/edges/`, payload);
+  }
+
+  updateGraphEdge(edgeId: number, payload: GraphEdgeUpdatePayload): Observable<GraphEdge> {
+    return this.http.patch<GraphEdge>(`${this.base}/graph-edges/${edgeId}/`, payload);
+  }
+
+  deleteGraphEdge(edgeId: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/graph-edges/${edgeId}/`);
   }
 
   mediaUrl(path: string | null | undefined): string | null {

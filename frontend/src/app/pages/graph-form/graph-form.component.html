@@ -1,0 +1,30 @@
+<section class="page-shell view-enter">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">{{ editing ? 'Edit Relationship Web' : 'New Relationship Web' }}</h1>
+      <p class="page-subtitle">Name a web of NPC and party relations for this campaign.</p>
+    </div>
+    <a [routerLink]="backLink()" class="btn btn-secondary">Back</a>
+  </header>
+
+  <form class="graph-form glass-panel" [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label for="name">Web name</label>
+      <input id="name" type="text" formControlName="name" placeholder="Faction intrigue, Court romance…" />
+    </div>
+    <div class="field">
+      <label for="notes">Notes (optional)</label>
+      <textarea id="notes" formControlName="notes" rows="4" placeholder="What this web tracks"></textarea>
+    </div>
+
+    @if (error) {
+      <p class="form-error">{{ error }}</p>
+    }
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving">
+        {{ saving ? 'Saving…' : editing ? 'Save Changes' : 'Create Web' }}
+      </button>
+    </div>
+  </form>
+</section>

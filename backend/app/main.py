@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.media import ensure_media_root
-from app.routers import campaigns, npcs, sessions, tags
+from app.routers import campaigns, graphs, npcs, sessions, tags
 
 
 @asynccontextmanager
@@ -31,6 +31,12 @@ settings.media_root.mkdir(parents=True, exist_ok=True)
 app.mount("/media", StaticFiles(directory=str(settings.media_root)), name="media")
 
 app.include_router(campaigns.router, prefix="/api")
+app.include_router(graphs.campaign_graphs_router, prefix="/api")
+app.include_router(graphs.campaign_relation_types_router, prefix="/api")
+app.include_router(graphs.router, prefix="/api")
+app.include_router(graphs.relation_types_router, prefix="/api")
+app.include_router(graphs.graph_nodes_router, prefix="/api")
+app.include_router(graphs.graph_edges_router, prefix="/api")
 app.include_router(sessions.campaign_sessions_router, prefix="/api")
 app.include_router(sessions.router, prefix="/api")
 app.include_router(npcs.campaign_npcs_router, prefix="/api")

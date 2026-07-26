@@ -1,0 +1,160 @@
+<section class="page-shell view-enter">
+  @if (loading) {
+    <p class="empty-state">Loading relationship web…</p>
+  } @else if (error) {
+    <p class="empty-state">{{ error }}</p>
+  } @else if (graph) {
+    <header class="detail-header glass-panel">
+      <div>
+        <p class="eyebrow">Relationship Web</p>
+        <h1 class="page-title">{{ graph.name }}</h1>
+        @if (graph.notes.trim()) {
+          <p class="page-subtitle">{{ graph.notes }}</p>
+        }
+      </div>
+      <div class="header-actions">
+        <a [routerLink]="['/campaigns', campaignId, 'graphs']" class="btn btn-secondary">All Webs</a>
+        <a [routerLink]="['/campaigns', campaignId, 'graphs', graph.id, 'edit']" class="btn btn-secondary">Edit</a>
+        <button type="button" class="btn btn-danger" (click)="deleteGraph()" [disabled]="deleting">
+          {{ deleting ? 'Deleting…' : 'Delete' }}
+        </button>
+      </div>
+    </header>
+
+    <div class="graph-workspace">
+      <div class="canvas-panel glass-panel">
+        <div class="canvas-toolbar">
+          <button type="button" class="btn btn-sm btn-secondary" (click)="fitView()">Fit view</button>
+          <button type="button" class="btn btn-sm btn-secondary" (click)="runLayout()">Auto layout</button>
+        </div>
+        <div #cyContainer class="cy-container"></div>
+      </div>
+
+      <aside class="side-panel glass-panel">
+        @if (actionError) {
+          <p class="panel-error">{{ actionError }}</p>
+        }
+
+        <section class="panel-section">
+          <h2>Add characters</h2>
+          @if (!hasPartyNode()) {
+            <button type="button" class="btn btn-secondary btn-block" (click)="addPartyNode()">
+              Add Party node
+            </button>
+          } @else {
+            <p class="hint">Party node is on the web.</p>
+          }
+          <div class="field">
+            <label for="addNpc">Add NPC</label>
+            <select id="addNpc" [(ngModel)]="addNpcId" [ngModelOptions]="{ standalone: true }">
+              <option [ngValue]="null">Choose NPC…</option>
+              @for (npc of availableNpcs(); track npc.id) {
+                <option [ngValue]="npc.id">{{ npc.name }}</option>
+              }
+            </select>
+          </div>
+          <button
+            type="button"
+            class="btn btn-primary btn-block"
+            (click)="addNpcNode()"
+            [disabled]="addNpcId === null"
+          >
+            Add to web
+          </button>
+        </section>
+
+        <section class="panel-section">
+          <h2>Add relation</h2>
+          <div class="field">
+            <label for="from">From</label>
+            <select id="from" [(ngModel)]="edgeFromKey" [ngModelOptions]="{ standalone: true }">
+              <option value="">Choose…</option>
+              @for (option of endpointOptions(); track option.key) {
+                <option [value]="option.key">{{ option.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="relationType">Relation</label>
+            <select
+              id="relationType"
+              [(ngModel)]="edgeRelationTypeId"
+              [ngModelOptions]="{ standalone: true }"
+            >
+              <option [ngValue]="null">Choose…</option>
+              @for (type of relationTypes; track type.id) {
+                <option [ngValue]="type.id">{{ type.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="to">To</label>
+            <select id="to" [(ngModel)]="edgeToKey" [ngModelOptions]="{ standalone: true }">
+              <option value="">Choose…</option>
+              @for (option of endpointOptions(); track option.key) {
+                <option [value]="option.key">{{ option.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="edgeNotes">Notes (optional)</label>
+            <input id="edgeNotes" type="text" [(ngModel)]="edgeNotes" [ngModelOptions]="{ standalone: true }" />
+          </div>
+          <button type="button" class="btn btn-primary btn-block" (click)="addEdge()">Add relation</button>
+        </section>
+
+        <section class="panel-section">
+          <h2>Custom relation types</h2>
+          <div class="field">
+            <label for="newRelation">Name</label>
+            <input id="newRelation" type="text" [(ngModel)]="newRelationName" [ngModelOptions]="{ standalone: true }" />
+          </div>
+          <div class="field">
+            <label for="polarity">Polarity</label>
+            <select
+              id="polarity"
+              [(ngModel)]="newRelationPolarity"
+              [ngModelOptions]="{ standalone: true }"
+            >
+              @for (item of polarities; track item.value) {
+                <option [value]="item.value">{{ item.label }}</option>
+              }
+            </select>
+          </div>
+          <button type="button" class="btn btn-secondary btn-block" (click)="addRelationType()">Add type</button>
+        </section>
+
+        @if (selectedNode(); as node) {
+          <section class="panel-section selection">
+            <h2>Selected: {{ node.label }}</h2>
+            @if (node.kind === 'npc' && node.npc_id !== null) {
+              <button type="button" class="btn btn-secondary btn-block" (click)="openNpc(node)">
+                Open NPC dossier
+              </button>
+            }
+            <button type="button" class="btn btn-danger btn-block" (click)="deleteSelectedNode()">
+              Remove from web
+            </button>
+          </section>
+        }
+
+        @if (selectedEdge(); as edge) {
+          <section class="panel-section selection">
+            <h2>Selected relation</h2>
+            <p class="relation-summary">
+              {{ edge.from_endpoint.label }}
+              → {{ edge.relation_type.name }} →
+              {{ edge.to_endpoint.label }}
+            </p>
+            @if (edge.notes.trim()) {
+              <p class="hint">{{ edge.notes }}</p>
+            }
+            <button type="button" class="btn btn-danger btn-block" (click)="deleteSelectedEdge()">
+              Remove relation
+            </button>
+          </section>
+        }
+      </aside>
+    </div>
+  }
+</section>

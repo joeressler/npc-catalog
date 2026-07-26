@@ -1,0 +1,52 @@
+<section class="page-shell view-enter">
+  @if (campaign) {
+    <header class="list-header glass-panel">
+      <div class="list-title">
+        @if (imageUrl(); as src) {
+          <img class="campaign-thumb" [src]="src" [alt]="campaign.name" />
+        }
+        <div>
+          <p class="eyebrow">Relationship Webs</p>
+          <h1 class="page-title">{{ campaign.name }}</h1>
+          <p class="page-subtitle">{{ graphs.length }} web{{ graphs.length === 1 ? '' : 's' }} mapped</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a [routerLink]="['/campaigns', campaign.id]" class="btn btn-secondary">Back to Roster</a>
+        <a [routerLink]="['/campaigns', campaign.id, 'graphs', 'new']" class="btn btn-primary">New Web</a>
+      </div>
+    </header>
+
+    @if (loading) {
+      <p class="empty-state">Loading webs…</p>
+    } @else if (error) {
+      <p class="empty-state">{{ error }}</p>
+    } @else if (graphs.length === 0) {
+      <div class="empty-state glass-panel">
+        <p>No relationship webs yet. Map how your NPCs feel about each other and the party.</p>
+        <a [routerLink]="['/campaigns', campaign.id, 'graphs', 'new']" class="btn btn-primary">Create First Web</a>
+      </div>
+    } @else {
+      <div class="graph-list">
+        @for (graph of graphs; track graph.id) {
+          <a
+            [routerLink]="['/campaigns', campaign.id, 'graphs', graph.id]"
+            class="graph-row glass-panel"
+          >
+            <div>
+              <h2>{{ graph.name }}</h2>
+              @if (graph.notes.trim()) {
+                <p class="meta-line">{{ graph.notes }}</p>
+              }
+              <p class="meta-line">
+                {{ graph.node_count }} character{{ graph.node_count === 1 ? '' : 's' }} ·
+                {{ graph.edge_count }} relation{{ graph.edge_count === 1 ? '' : 's' }}
+              </p>
+            </div>
+            <span class="row-action">Open</span>
+          </a>
+        }
+      </div>
+    }
+  }
+</section>
