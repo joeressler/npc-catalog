@@ -1,0 +1,132 @@
+<section class="page-shell view-enter">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">{{ editing ? 'Edit Session' : 'New Session' }}</h1>
+      <p class="page-subtitle">
+        Capture story beats, clues, secrets, and the NPCs your players noticed.
+      </p>
+    </div>
+    <a [routerLink]="backLink()" class="btn btn-secondary">Back</a>
+  </header>
+
+  <form class="session-form glass-panel" [formGroup]="form" (ngSubmit)="submit()">
+    <section class="form-section">
+      <h2>Session details</h2>
+      <div class="grid">
+        @if (editing) {
+          <div class="field">
+            <label for="number">Session number</label>
+            <input id="number" type="number" min="1" formControlName="number" />
+          </div>
+        } @else {
+          <div class="field">
+            <label>Session number</label>
+            <p class="hint">Assigned automatically when you save.</p>
+          </div>
+        }
+        <div class="field">
+          <label for="title">Title (optional)</label>
+          <input id="title" type="text" formControlName="title" placeholder="Heist at the Docks" />
+        </div>
+        <div class="field span-2">
+          <label for="overall_notes">Overall notes</label>
+          <textarea id="overall_notes" formControlName="overall_notes" rows="5"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-head">
+        <h2>Story beats</h2>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="addLineItem('story_beats')">Add beat</button>
+      </div>
+      @if (storyBeats.length === 0) {
+        <p class="hint">Add beats in the order they happened at the table.</p>
+      }
+      <div class="line-items" formArrayName="story_beats">
+        @for (control of storyBeats.controls; track $index) {
+          <div class="line-item">
+            <span class="line-index">{{ $index + 1 }}</span>
+            <input type="text" [formControlName]="$index" placeholder="What happened next?" />
+            <div class="line-actions">
+              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('story_beats', $index, -1)" [disabled]="$index === 0">Up</button>
+              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('story_beats', $index, 1)" [disabled]="$index === storyBeats.length - 1">Down</button>
+              <button type="button" class="btn btn-danger btn-sm" (click)="removeLineItem('story_beats', $index)">Remove</button>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-head">
+        <h2>Clues (optional)</h2>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="addLineItem('clues')">Add clue</button>
+      </div>
+      <div class="line-items" formArrayName="clues">
+        @for (control of clues.controls; track $index) {
+          <div class="line-item">
+            <input type="text" [formControlName]="$index" placeholder="Clue the party discovered" />
+            <div class="line-actions">
+              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('clues', $index, -1)" [disabled]="$index === 0">Up</button>
+              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('clues', $index, 1)" [disabled]="$index === clues.length - 1">Down</button>
+              <button type="button" class="btn btn-danger btn-sm" (click)="removeLineItem('clues', $index)">Remove</button>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-head">
+        <h2>Secrets (optional)</h2>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="addLineItem('secrets')">Add secret</button>
+      </div>
+      <div class="line-items" formArrayName="secrets">
+        @for (control of secrets.controls; track $index) {
+          <div class="line-item">
+            <input type="text" [formControlName]="$index" placeholder="Secret only the DM should remember" />
+            <div class="line-actions">
+              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('secrets', $index, -1)" [disabled]="$index === 0">Up</button>
+              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('secrets', $index, 1)" [disabled]="$index === secrets.length - 1">Down</button>
+              <button type="button" class="btn btn-danger btn-sm" (click)="removeLineItem('secrets', $index)">Remove</button>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2>Characters of note</h2>
+      @if (campaignNpcs.length === 0) {
+        <p class="hint">No NPCs in this campaign yet. Add NPCs to link them here.</p>
+      } @else {
+        <div class="character-grid">
+          @for (npc of campaignNpcs; track npc.id) {
+            <label class="character-option">
+              <input
+                type="checkbox"
+                [checked]="isCharacterSelected(npc.id)"
+                (change)="toggleCharacter(npc.id)"
+              />
+              <span>
+                <strong>{{ npc.name }}</strong>
+                <small>{{ npc.role_occupation }}</small>
+              </span>
+            </label>
+          }
+        </div>
+      }
+    </section>
+
+    @if (error) {
+      <p class="form-error">{{ error }}</p>
+    }
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving">
+        {{ saving ? 'Saving…' : editing ? 'Save Changes' : 'Create Session' }}
+      </button>
+    </div>
+  </form>
+</section>

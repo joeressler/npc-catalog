@@ -1,0 +1,48 @@
+<section class="page-shell view-enter">
+  @if (campaign) {
+    <header class="list-header glass-panel">
+      <div class="list-title">
+        @if (imageUrl(); as src) {
+          <img class="campaign-thumb" [src]="src" [alt]="campaign.name" />
+        }
+        <div>
+          <p class="eyebrow">Campaign Sessions</p>
+          <h1 class="page-title">{{ campaign.name }}</h1>
+          <p class="page-subtitle">{{ sessions.length }} session{{ sessions.length === 1 ? '' : 's' }} recorded</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a [routerLink]="['/campaigns', campaign.id]" class="btn btn-secondary">Back to Roster</a>
+        <a [routerLink]="['/campaigns', campaign.id, 'sessions', 'new']" class="btn btn-primary">Add Session</a>
+      </div>
+    </header>
+
+    @if (loading) {
+      <p class="empty-state">Loading sessions…</p>
+    } @else if (error) {
+      <p class="empty-state">{{ error }}</p>
+    } @else if (sessions.length === 0) {
+      <div class="empty-state glass-panel">
+        <p>No sessions yet. Log your first game night.</p>
+        <a [routerLink]="['/campaigns', campaign.id, 'sessions', 'new']" class="btn btn-primary">Create First Session</a>
+      </div>
+    } @else {
+      <div class="session-list">
+        @for (session of sessions; track session.id) {
+          <a
+            [routerLink]="['/campaigns', campaign.id, 'sessions', session.id]"
+            class="session-row glass-panel"
+          >
+            <div>
+              <h2>{{ sessionLabel(session) }}</h2>
+              <p class="meta-line">
+                {{ session.character_count }} character{{ session.character_count === 1 ? '' : 's' }} of note
+              </p>
+            </div>
+            <span class="row-action">View</span>
+          </a>
+        }
+      </div>
+    }
+  }
+</section>

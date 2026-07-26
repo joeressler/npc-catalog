@@ -1,0 +1,88 @@
+<section class="page-shell view-enter">
+  @if (loading) {
+    <p class="empty-state">Loading session…</p>
+  } @else if (error) {
+    <p class="empty-state">{{ error }}</p>
+  } @else if (session) {
+    <header class="detail-header glass-panel">
+      <div>
+        <p class="eyebrow">Session Notes</p>
+        <h1 class="page-title">{{ sessionTitle() }}</h1>
+        <p class="page-subtitle">DM-only notes for this game night</p>
+      </div>
+      <div class="actions">
+        <a [routerLink]="['/campaigns', session.campaign, 'sessions']" class="btn btn-secondary">Back to Sessions</a>
+        <a [routerLink]="['/campaigns', session.campaign, 'sessions', session.id, 'edit']" class="btn btn-primary">Edit</a>
+        <button type="button" class="btn btn-danger" (click)="deleteSession()" [disabled]="deleting">
+          {{ deleting ? 'Deleting…' : 'Delete' }}
+        </button>
+      </div>
+    </header>
+
+    @if (session.overall_notes.trim()) {
+      <article class="section glass-panel">
+        <h2>Overall notes</h2>
+        <div class="section-body">{{ session.overall_notes }}</div>
+      </article>
+    }
+
+    @if (session.story_beats.length) {
+      <article class="section glass-panel">
+        <h2>Story beats</h2>
+        <ol class="ordered-list">
+          @for (beat of session.story_beats; track beat.id) {
+            <li>{{ beat.text }}</li>
+          }
+        </ol>
+      </article>
+    }
+
+    @if (session.characters.length) {
+      <article class="section glass-panel">
+        <h2>Characters of note</h2>
+        <div class="character-list">
+          @for (character of session.characters; track character.id) {
+            <a [routerLink]="['/npcs', character.id]" class="character-link">
+              <strong>{{ character.name }}</strong>
+              <span>{{ character.role_occupation }} · {{ character.alignment_display }}</span>
+            </a>
+          }
+        </div>
+      </article>
+    }
+
+    @if (session.clues.length) {
+      <article class="section glass-panel">
+        <h2>Clues</h2>
+        <ul class="bullet-list">
+          @for (clue of session.clues; track clue.id) {
+            <li>{{ clue.text }}</li>
+          }
+        </ul>
+      </article>
+    }
+
+    @if (session.secrets.length) {
+      <article class="section glass-panel">
+        <h2>Secrets</h2>
+        <ul class="bullet-list">
+          @for (secret of session.secrets; track secret.id) {
+            <li>{{ secret.text }}</li>
+          }
+        </ul>
+      </article>
+    }
+
+    @if (
+      !session.overall_notes.trim() &&
+      !session.story_beats.length &&
+      !session.characters.length &&
+      !session.clues.length &&
+      !session.secrets.length
+    ) {
+      <div class="empty-state glass-panel">
+        <p>No notes recorded yet. Edit this session to add your DM notes.</p>
+      </div>
+    }
+  }
+</section>
