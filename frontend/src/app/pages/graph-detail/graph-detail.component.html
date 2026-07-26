@@ -43,6 +43,24 @@
             </button>
           } @else {
             <p class="hint">Party node is on the web.</p>
+            <div class="field">
+              <label for="addPc">Add player character</label>
+              <input
+                id="addPc"
+                type="text"
+                [(ngModel)]="addPcName"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="PC name (e.g. Thorn)"
+              />
+            </div>
+            <button
+              type="button"
+              class="btn btn-secondary btn-block"
+              (click)="addPcNode()"
+              [disabled]="!addPcName.trim()"
+            >
+              Add PC under Party
+            </button>
           }
           <div class="field">
             <label for="addNpc">Add NPC</label>
@@ -100,6 +118,15 @@
             <label for="edgeNotes">Notes (optional)</label>
             <input id="edgeNotes" type="text" [(ngModel)]="edgeNotes" [ngModelOptions]="{ standalone: true }" />
           </div>
+          <label class="checkbox-field" for="edgeBidirectional">
+            <input
+              id="edgeBidirectional"
+              type="checkbox"
+              [(ngModel)]="edgeBidirectional"
+              [ngModelOptions]="{ standalone: true }"
+            />
+            Both directions (same relation each way)
+          </label>
           <button type="button" class="btn btn-primary btn-block" (click)="addEdge()">Add relation</button>
         </section>
 

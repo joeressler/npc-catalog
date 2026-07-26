@@ -150,7 +150,7 @@ export interface SessionWritePayload {
 }
 
 export type RelationPolarity = 'positive' | 'negative' | 'neutral' | 'complex';
-export type GraphNodeKind = 'npc' | 'party';
+export type GraphNodeKind = 'npc' | 'party' | 'pc';
 
 export interface RelationType {
   id: number;
@@ -164,6 +164,7 @@ export interface RelationTypeWritePayload {
 }
 
 export interface GraphEndpoint {
+  node_id: number;
   kind: GraphNodeKind;
   npc_id: number | null;
   label: string;
@@ -210,6 +211,7 @@ export interface GraphWritePayload {
 export interface GraphNodeWritePayload {
   kind: GraphNodeKind;
   npc_id?: number | null;
+  label?: string | null;
 }
 
 export interface GraphNodePositionPayload {
@@ -219,11 +221,10 @@ export interface GraphNodePositionPayload {
 
 export interface GraphEdgeWritePayload {
   relation_type_id: number;
-  from_kind: GraphNodeKind;
-  from_npc_id?: number | null;
-  to_kind: GraphNodeKind;
-  to_npc_id?: number | null;
+  from_node_id: number;
+  to_node_id: number;
   notes?: string;
+  bidirectional?: boolean;
 }
 
 export interface GraphEdgeUpdatePayload {

@@ -222,6 +222,7 @@ class RelationTypeWritePartial(BaseModel):
 
 
 class GraphEndpointRead(BaseModel):
+    node_id: int
     kind: str
     npc_id: int | None = None
     label: str
@@ -239,6 +240,7 @@ class GraphNodeRead(BaseModel):
 class GraphNodeWrite(BaseModel):
     kind: str = Field(max_length=20)
     npc_id: int | None = None
+    label: str | None = Field(default=None, max_length=200)
 
 
 class GraphNodePositionWrite(BaseModel):
@@ -256,11 +258,10 @@ class GraphEdgeRead(BaseModel):
 
 class GraphEdgeWrite(BaseModel):
     relation_type_id: int
-    from_kind: str = Field(max_length=20)
-    from_npc_id: int | None = None
-    to_kind: str = Field(max_length=20)
-    to_npc_id: int | None = None
+    from_node_id: int
+    to_node_id: int
     notes: str = ""
+    bidirectional: bool = False
 
 
 class GraphEdgeWritePartial(BaseModel):

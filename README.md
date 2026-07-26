@@ -62,9 +62,9 @@ The dev server proxies `/api` and `/media` to the backend when configured in `pr
 | GET/PATCH/DELETE | `/api/graphs/{id}/` | Graph detail (nodes + edges) |
 | GET/POST | `/api/campaigns/{id}/relation-types/` | List / add relation types |
 | PATCH/DELETE | `/api/relation-types/{id}/` | Update / delete relation type |
-| POST | `/api/graphs/{id}/nodes/` | Add NPC or Party node |
+| POST | `/api/graphs/{id}/nodes/` | Add NPC, Party, or PC node |
 | PATCH/DELETE | `/api/graph-nodes/{id}/` | Update position / remove node |
-| POST | `/api/graphs/{id}/edges/` | Add directed relation |
+| POST | `/api/graphs/{id}/edges/` | Add directed relation (`from_node_id` / `to_node_id`, optional `bidirectional`) |
 | PATCH/DELETE | `/api/graph-edges/{id}/` | Update / remove relation |
 
 ## Stack

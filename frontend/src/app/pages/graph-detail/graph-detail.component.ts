@@ -26,8 +26,8 @@ import {
 
 interface EndpointOption {
   key: string;
+  nodeId: number;
   kind: GraphNodeKind;
-  npc_id: number | null;
   label: string;
 }
 
@@ -58,10 +58,12 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedEdgeId: number | null = null;
 
   addNpcId: number | null = null;
+  addPcName = '';
   edgeFromKey = '';
   edgeToKey = '';
   edgeRelationTypeId: number | null = null;
   edgeNotes = '';
+  edgeBidirectional = true;
   newRelationName = '';
   newRelationPolarity: RelationPolarity = 'complex';
 
@@ -124,8 +126,8 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  endpointKey(kind: GraphNodeKind, npcId: number | null): string {
-    return `${kind}:${npcId ?? 'party'}`;
+  endpointKey(nodeId: number): string {
+    return `node:${nodeId}`;
   }
 
   endpointOptions(): EndpointOption[] {
@@ -133,10 +135,10 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       return [];
     }
     return this.graph.nodes.map((node) => ({
-      key: this.endpointKey(node.kind, node.npc_id),
+      key: this.endpointKey(node.id),
+      nodeId: node.id,
       kind: node.kind,
-      npc_id: node.npc_id,
-      label: node.label,
+      label: node.kind === 'pc' ? `${node.label} (PC)` : node.label,
     }));
   }
 
@@ -180,6 +182,24 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  addPcNode(): void {
+    const name = this.addPcName.trim();
+    if (!name) {
+      this.actionError = 'Enter a player character name.';
+      return;
+    }
+    this.actionError = '';
+    this.api.addGraphNode(this.graphId, { kind: 'pc', label: name }).subscribe({
+      next: () => {
+        this.addPcName = '';
+        this.loadGraph(true);
+      },
+      error: (err) => {
+        this.actionError = err.error?.detail ?? 'Could not add player character.';
+      },
+    });
+  }
+
   addEdge(): void {
     if (!this.edgeFromKey || !this.edgeToKey || this.edgeRelationTypeId === null) {
       this.actionError = 'Choose from, to, and relation type.';
@@ -196,11 +216,10 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     this.api
       .addGraphEdge(this.graphId, {
         relation_type_id: this.edgeRelationTypeId,
-        from_kind: from.kind,
-        from_npc_id: from.npc_id,
-        to_kind: to.kind,
-        to_npc_id: to.npc_id,
+        from_node_id: from.nodeId,
+        to_node_id: to.nodeId,
         notes: this.edgeNotes.trim(),
+        bidirectional: this.edgeBidirectional,
       })
       .subscribe({
         next: () => {
@@ -241,7 +260,12 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.selectedNodeId === null) {
       return;
     }
-    if (!confirm('Remove this character from the web? Connected relations will also be removed.')) {
+    const node = this.selectedNode();
+    const message =
+      node?.kind === 'party'
+        ? 'Remove the Party node and all player characters under it? Connected relations will also be removed.'
+        : 'Remove this character from the web? Connected relations will also be removed.';
+    if (!confirm(message)) {
       return;
     }
     this.api.deleteGraphNode(this.selectedNodeId).subscribe({
@@ -373,13 +397,27 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
           selector: 'node[kind = "party"]',
           style: {
             shape: 'round-rectangle',
-            width: 96,
-            height: 56,
             'background-color': '#e8dcff',
+            'background-opacity': 0.5,
             'border-color': '#4a2d7a',
             'border-width': 3,
             'font-size': 13,
             'font-weight': 700,
+            'text-valign': 'top',
+            'text-margin-y': 8,
+            padding: '28px',
+          },
+        },
+        {
+          selector: 'node[kind = "pc"]',
+          style: {
+            shape: 'ellipse',
+            width: 64,
+            height: 64,
+            'background-color': '#d8e8ff',
+            'border-color': '#4a2d7a',
+            'border-width': 2,
+            'font-size': 11,
           },
         },
         {
@@ -446,39 +484,37 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private buildElements(graph: GraphDetail): ElementDefinition[] {
-    const nodes: ElementDefinition[] = graph.nodes.map((node, index) => ({
-      data: {
+    const party = graph.nodes.find((node) => node.kind === 'party');
+    const nodes: ElementDefinition[] = graph.nodes.map((node, index) => {
+      const data: Record<string, string | number | null> = {
         id: `node-${node.id}`,
         label: node.label,
         kind: node.kind,
         npcId: node.npc_id,
-      },
-      position:
-        node.pos_x !== null && node.pos_y !== null
-          ? { x: node.pos_x, y: node.pos_y }
-          : { x: 120 + (index % 4) * 140, y: 120 + Math.floor(index / 4) * 120 },
-    }));
+      };
+      if (node.kind === 'pc' && party) {
+        data['parent'] = `node-${party.id}`;
+      }
+      return {
+        data,
+        position:
+          node.pos_x !== null && node.pos_y !== null
+            ? { x: node.pos_x, y: node.pos_y }
+            : { x: 120 + (index % 4) * 140, y: 120 + Math.floor(index / 4) * 120 },
+      };
+    });
 
     const edges: ElementDefinition[] = graph.edges.map((edge) => ({
       data: {
         id: `edge-${edge.id}`,
-        source: this.findNodeElementId(graph, edge.from_endpoint.kind, edge.from_endpoint.npc_id),
-        target: this.findNodeElementId(graph, edge.to_endpoint.kind, edge.to_endpoint.npc_id),
+        source: `node-${edge.from_endpoint.node_id}`,
+        target: `node-${edge.to_endpoint.node_id}`,
         label: edge.relation_type.name,
         color: this.polarityColor(edge.relation_type.polarity),
       },
     }));
 
     return [...nodes, ...edges];
-  }
-
-  private findNodeElementId(
-    graph: GraphDetail,
-    kind: GraphNodeKind,
-    npcId: number | null,
-  ): string {
-    const node = graph.nodes.find((item) => item.kind === kind && item.npc_id === npcId);
-    return node ? `node-${node.id}` : '';
   }
 
   private polarityColor(polarity: RelationPolarity): string {

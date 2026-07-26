@@ -13,7 +13,7 @@ ALIGNMENT_DISPLAY: dict[str, str] = {
 VALID_ALIGNMENTS = frozenset(ALIGNMENT_DISPLAY.keys())
 
 RELATION_POLARITIES = frozenset({"positive", "negative", "neutral", "complex"})
-VALID_NODE_KINDS = frozenset({"npc", "party"})
+VALID_NODE_KINDS = frozenset({"npc", "party", "pc"})
 PARTY_NODE_LABEL = "Party"
 
 DEFAULT_RELATION_TYPES: tuple[tuple[str, str], ...] = (

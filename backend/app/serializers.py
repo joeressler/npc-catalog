@@ -130,17 +130,13 @@ def serialize_session_detail(session: GameSession) -> SessionDetailRead:
     )
 
 
-def _serialize_endpoint(kind: str, npc_id: int | None, label: str) -> GraphEndpointRead:
-    return GraphEndpointRead(kind=kind, npc_id=npc_id, label=label)
-
-
-def _endpoint_label(graph: CharacterGraph, kind: str, npc_id: int | None) -> str:
-    for node in graph.nodes:
-        if node.kind == kind and node.npc_id == npc_id:
-            return node_label(node)
-    if kind == "party":
-        return "Party"
-    return "Unknown"
+def _serialize_endpoint(node: GraphNode) -> GraphEndpointRead:
+    return GraphEndpointRead(
+        node_id=node.id,
+        kind=node.kind,
+        npc_id=node.npc_id,
+        label=node_label(node),
+    )
 
 
 def serialize_graph_node(node: GraphNode) -> GraphNodeRead:
@@ -158,16 +154,8 @@ def serialize_graph_edge(graph: CharacterGraph, edge: GraphEdge) -> GraphEdgeRea
     return GraphEdgeRead(
         id=edge.id,
         relation_type=RelationTypeRead.model_validate(edge.relation_type),
-        from_endpoint=_serialize_endpoint(
-            edge.from_kind,
-            edge.from_npc_id,
-            _endpoint_label(graph, edge.from_kind, edge.from_npc_id),
-        ),
-        to_endpoint=_serialize_endpoint(
-            edge.to_kind,
-            edge.to_npc_id,
-            _endpoint_label(graph, edge.to_kind, edge.to_npc_id),
-        ),
+        from_endpoint=_serialize_endpoint(edge.from_node),
+        to_endpoint=_serialize_endpoint(edge.to_node),
         notes=edge.notes,
     )
 

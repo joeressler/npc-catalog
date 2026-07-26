@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.deps import get_db
@@ -25,6 +25,7 @@ from app.serializers import (
 from app.services.graphs import (
     create_graph_edge,
     create_graph_node,
+    delete_graph_node_and_dependents,
     ensure_default_relation_types,
     ensure_unique_graph_name,
     ensure_unique_relation_type_name,
@@ -230,7 +231,13 @@ def add_graph_node(
     db: Session = Depends(get_db),
 ):
     graph = get_graph_or_404(db, graph_id)
-    node = create_graph_node(db, graph, kind=payload.kind, npc_id=payload.npc_id)
+    node = create_graph_node(
+        db,
+        graph,
+        kind=payload.kind,
+        npc_id=payload.npc_id,
+        label=payload.label,
+    )
     db.commit()
     return serialize_graph_node(node)
 
@@ -252,16 +259,7 @@ def update_graph_node_position(
 @graph_nodes_router.delete("/graph-nodes/{node_id}/", status_code=status.HTTP_204_NO_CONTENT)
 def delete_graph_node(node_id: int, db: Session = Depends(get_db)):
     node = get_graph_node_or_404(db, node_id)
-    db.execute(
-        delete(GraphEdge).where(
-            GraphEdge.graph_id == node.graph_id,
-            (
-                ((GraphEdge.from_kind == node.kind) & (GraphEdge.from_npc_id == node.npc_id))
-                | ((GraphEdge.to_kind == node.kind) & (GraphEdge.to_npc_id == node.npc_id))
-            ),
-        )
-    )
-    db.delete(node)
+    delete_graph_node_and_dependents(db, node)
     db.commit()
 
 
@@ -276,12 +274,21 @@ def add_graph_edge(
         db,
         graph,
         relation_type_id=payload.relation_type_id,
-        from_kind=payload.from_kind,
-        from_npc_id=payload.from_npc_id,
-        to_kind=payload.to_kind,
-        to_npc_id=payload.to_npc_id,
+        from_node_id=payload.from_node_id,
+        to_node_id=payload.to_node_id,
         notes=payload.notes,
     )
+    assert edge is not None
+    if payload.bidirectional:
+        create_graph_edge(
+            db,
+            graph,
+            relation_type_id=payload.relation_type_id,
+            from_node_id=payload.to_node_id,
+            to_node_id=payload.from_node_id,
+            notes=payload.notes,
+            skip_if_exists=True,
+        )
     db.commit()
     graph = get_graph_or_404(db, graph_id)
     return serialize_graph_edge(graph, edge)
