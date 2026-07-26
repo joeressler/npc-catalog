@@ -1,0 +1,113 @@
+<section class="page-shell view-enter">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">{{ editing ? 'Edit NPC' : 'New NPC' }}</h1>
+      <p class="page-subtitle">Capture the essentials now. Expand the dossier when you have more lore.</p>
+    </div>
+    <a [routerLink]="backLink()" class="btn btn-secondary">Back</a>
+  </header>
+
+  <form class="npc-form glass-panel" [formGroup]="form" (ngSubmit)="submit()">
+    <section class="form-section">
+      <h2>At a glance</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" type="text" formControlName="name" />
+        </div>
+        <div class="field">
+          <label for="aliases">Aliases (comma-separated)</label>
+          <input id="aliases" type="text" formControlName="aliases" placeholder="The Pale Merchant, Old Tom" />
+        </div>
+        <div class="field">
+          <label for="role">Role / Occupation</label>
+          <input id="role" type="text" formControlName="role_occupation" />
+        </div>
+        <div class="field">
+          <label for="alignment">Alignment</label>
+          <select id="alignment" formControlName="alignment">
+            @for (item of alignments; track item.code) {
+              <option [value]="item.code">{{ item.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="location">Location</label>
+          <input id="location" type="text" formControlName="location" />
+        </div>
+        <div class="field">
+          <label for="faction">Faction (optional)</label>
+          <input id="faction" type="text" formControlName="faction" />
+        </div>
+        <div class="field">
+          <label for="attitude">Attitude</label>
+          <input id="attitude" type="text" formControlName="attitude" placeholder="Wary, friendly, hostile…" />
+        </div>
+        <div class="field">
+          <label for="relationship">Relationship to Party</label>
+          <input id="relationship" type="text" formControlName="party_relationship" />
+        </div>
+        <div class="field span-2">
+          <label for="tags">Tags / Keywords (comma-separated)</label>
+          <input id="tags" type="text" formControlName="tags" placeholder="informant, dockside, quest-giver" />
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section dossier">
+      <button type="button" class="dossier-toggle" (click)="toggleDossier()">
+        <h2>Dossier</h2>
+        <span>{{ dossierOpen ? 'Hide' : 'Show' }} optional fields</span>
+      </button>
+
+      @if (dossierOpen) {
+        <div class="grid dossier-grid">
+          <div class="field span-2">
+            <label for="appearance">Appearance</label>
+            <textarea id="appearance" formControlName="appearance"></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="voice">Voice / Accent / Mannerisms</label>
+            <textarea id="voice" formControlName="voice_mannerisms"></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="personality">Personality Traits</label>
+            <textarea id="personality" formControlName="personality_traits"></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="motivation">Motivation / Goal</label>
+            <textarea id="motivation" formControlName="motivation_goal"></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="secret">Secret / Hook</label>
+            <textarea id="secret" formControlName="secret_hook"></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="knowledge">Knowledge / What They Know</label>
+            <textarea id="knowledge" formControlName="knowledge"></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="inventory">Inventory / Notable Items</label>
+            <textarea id="inventory" formControlName="inventory"></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="notes">DM Notes</label>
+            <textarea id="notes" formControlName="dm_notes"></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="session">Session Log / Campaign History</label>
+            <textarea id="session" formControlName="session_log"></textarea>
+          </div>
+        </div>
+      }
+    </section>
+
+    @if (error) {
+      <p class="form-error">{{ error }}</p>
+    }
+
+    <button type="submit" class="btn btn-primary" [disabled]="saving">
+      {{ saving ? 'Saving…' : editing ? 'Save NPC' : 'Create NPC' }}
+    </button>
+  </form>
+</section>

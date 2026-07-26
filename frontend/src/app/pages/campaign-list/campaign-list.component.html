@@ -1,0 +1,38 @@
+<section class="page-shell view-enter">
+  <header class="hero glass-panel">
+    <p class="eyebrow">Dungeon Master Toolkit</p>
+    <h1 class="brand">NPC Catalog</h1>
+    <p class="hero-copy">Catalog every NPC as you invent them. Retrieve them instantly at the table.</p>
+    <a routerLink="/campaigns/new" class="btn btn-primary">New Campaign</a>
+  </header>
+
+  @if (loading) {
+    <p class="empty-state">Loading campaigns…</p>
+  } @else if (error) {
+    <p class="empty-state">{{ error }}</p>
+  } @else if (campaigns.length === 0) {
+    <div class="empty-state glass-panel">
+      <p>No campaigns yet. Create your first adventure.</p>
+      <a routerLink="/campaigns/new" class="btn btn-primary">Create Campaign</a>
+    </div>
+  } @else {
+    <div class="campaign-grid">
+      @for (campaign of campaigns; track campaign.id) {
+        <a [routerLink]="['/campaigns', campaign.id]" class="campaign-tile glass-panel">
+          <div class="tile-media">
+            @if (imageUrl(campaign); as src) {
+              <img [src]="src" [alt]="campaign.name" />
+            } @else {
+              <div class="tile-fallback"></div>
+            }
+            <span class="tile-sheen"></span>
+          </div>
+          <div class="tile-body">
+            <h2>{{ campaign.name }}</h2>
+            <p>{{ campaign.npc_count ?? 0 }} NPC{{ (campaign.npc_count ?? 0) === 1 ? '' : 's' }}</p>
+          </div>
+        </a>
+      }
+    </div>
+  }
+</section>

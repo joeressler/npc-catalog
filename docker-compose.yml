@@ -1,0 +1,25 @@
+services:
+  backend:
+    build: ./backend
+    volumes:
+      - npc_data:/data
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-insecure-change-me}
+      DEBUG: ${DEBUG:-true}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+      SQLITE_PATH: /data/db.sqlite3
+      MEDIA_ROOT: /data/media
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "0314:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  npc_data:

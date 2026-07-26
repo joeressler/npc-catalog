@@ -1,0 +1,45 @@
+<section class="page-shell view-enter">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">{{ editing ? 'Edit Campaign' : 'New Campaign' }}</h1>
+      <p class="page-subtitle">Name your adventure and optionally set a cover image.</p>
+    </div>
+    <a [routerLink]="editing ? ['/campaigns', campaignId] : '/'" class="btn btn-secondary">Back</a>
+  </header>
+
+  <form class="form-panel glass-panel" [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label for="name">Campaign name</label>
+      <input id="name" type="text" formControlName="name" placeholder="Curse of the Violet Spire" />
+      @if (form.controls.name.touched && form.controls.name.invalid) {
+        <span class="field-error">Campaign name is required.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="image">Cover image (optional)</label>
+      <input id="image" type="file" accept="image/*" (change)="onFileSelected($event)" />
+    </div>
+
+    @if (previewUrl || currentImage) {
+      <div class="preview">
+        <img [src]="previewUrl || currentImage" alt="Campaign preview" />
+      </div>
+    }
+
+    @if (error) {
+      <p class="form-error">{{ error }}</p>
+    }
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving || deleting">
+        {{ saving ? 'Saving…' : editing ? 'Save Changes' : 'Create Campaign' }}
+      </button>
+      @if (editing) {
+        <button type="button" class="btn btn-danger" (click)="deleteCampaign()" [disabled]="saving || deleting">
+          {{ deleting ? 'Deleting…' : 'Delete Campaign' }}
+        </button>
+      }
+    </div>
+  </form>
+</section>

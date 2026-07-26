@@ -1,0 +1,63 @@
+.npc-form {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-section h2 {
+  margin: 0 0 1rem;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+.dossier-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+}
+
+.dossier-toggle h2 {
+  margin: 0;
+}
+
+.dossier-toggle span {
+  color: var(--aero-text-muted);
+  font-size: 0.9rem;
+}
+
+.dossier-grid {
+  margin-top: 1rem;
+  animation: fadeSlideIn 260ms ease;
+}
+
+.form-error {
+  color: var(--aero-danger);
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .span-2 {
+    grid-column: span 1;
+  }
+}

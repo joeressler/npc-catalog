@@ -1,0 +1,32 @@
+.form-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  max-width: 560px;
+}
+
+.preview {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--aero-glass-border);
+}
+
+.preview img {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+}
+
+.field-error,
+.form-error {
+  color: var(--aero-danger);
+  font-size: 0.85rem;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}

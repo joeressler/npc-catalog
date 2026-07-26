@@ -1,0 +1,56 @@
+<section class="page-shell view-enter">
+  @if (loading) {
+    <p class="empty-state">Loading dossier…</p>
+  } @else if (error) {
+    <p class="empty-state">{{ error }}</p>
+  } @else if (npc) {
+    <header class="detail-header glass-panel">
+      <div>
+        <p class="eyebrow">NPC Dossier</p>
+        <h1 class="page-title">{{ npc.name }}</h1>
+        @if (npc.aliases.length) {
+          <p class="aliases">Also known as {{ aliasList() }}</p>
+        }
+        <p class="role">{{ npc.role_occupation }} · {{ npc.location }}</p>
+        <div class="chips">
+          <span class="chip">{{ npc.alignment_display }}</span>
+          <span class="chip">{{ npc.attitude }}</span>
+          <span class="chip">{{ npc.party_relationship }}</span>
+          @if (npc.faction) {
+            <span class="chip">{{ npc.faction }}</span>
+          }
+          @for (tag of npc.tags; track tag.id) {
+            <span class="chip">{{ tag.name }}</span>
+          }
+        </div>
+      </div>
+      <div class="actions">
+        <a [routerLink]="['/campaigns', npc.campaign]" class="btn btn-secondary">Back to Roster</a>
+        <a [routerLink]="['/npcs', npc.id, 'edit']" class="btn btn-primary">Edit</a>
+        <button type="button" class="btn btn-danger" (click)="deleteNpc()" [disabled]="deleting">
+          {{ deleting ? 'Deleting…' : 'Delete' }}
+        </button>
+      </div>
+    </header>
+
+    @if (sections.length === 0) {
+      <div class="empty-state glass-panel">
+        <p>No dossier fields filled in yet. Edit this NPC to add lore.</p>
+      </div>
+    } @else {
+      <div class="sections">
+        @for (section of sections; track section.title) {
+          <article class="section glass-panel" [class.open]="section.open">
+            <button type="button" class="section-toggle" (click)="toggleSection(section)">
+              <h2>{{ section.title }}</h2>
+              <span>{{ section.open ? '−' : '+' }}</span>
+            </button>
+            @if (section.open) {
+              <div class="section-body">{{ section.content }}</div>
+            }
+          </article>
+        }
+      </div>
+    }
+  }
+</section>

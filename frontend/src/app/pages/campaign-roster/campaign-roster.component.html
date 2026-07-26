@@ -1,0 +1,90 @@
+<section class="page-shell view-enter">
+  @if (campaign) {
+    <header class="roster-header glass-panel">
+      <div class="roster-title">
+        @if (imageUrl(); as src) {
+          <img class="campaign-thumb" [src]="src" [alt]="campaign.name" />
+        }
+        <div>
+          <p class="eyebrow">Campaign</p>
+          <h1 class="page-title">{{ campaign.name }}</h1>
+          <p class="page-subtitle">{{ npcs.length }} NPC{{ npcs.length === 1 ? '' : 's' }} cataloged</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a routerLink="/" class="btn btn-secondary">All Campaigns</a>
+        <a [routerLink]="['/campaigns', campaign.id, 'edit']" class="btn btn-secondary">Edit</a>
+        <button type="button" class="btn btn-danger" (click)="deleteCampaign()" [disabled]="deleting">
+          {{ deleting ? 'Deleting…' : 'Delete' }}
+        </button>
+        <a [routerLink]="['/campaigns', campaign.id, 'npcs', 'new']" class="btn btn-primary">Add NPC</a>
+      </div>
+    </header>
+
+    <form class="filters glass-panel" [formGroup]="filters">
+      <div class="field">
+        <label for="q">Search</label>
+        <input id="q" type="search" formControlName="q" placeholder="Name, alias, role, tag…" />
+      </div>
+      <div class="field">
+        <label for="alignment">Alignment</label>
+        <select id="alignment" formControlName="alignment">
+          <option value="">Any</option>
+          @for (item of alignments; track item.code) {
+            <option [value]="item.code">{{ item.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="tag">Tag</label>
+        <select id="tag" formControlName="tag">
+          <option value="">Any</option>
+          @for (tag of tags; track tag.id) {
+            <option [value]="tag.name">{{ tag.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="location">Location</label>
+        <input id="location" type="text" formControlName="location" placeholder="Filter by location" />
+      </div>
+      <div class="field">
+        <label for="faction">Faction</label>
+        <input id="faction" type="text" formControlName="faction" placeholder="Filter by faction" />
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="clearFilters()">Clear</button>
+    </form>
+
+    @if (loading) {
+      <p class="empty-state">Loading roster…</p>
+    } @else if (error) {
+      <p class="empty-state">{{ error }}</p>
+    } @else if (npcs.length === 0) {
+      <div class="empty-state glass-panel">
+        <p>No NPCs match your filters yet.</p>
+        <a [routerLink]="['/campaigns', campaign.id, 'npcs', 'new']" class="btn btn-primary">Create First NPC</a>
+      </div>
+    } @else {
+      <div class="npc-list">
+        @for (npc of npcs; track npc.id) {
+          <a [routerLink]="['/npcs', npc.id]" class="npc-row glass-panel">
+            <div>
+              <h2>{{ npc.name }}</h2>
+              <p class="role">{{ npc.role_occupation }} · {{ npc.location }}</p>
+              @if (npc.aliases.length) {
+                <p class="aliases">Also known as {{ aliasList(npc) }}</p>
+              }
+            </div>
+            <div class="meta">
+              <span class="chip">{{ npc.alignment_display }}</span>
+              <span class="chip">{{ npc.attitude }}</span>
+              @for (tag of npc.tags; track tag.id) {
+                <span class="chip">{{ tag.name }}</span>
+              }
+            </div>
+          </a>
+        }
+      </div>
+    }
+  }
+</section>
