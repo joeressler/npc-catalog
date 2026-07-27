@@ -57,7 +57,11 @@ def main() -> int:
         "aliases": ["Mithrandir", "Grey Pilgrim"],
         "tags": ["ally", "wizard"],
     }
-    status, npc = request("POST", f"/campaigns/{campaign_id}/npcs/", data=npc_payload)
+    status, npc = request(
+        "POST",
+        f"/campaigns/{campaign_id}/npcs/",
+        multipart={"payload": json.dumps(npc_payload)},
+    )
     assert status == 201, npc
     assert npc["alignment_display"] == "Neutral Good"
     assert len(npc["aliases"]) == 2
@@ -78,7 +82,11 @@ def main() -> int:
     assert status == 200 and detail["session_log"] == ""
     print("GET /npcs/{id}/ OK")
 
-    status, patched = request("PATCH", f"/npcs/{npc_id}/", data={"attitude": "Gruff"})
+    status, patched = request(
+        "PATCH",
+        f"/npcs/{npc_id}/",
+        multipart={"payload": json.dumps({"attitude": "Gruff"})},
+    )
     assert status == 200 and patched["attitude"] == "Gruff"
     print("PATCH /npcs/{id}/ OK")
 
