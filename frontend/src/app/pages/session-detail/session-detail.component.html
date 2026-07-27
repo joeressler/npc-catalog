@@ -81,6 +81,25 @@
       </article>
     }
 
+    @if (session.locations.length) {
+      <article class="section glass-panel">
+        <h2>Linked locations</h2>
+        <div class="character-list">
+          @for (location of session.locations; track location.id) {
+            <a
+              [routerLink]="['/campaigns', session.campaign, 'locations', location.id]"
+              class="character-link"
+            >
+              <strong>{{ location.title }}</strong>
+              @if (location.description.trim()) {
+                <span>{{ location.description }}</span>
+              }
+            </a>
+          }
+        </div>
+      </article>
+    }
+
     @if (session.clues.length) {
       <article class="section glass-panel">
         <h2>Clues</h2>
@@ -108,6 +127,7 @@
       !session.story_paths.length &&
       !session.characters.length &&
       !session.encounters.length &&
+      !session.locations.length &&
       !session.clues.length &&
       !session.secrets.length
     ) {

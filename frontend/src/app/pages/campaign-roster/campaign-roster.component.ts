@@ -100,6 +100,15 @@ export class CampaignRosterComponent implements OnInit {
     return this.api.mediaUrl(npc.image);
   }
 
+  locationSubtitle(npc: NPC): string {
+    if (npc.catalog_location) {
+      return npc.location.trim()
+        ? `${npc.catalog_location.title} · ${npc.location}`
+        : npc.catalog_location.title;
+    }
+    return npc.location;
+  }
+
   aliasList(npc: NPC): string {
     return npc.aliases.map((alias) => alias.name).join(', ');
   }

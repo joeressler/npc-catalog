@@ -1,0 +1,110 @@
+<section class="page-shell view-enter">
+  @if (loading) {
+    <p class="empty-state">Loading location…</p>
+  } @else if (error && !location) {
+    <p class="empty-state">{{ error }}</p>
+  } @else if (location) {
+    <header class="detail-header glass-panel">
+      <div class="detail-identity">
+        @if (imageUrl(); as src) {
+          <img class="location-image" [src]="src" [alt]="location.title" />
+        }
+        <div>
+          <p class="eyebrow">Location</p>
+          <h1 class="page-title">{{ location.title }}</h1>
+          @if (location.description.trim()) {
+            <p class="page-subtitle">{{ location.description }}</p>
+          }
+        </div>
+      </div>
+      <div class="actions">
+        <a [routerLink]="['/campaigns', location.campaign, 'locations']" class="btn btn-secondary">
+          Back to Locations
+        </a>
+        <a
+          [routerLink]="['/campaigns', location.campaign, 'locations', location.id, 'edit']"
+          class="btn btn-primary"
+        >
+          Edit
+        </a>
+        <button type="button" class="btn btn-danger" (click)="deleteLocation()" [disabled]="deleting">
+          {{ deleting ? 'Deleting…' : 'Delete' }}
+        </button>
+      </div>
+    </header>
+
+    @if (error) {
+      <p class="form-error glass-panel">{{ error }}</p>
+    }
+
+    @if (location.objects.length) {
+      <section class="section glass-panel">
+        <h2>Points of interest &amp; interactables</h2>
+        <div class="object-list">
+          @for (obj of location.objects; track obj.id) {
+            <article class="object-block">
+              <h3>{{ obj.name }}</h3>
+              @if (obj.description.trim()) {
+                <p>{{ obj.description }}</p>
+              }
+            </article>
+          }
+        </div>
+      </section>
+    }
+
+    @if (location.loot.length) {
+      <section class="section glass-panel">
+        <h2>Loot found here</h2>
+        <ul class="bullet-list">
+          @for (item of location.loot; track item.id) {
+            <li>{{ item.description }}</li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (location.residents.length) {
+      <section class="section glass-panel">
+        <h2>Residents</h2>
+        <p class="section-note">NPCs whose home location is set to this place.</p>
+        <div class="character-list">
+          @for (character of location.residents; track character.id) {
+            <a [routerLink]="['/npcs', character.id]" class="character-link">
+              <strong>{{ character.name }}</strong>
+              <span>{{ character.role_occupation }} · {{ character.alignment_display }}</span>
+            </a>
+          }
+        </div>
+      </section>
+    }
+
+    @if (location.characters.length) {
+      <section class="section glass-panel">
+        <h2>Linked NPCs</h2>
+        <p class="section-note">NPCs soft-linked to this location.</p>
+        <div class="character-list">
+          @for (character of location.characters; track character.id) {
+            <a [routerLink]="['/npcs', character.id]" class="character-link">
+              <strong>{{ character.name }}</strong>
+              <span>{{ character.role_occupation }} · {{ character.alignment_display }}</span>
+            </a>
+          }
+        </div>
+      </section>
+    }
+
+    @if (
+      !location.description.trim() &&
+      !location.objects.length &&
+      !location.loot.length &&
+      !location.residents.length &&
+      !location.characters.length &&
+      !imageUrl()
+    ) {
+      <div class="glass-panel empty-state">
+        <p>No details yet. Edit this location to add description, POIs, and loot.</p>
+      </div>
+    }
+  }
+</section>

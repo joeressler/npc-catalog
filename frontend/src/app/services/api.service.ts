@@ -25,6 +25,9 @@ import {
   EncounterDetail,
   EncounterSummary,
   EncounterWritePayload,
+  LocationDetail,
+  LocationSummary,
+  LocationWritePayload,
   Tag,
 } from '../models/npc.models';
 
@@ -165,6 +168,49 @@ export class ApiService {
 
   cloneEncounter(id: number): Observable<EncounterDetail> {
     return this.http.post<EncounterDetail>(`${this.base}/encounters/${id}/clone/`, {});
+  }
+
+  getCampaignLocations(campaignId: number): Observable<PaginatedResponse<LocationSummary>> {
+    return this.http.get<PaginatedResponse<LocationSummary>>(
+      `${this.base}/campaigns/${campaignId}/locations/`,
+    );
+  }
+
+  getLocation(id: number): Observable<LocationDetail> {
+    return this.http.get<LocationDetail>(`${this.base}/locations/${id}/`);
+  }
+
+  createLocation(
+    campaignId: number,
+    payload: LocationWritePayload,
+    image?: File | null,
+  ): Observable<LocationDetail> {
+    const form = new FormData();
+    form.append('payload', JSON.stringify(payload));
+    if (image) {
+      form.append('image', image);
+    }
+    return this.http.post<LocationDetail>(`${this.base}/campaigns/${campaignId}/locations/`, form);
+  }
+
+  updateLocation(
+    id: number,
+    payload: Partial<LocationWritePayload>,
+    image?: File | null,
+    clearImage = false,
+  ): Observable<LocationDetail> {
+    const form = new FormData();
+    form.append('payload', JSON.stringify(payload));
+    if (image) {
+      form.append('image', image);
+    } else if (clearImage) {
+      form.append('image', '');
+    }
+    return this.http.patch<LocationDetail>(`${this.base}/locations/${id}/`, form);
+  }
+
+  deleteLocation(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/locations/${id}/`);
   }
 
   getCampaignGraphs(campaignId: number): Observable<PaginatedResponse<GraphSummary>> {

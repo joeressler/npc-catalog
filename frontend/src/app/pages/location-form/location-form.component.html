@@ -1,0 +1,170 @@
+<section class="page-shell view-enter">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">{{ editing ? 'Edit Location' : 'New Location' }}</h1>
+      <p class="page-subtitle">
+        Describe the place, its points of interest, loot, and linked NPCs.
+      </p>
+    </div>
+    <a [routerLink]="backLink()" class="btn btn-secondary">Back</a>
+  </header>
+
+  <form class="location-form glass-panel" [formGroup]="form" (ngSubmit)="submit()">
+    <section class="form-section">
+      <h2>Location details</h2>
+      <div class="grid">
+        <div class="field span-2">
+          <label for="title">Title</label>
+          <input id="title" type="text" formControlName="title" placeholder="The Sunken Market" />
+        </div>
+        <div class="field span-2">
+          <label for="description">Description</label>
+          <textarea
+            id="description"
+            formControlName="description"
+            rows="4"
+            placeholder="Atmosphere, layout, who controls it…"
+          ></textarea>
+        </div>
+        <div class="field span-2">
+          <label for="image">Location image (optional)</label>
+          <input id="image" type="file" accept="image/*" (change)="onFileSelected($event)" />
+          @if (previewUrl || currentImage) {
+            <div class="image-preview">
+              <img [src]="previewUrl || currentImage" alt="Location preview" />
+              <button type="button" class="btn btn-secondary btn-clear-image" (click)="clearImage()">
+                Remove
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-head">
+        <h2>Points of interest &amp; interactables</h2>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="addObject()">Add point</button>
+      </div>
+      <div class="object-editor-list" formArrayName="objects">
+        @for (objectGroup of objects.controls; track objectGroup; let objectIndex = $index) {
+          <article class="object-card" [formGroupName]="objectIndex">
+            <div class="object-header">
+              <div class="field object-name">
+                <label [for]="'object-name-' + objectIndex">Name</label>
+                <input
+                  [id]="'object-name-' + objectIndex"
+                  type="text"
+                  formControlName="name"
+                  placeholder="Hidden cellar door"
+                />
+              </div>
+              <div class="line-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  (click)="moveObject(objectIndex, -1)"
+                  [disabled]="objectIndex === 0"
+                >
+                  Up
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  (click)="moveObject(objectIndex, 1)"
+                  [disabled]="objectIndex === objects.length - 1"
+                >
+                  Down
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" (click)="removeObject(objectIndex)">
+                  Remove
+                </button>
+              </div>
+            </div>
+            <div class="field">
+              <label [for]="'object-desc-' + objectIndex">Interaction / notes</label>
+              <textarea
+                [id]="'object-desc-' + objectIndex"
+                formControlName="description"
+                rows="2"
+                placeholder="What can the party do here?"
+              ></textarea>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-head">
+        <h2>Loot found here</h2>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="addLoot()">Add loot</button>
+      </div>
+      <div class="line-items" formArrayName="loot">
+        @for (control of loot.controls; track control; let lootIndex = $index) {
+          <div class="line-item">
+            <textarea
+              [formControlName]="lootIndex"
+              rows="2"
+              placeholder="Treasure, salvage, or resources commonly found in this area"
+            ></textarea>
+            <div class="line-actions">
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="moveLoot(lootIndex, -1)"
+                [disabled]="lootIndex === 0"
+              >
+                Up
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="moveLoot(lootIndex, 1)"
+                [disabled]="lootIndex === loot.length - 1"
+              >
+                Down
+              </button>
+              <button type="button" class="btn btn-danger btn-sm" (click)="removeLoot(lootIndex)">
+                Remove
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2>Linked NPCs</h2>
+      @if (campaignNpcs.length === 0) {
+        <p class="hint">No NPCs in this campaign yet. Add NPCs to link them here.</p>
+      } @else {
+        <div class="character-grid">
+          @for (npc of campaignNpcs; track npc.id) {
+            <label class="character-option">
+              <input
+                type="checkbox"
+                [checked]="isCharacterSelected(npc.id)"
+                (change)="toggleCharacter(npc.id)"
+              />
+              <span>
+                <strong>{{ npc.name }}</strong>
+                <small>{{ npc.role_occupation }}</small>
+              </span>
+            </label>
+          }
+        </div>
+      }
+    </section>
+
+    @if (error) {
+      <p class="form-error">{{ error }}</p>
+    }
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving">
+        {{ saving ? 'Saving…' : editing ? 'Save Changes' : 'Create Location' }}
+      </button>
+    </div>
+  </form>
+</section>

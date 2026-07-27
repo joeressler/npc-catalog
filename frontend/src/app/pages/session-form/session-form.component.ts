@@ -12,6 +12,7 @@ import {
 import { ApiService } from '../../services/api.service';
 import {
   EncounterSummary,
+  LocationSummary,
   NPC,
   SessionStoryPath,
   SessionWritePayload,
@@ -35,8 +36,10 @@ export class SessionFormComponent implements OnInit {
   campaignId: number | null = null;
   campaignNpcs: NPC[] = [];
   campaignEncounters: EncounterSummary[] = [];
+  campaignLocations: LocationSummary[] = [];
   selectedCharacterIds = new Set<number>();
   selectedEncounterIds = new Set<number>();
+  selectedLocationIds = new Set<number>();
   saving = false;
   error = '';
 
@@ -66,6 +69,12 @@ export class SessionFormComponent implements OnInit {
       },
     });
 
+    this.api.getCampaignLocations(this.campaignId).subscribe({
+      next: (response) => {
+        this.campaignLocations = response.results;
+      },
+    });
+
     if (sessionIdParam && sessionIdParam !== 'new') {
       this.editing = true;
       this.sessionId = Number(sessionIdParam);
@@ -85,6 +94,7 @@ export class SessionFormComponent implements OnInit {
           this.setLineItems('secrets', session.secrets.map((item) => item.text));
           this.selectedCharacterIds = new Set(session.characters.map((character) => character.id));
           this.selectedEncounterIds = new Set(session.encounters.map((encounter) => encounter.id));
+          this.selectedLocationIds = new Set(session.locations.map((location) => location.id));
         },
         error: () => {
           this.error = 'Session not found.';
@@ -169,6 +179,18 @@ export class SessionFormComponent implements OnInit {
     }
   }
 
+  isLocationSelected(locationId: number): boolean {
+    return this.selectedLocationIds.has(locationId);
+  }
+
+  toggleLocation(locationId: number): void {
+    if (this.selectedLocationIds.has(locationId)) {
+      this.selectedLocationIds.delete(locationId);
+    } else {
+      this.selectedLocationIds.add(locationId);
+    }
+  }
+
   submit(): void {
     if (this.form.invalid || this.saving || !this.campaignId) {
       this.form.markAllAsTouched();
@@ -184,6 +206,7 @@ export class SessionFormComponent implements OnInit {
       secrets: this.lineItemValues('secrets'),
       character_ids: [...this.selectedCharacterIds],
       encounter_ids: [...this.selectedEncounterIds],
+      location_ids: [...this.selectedLocationIds],
     };
 
     if (this.editing) {

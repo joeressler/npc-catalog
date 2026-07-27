@@ -69,6 +69,23 @@ export class NpcDetailComponent implements OnInit {
     return this.npc.aliases.map((alias) => alias.name).join(', ');
   }
 
+  locationLabel(): string {
+    if (!this.npc) {
+      return '';
+    }
+    if (this.npc.catalog_location) {
+      return this.npc.catalog_location.title;
+    }
+    return this.npc.location;
+  }
+
+  locationNotes(): string {
+    if (!this.npc?.location.trim() || !this.npc.catalog_location) {
+      return '';
+    }
+    return this.npc.location;
+  }
+
   deleteNpc(): void {
     if (!this.npc || this.deleting) {
       return;

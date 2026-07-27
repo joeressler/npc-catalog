@@ -1,7 +1,7 @@
 from sqlalchemy import Select, delete, func, or_, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from app.models import Alias, Campaign, NPC, NPCTag, Tag
+from app.models import Alias, Campaign, Location, NPC, NPCTag, Tag
 
 
 def _clean_alias_names(alias_names: list[str]) -> list[str]:
@@ -39,6 +39,7 @@ def sync_tags(db: Session, npc: NPC, tag_names: list[str]) -> None:
 def npc_query_options(stmt: Select[tuple[NPC]]) -> Select[tuple[NPC]]:
     return stmt.options(
         joinedload(NPC.campaign),
+        joinedload(NPC.catalog_location),
         selectinload(NPC.aliases),
         selectinload(NPC.tags),
     )
@@ -59,7 +60,16 @@ def apply_npc_filters(
     if alignment:
         stmt = stmt.where(NPC.alignment == alignment)
     if location:
-        stmt = stmt.where(NPC.location.ilike(f"%{location}%"))
+        catalog_match = select(Location.id).where(
+            Location.id == NPC.location_id,
+            Location.title.ilike(f"%{location}%"),
+        ).exists()
+        stmt = stmt.where(
+            or_(
+                NPC.location.ilike(f"%{location}%"),
+                catalog_match,
+            )
+        )
     if faction:
         stmt = stmt.where(NPC.faction.ilike(f"%{faction}%"))
     if tag:
@@ -114,3 +124,18 @@ def get_npc_or_404(db: Session, npc_id: int) -> NPC:
     if npc is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="NPC not found.")
     return npc
+
+
+def validate_npc_location_id(db: Session, *, campaign_id: int, location_id: int | None) -> None:
+    from fastapi import HTTPException, status
+
+    if location_id is None:
+        return
+    catalog_location = db.get(Location, location_id)
+    if catalog_location is None:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Catalog location not found.")
+    if catalog_location.campaign_id != campaign_id:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail="Catalog location must belong to the NPC's campaign.",
+        )

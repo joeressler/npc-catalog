@@ -16,6 +16,7 @@
         <a [routerLink]="['/campaigns', campaign.id, 'edit']" class="btn btn-secondary">Edit</a>
         <a [routerLink]="['/campaigns', campaign.id, 'sessions']" class="btn btn-secondary">Sessions</a>
         <a [routerLink]="['/campaigns', campaign.id, 'encounters']" class="btn btn-secondary">Encounters</a>
+        <a [routerLink]="['/campaigns', campaign.id, 'locations']" class="btn btn-secondary">Locations</a>
         <a [routerLink]="['/campaigns', campaign.id, 'graphs']" class="btn btn-secondary">Graphs</a>
         <button type="button" class="btn btn-danger" (click)="deleteCampaign()" [disabled]="deleting">
           {{ deleting ? 'Deleting…' : 'Delete' }}
@@ -77,7 +78,7 @@
               }
               <div>
                 <h2>{{ npc.name }}</h2>
-                <p class="role">{{ npc.role_occupation }} · {{ npc.location }}</p>
+                <p class="role">{{ npc.role_occupation }} · {{ locationSubtitle(npc) }}</p>
                 @if (npc.aliases.length) {
                   <p class="aliases">Also known as {{ aliasList(npc) }}</p>
                 }

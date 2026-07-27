@@ -47,6 +47,11 @@ class Campaign(Base):
         cascade="all, delete-orphan",
         order_by="Encounter.title",
     )
+    locations: Mapped[list["Location"]] = relationship(
+        back_populates="campaign",
+        cascade="all, delete-orphan",
+        order_by="Location.title",
+    )
 
 
 class Tag(Base):
@@ -76,6 +81,10 @@ class NPC(Base):
     role_occupation: Mapped[str] = mapped_column(String(200))
     alignment: Mapped[str] = mapped_column(String(2))
     location: Mapped[str] = mapped_column(String(200))
+    location_id: Mapped[int | None] = mapped_column(
+        ForeignKey("locations.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     faction: Mapped[str] = mapped_column(String(200), default="")
     attitude: Mapped[str] = mapped_column(String(200))
     party_relationship: Mapped[str] = mapped_column(String(200))
@@ -100,6 +109,7 @@ class NPC(Base):
     )
 
     campaign: Mapped["Campaign"] = relationship(back_populates="npcs")
+    catalog_location: Mapped["Location | None"] = relationship(back_populates="residents")
     aliases: Mapped[list["Alias"]] = relationship(
         back_populates="npc",
         cascade="all, delete-orphan",
@@ -180,6 +190,10 @@ class GameSession(Base):
     encounters: Mapped[list["Encounter"]] = relationship(
         secondary="session_encounters",
         order_by="Encounter.title",
+    )
+    locations: Mapped[list["Location"]] = relationship(
+        secondary="session_locations",
+        order_by="Location.title",
     )
 
 
@@ -344,6 +358,94 @@ class SessionEncounter(Base):
     )
     encounter_id: Mapped[int] = mapped_column(
         ForeignKey("encounters.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+
+class Location(Base):
+    __tablename__ = "locations"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    campaign_id: Mapped[int] = mapped_column(ForeignKey("campaigns.id", ondelete="CASCADE"))
+    title: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str] = mapped_column(Text, default="")
+    image_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+    campaign: Mapped["Campaign"] = relationship(back_populates="locations")
+    loot: Mapped[list["LocationLoot"]] = relationship(
+        back_populates="location",
+        cascade="all, delete-orphan",
+        order_by="LocationLoot.sort_order",
+    )
+    objects: Mapped[list["LocationObject"]] = relationship(
+        back_populates="location",
+        cascade="all, delete-orphan",
+        order_by="LocationObject.sort_order",
+    )
+    characters: Mapped[list["NPC"]] = relationship(
+        secondary="location_npcs",
+        order_by="NPC.name",
+    )
+    residents: Mapped[list["NPC"]] = relationship(
+        back_populates="catalog_location",
+        order_by="NPC.name",
+    )
+
+
+class LocationLoot(Base):
+    __tablename__ = "location_loot"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    location_id: Mapped[int] = mapped_column(ForeignKey("locations.id", ondelete="CASCADE"))
+    description: Mapped[str] = mapped_column(Text)
+    sort_order: Mapped[int] = mapped_column()
+
+    location: Mapped["Location"] = relationship(back_populates="loot")
+
+
+class LocationObject(Base):
+    __tablename__ = "location_objects"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    location_id: Mapped[int] = mapped_column(ForeignKey("locations.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str] = mapped_column(Text, default="")
+    sort_order: Mapped[int] = mapped_column()
+
+    location: Mapped["Location"] = relationship(back_populates="objects")
+
+
+class LocationNPC(Base):
+    __tablename__ = "location_npcs"
+
+    location_id: Mapped[int] = mapped_column(
+        ForeignKey("locations.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    npc_id: Mapped[int] = mapped_column(
+        ForeignKey("npcs.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+
+class SessionLocation(Base):
+    __tablename__ = "session_locations"
+
+    session_id: Mapped[int] = mapped_column(
+        ForeignKey("sessions.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    location_id: Mapped[int] = mapped_column(
+        ForeignKey("locations.id", ondelete="CASCADE"),
         primary_key=True,
     )
 

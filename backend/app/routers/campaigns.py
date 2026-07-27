@@ -3,8 +3,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.deps import get_db
-from app.media import delete_campaign_image, delete_npc_image, save_campaign_image
-from app.models import Campaign, NPC
+from app.media import delete_campaign_image, delete_location_image, delete_npc_image, save_campaign_image
+from app.models import Campaign, Location, NPC
 from app.serializers import serialize_campaign
 from app.services.pagination import paginate_select
 
@@ -114,5 +114,7 @@ def delete_campaign(campaign_id: int, db: Session = Depends(get_db)):
     delete_campaign_image(campaign.image_path)
     for npc in campaign.npcs:
         delete_npc_image(npc.image_path)
+    for location in campaign.locations:
+        delete_location_image(location.image_path)
     db.delete(campaign)
     db.commit()

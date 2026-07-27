@@ -43,7 +43,8 @@ class NPCWrite(BaseModel):
     name: str = Field(max_length=200)
     role_occupation: str = Field(max_length=200)
     alignment: str = Field(max_length=2)
-    location: str = Field(max_length=200)
+    location: str = Field(default="", max_length=200)
+    location_id: int | None = None
     faction: str = ""
     attitude: str = Field(max_length=200)
     party_relationship: str = Field(max_length=200)
@@ -73,6 +74,7 @@ class NPCWritePartial(BaseModel):
     role_occupation: str | None = Field(default=None, max_length=200)
     alignment: str | None = Field(default=None, max_length=2)
     location: str | None = Field(default=None, max_length=200)
+    location_id: int | None = None
     faction: str | None = None
     attitude: str | None = Field(default=None, max_length=200)
     party_relationship: str | None = Field(default=None, max_length=200)
@@ -96,6 +98,11 @@ class NPCWritePartial(BaseModel):
         return value
 
 
+class CatalogLocationRead(BaseModel):
+    id: int
+    title: str
+
+
 class NPCListRead(BaseModel):
     id: int
     campaign: int
@@ -104,6 +111,7 @@ class NPCListRead(BaseModel):
     alignment: str
     alignment_display: str
     location: str
+    catalog_location: CatalogLocationRead | None = None
     faction: str
     attitude: str
     party_relationship: str
@@ -162,6 +170,12 @@ class SessionEncounterRead(BaseModel):
     short_description: str
 
 
+class SessionLocationRead(BaseModel):
+    id: int
+    title: str
+    description: str
+
+
 class SessionListRead(BaseModel):
     id: int
     campaign: int
@@ -183,6 +197,7 @@ class SessionDetailRead(BaseModel):
     secrets: list[SessionLineItemRead]
     characters: list[SessionCharacterRead]
     encounters: list[SessionEncounterRead]
+    locations: list[SessionLocationRead]
     created_at: datetime
     updated_at: datetime
 
@@ -196,6 +211,7 @@ class SessionWrite(BaseModel):
     secrets: list[str] = Field(default_factory=list)
     character_ids: list[int] = Field(default_factory=list)
     encounter_ids: list[int] = Field(default_factory=list)
+    location_ids: list[int] = Field(default_factory=list)
 
 
 class SessionWritePartial(BaseModel):
@@ -207,6 +223,7 @@ class SessionWritePartial(BaseModel):
     secrets: list[str] | None = None
     character_ids: list[int] | None = None
     encounter_ids: list[int] | None = None
+    location_ids: list[int] | None = None
 
 
 def dump_session_partial(payload: SessionWritePartial) -> dict[str, Any]:
@@ -302,6 +319,77 @@ class EncounterWritePartial(BaseModel):
 
 
 def dump_encounter_partial(payload: EncounterWritePartial) -> dict[str, Any]:
+    return payload.model_dump(exclude_unset=True)
+
+
+class LocationLootRead(BaseModel):
+    id: int
+    description: str
+    sort_order: int
+
+
+class LocationObjectRead(BaseModel):
+    id: int
+    name: str
+    description: str
+    sort_order: int
+
+
+class LocationObjectWrite(BaseModel):
+    name: str = Field(max_length=200)
+    description: str = ""
+
+
+class LocationCharacterRead(BaseModel):
+    id: int
+    name: str
+    role_occupation: str
+    alignment: str
+    alignment_display: str
+
+
+class LocationListRead(BaseModel):
+    id: int
+    campaign: int
+    title: str
+    description: str
+    image: str | None = None
+    npc_count: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class LocationDetailRead(BaseModel):
+    id: int
+    campaign: int
+    title: str
+    description: str
+    image: str | None = None
+    loot: list[LocationLootRead]
+    objects: list[LocationObjectRead]
+    characters: list[LocationCharacterRead]
+    residents: list[LocationCharacterRead]
+    created_at: datetime
+    updated_at: datetime
+
+
+class LocationWrite(BaseModel):
+    title: str = Field(max_length=200)
+    description: str = ""
+    loot: list[str] = Field(default_factory=list)
+    objects: list[LocationObjectWrite] = Field(default_factory=list)
+    character_ids: list[int] = Field(default_factory=list)
+
+
+class LocationWritePartial(BaseModel):
+    title: str | None = Field(default=None, max_length=200)
+    description: str | None = None
+    loot: list[str] | None = None
+    objects: list[LocationObjectWrite] | None = None
+    character_ids: list[int] | None = None
+
+
+def dump_location_partial(payload: LocationWritePartial) -> dict[str, Any]:
     return payload.model_dump(exclude_unset=True)
 
 

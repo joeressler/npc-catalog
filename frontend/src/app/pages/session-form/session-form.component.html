@@ -175,6 +175,31 @@
       }
     </section>
 
+    <section class="form-section">
+      <h2>Linked locations</h2>
+      @if (campaignLocations.length === 0) {
+        <p class="hint">No locations in this campaign yet. Create locations to link them here.</p>
+      } @else {
+        <div class="character-grid">
+          @for (location of campaignLocations; track location.id) {
+            <label class="character-option">
+              <input
+                type="checkbox"
+                [checked]="isLocationSelected(location.id)"
+                (change)="toggleLocation(location.id)"
+              />
+              <span>
+                <strong>{{ location.title }}</strong>
+                @if (location.description.trim()) {
+                  <small>{{ location.description }}</small>
+                }
+              </span>
+            </label>
+          }
+        </div>
+      }
+    </section>
+
     @if (error) {
       <p class="form-error">{{ error }}</p>
     }
