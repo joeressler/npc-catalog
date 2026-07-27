@@ -1,0 +1,63 @@
+<section class="page-shell view-enter">
+  @if (campaign) {
+    <header class="list-header glass-panel">
+      <div class="list-title">
+        @if (imageUrl(); as src) {
+          <img class="campaign-thumb" [src]="src" [alt]="campaign.name" />
+        }
+        <div>
+          <p class="eyebrow">Campaign Encounters</p>
+          <h1 class="page-title">{{ campaign.name }}</h1>
+          <p class="page-subtitle">
+            {{ encounters.length }} encounter{{ encounters.length === 1 ? '' : 's' }} prepared
+          </p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a [routerLink]="['/campaigns', campaign.id]" class="btn btn-secondary">Back to Roster</a>
+        <a [routerLink]="['/campaigns', campaign.id, 'encounters', 'new']" class="btn btn-primary">
+          Add Encounter
+        </a>
+      </div>
+    </header>
+
+    @if (loading) {
+      <p class="empty-state">Loading encounters…</p>
+    } @else if (error) {
+      <p class="empty-state">{{ error }}</p>
+    } @else if (encounters.length === 0) {
+      <div class="glass-panel empty-state">
+        <p>No encounters yet. Design your first fight, ambush, or set-piece.</p>
+        <a [routerLink]="['/campaigns', campaign.id, 'encounters', 'new']" class="btn btn-primary">
+          Create First Encounter
+        </a>
+      </div>
+    } @else {
+      <div class="encounter-list">
+        @for (encounter of encounters; track encounter.id) {
+          <a
+            [routerLink]="['/campaigns', campaign.id, 'encounters', encounter.id]"
+            class="encounter-row glass-panel"
+          >
+            <div>
+              <h2>{{ encounter.title }}</h2>
+              <p class="meta-line">
+                {{ encounter.enemy_count }} enem{{ encounter.enemy_count === 1 ? 'y' : 'ies' }}
+                ·
+                {{ encounter.character_count }} NPC{{ encounter.character_count === 1 ? '' : 's' }} linked
+              </p>
+              @if (encounter.short_description.trim()) {
+                <p class="desc-line">{{ encounter.short_description }}</p>
+              }
+            </div>
+            <span class="row-action">Open →</span>
+          </a>
+        }
+      </div>
+    }
+  } @else if (error) {
+    <p class="empty-state">{{ error }}</p>
+  } @else {
+    <p class="empty-state">Loading…</p>
+  }
+</section>

@@ -2,11 +2,17 @@ from fastapi import Request
 
 from app.constants import ALIGNMENT_DISPLAY
 from app.media import build_media_url
-from app.models import Campaign, CharacterGraph, GameSession, GraphEdge, GraphNode, NPC
+from app.models import Campaign, CharacterGraph, Encounter, GameSession, GraphEdge, GraphNode, NPC
 from app.schemas import (
     AliasRead,
     CampaignListRead,
     CampaignRead,
+    EncounterCharacterRead,
+    EncounterDetailRead,
+    EncounterEnemyRead,
+    EncounterListRead,
+    EncounterLootRead,
+    EncounterObjectRead,
     GraphDetailRead,
     GraphEdgeRead,
     GraphEndpointRead,
@@ -17,6 +23,7 @@ from app.schemas import (
     RelationTypeRead,
     SessionCharacterRead,
     SessionDetailRead,
+    SessionEncounterRead,
     SessionLineItemRead,
     SessionListRead,
     SessionStoryPathRead,
@@ -127,8 +134,84 @@ def serialize_session_detail(session: GameSession) -> SessionDetailRead:
             )
             for npc in session.characters
         ],
+        encounters=[
+            SessionEncounterRead(
+                id=encounter.id,
+                title=encounter.title,
+                short_description=encounter.short_description,
+            )
+            for encounter in session.encounters
+        ],
         created_at=session.created_at,
         updated_at=session.updated_at,
+    )
+
+
+def serialize_encounter_list(
+    encounter: Encounter,
+    *,
+    enemy_count: int | None = None,
+    character_count: int | None = None,
+) -> EncounterListRead:
+    return EncounterListRead(
+        id=encounter.id,
+        campaign=encounter.campaign_id,
+        title=encounter.title,
+        short_description=encounter.short_description,
+        enemy_count=enemy_count if enemy_count is not None else len(encounter.enemies),
+        character_count=character_count if character_count is not None else len(encounter.characters),
+        created_at=encounter.created_at,
+        updated_at=encounter.updated_at,
+    )
+
+
+def serialize_encounter_detail(encounter: Encounter) -> EncounterDetailRead:
+    return EncounterDetailRead(
+        id=encounter.id,
+        campaign=encounter.campaign_id,
+        title=encounter.title,
+        short_description=encounter.short_description,
+        battlefield_description=encounter.battlefield_description,
+        further_notes=encounter.further_notes,
+        enemies=[
+            EncounterEnemyRead(
+                id=enemy.id,
+                quantity=enemy.quantity,
+                name=enemy.name,
+                creature_type=enemy.creature_type,
+                sort_order=enemy.sort_order,
+            )
+            for enemy in encounter.enemies
+        ],
+        loot=[
+            EncounterLootRead(
+                id=item.id,
+                description=item.description,
+                sort_order=item.sort_order,
+            )
+            for item in encounter.loot
+        ],
+        objects=[
+            EncounterObjectRead(
+                id=obj.id,
+                name=obj.name,
+                description=obj.description,
+                sort_order=obj.sort_order,
+            )
+            for obj in encounter.objects
+        ],
+        characters=[
+            EncounterCharacterRead(
+                id=npc.id,
+                name=npc.name,
+                role_occupation=npc.role_occupation,
+                alignment=npc.alignment,
+                alignment_display=ALIGNMENT_DISPLAY[npc.alignment],
+            )
+            for npc in encounter.characters
+        ],
+        created_at=encounter.created_at,
+        updated_at=encounter.updated_at,
     )
 
 

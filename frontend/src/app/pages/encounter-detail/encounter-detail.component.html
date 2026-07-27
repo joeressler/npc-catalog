@@ -1,0 +1,117 @@
+<section class="page-shell view-enter">
+  @if (loading) {
+    <p class="empty-state">Loading encounter…</p>
+  } @else if (error && !encounter) {
+    <p class="empty-state">{{ error }}</p>
+  } @else if (encounter) {
+    <header class="detail-header glass-panel">
+      <div>
+        <p class="eyebrow">Encounter</p>
+        <h1 class="page-title">{{ encounter.title }}</h1>
+        @if (encounter.short_description.trim()) {
+          <p class="page-subtitle">{{ encounter.short_description }}</p>
+        }
+      </div>
+      <div class="actions">
+        <a [routerLink]="['/campaigns', encounter.campaign, 'encounters']" class="btn btn-secondary">
+          Back to Encounters
+        </a>
+        <button type="button" class="btn btn-secondary" (click)="cloneEncounter()" [disabled]="cloning">
+          {{ cloning ? 'Cloning…' : 'Clone' }}
+        </button>
+        <a
+          [routerLink]="['/campaigns', encounter.campaign, 'encounters', encounter.id, 'edit']"
+          class="btn btn-primary"
+        >
+          Edit
+        </a>
+        <button type="button" class="btn btn-danger" (click)="deleteEncounter()" [disabled]="deleting">
+          {{ deleting ? 'Deleting…' : 'Delete' }}
+        </button>
+      </div>
+    </header>
+
+    @if (error) {
+      <p class="form-error glass-panel">{{ error }}</p>
+    }
+
+    @if (encounter.enemies.length) {
+      <section class="section glass-panel">
+        <h2>Enemies</h2>
+        <ul class="bullet-list">
+          @for (enemy of encounter.enemies; track enemy.id) {
+            <li>{{ enemyLabel(enemy.quantity, enemy.name, enemy.creature_type) }}</li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (encounter.battlefield_description.trim()) {
+      <section class="section glass-panel">
+        <h2>Battlefield</h2>
+        <div class="section-body">{{ encounter.battlefield_description }}</div>
+      </section>
+    }
+
+    @if (encounter.objects.length) {
+      <section class="section glass-panel">
+        <h2>Objects &amp; interaction points</h2>
+        <div class="object-list">
+          @for (obj of encounter.objects; track obj.id) {
+            <article class="object-block">
+              <h3>{{ obj.name }}</h3>
+              @if (obj.description.trim()) {
+                <p>{{ obj.description }}</p>
+              }
+            </article>
+          }
+        </div>
+      </section>
+    }
+
+    @if (encounter.loot.length) {
+      <section class="section glass-panel">
+        <h2>Loot &amp; rewards</h2>
+        <ul class="bullet-list">
+          @for (item of encounter.loot; track item.id) {
+            <li>{{ item.description }}</li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (encounter.further_notes.trim()) {
+      <section class="section glass-panel">
+        <h2>Further notes</h2>
+        <div class="section-body">{{ encounter.further_notes }}</div>
+      </section>
+    }
+
+    @if (encounter.characters.length) {
+      <section class="section glass-panel">
+        <h2>Linked NPCs</h2>
+        <div class="character-list">
+          @for (character of encounter.characters; track character.id) {
+            <a [routerLink]="['/npcs', character.id]" class="character-link">
+              <strong>{{ character.name }}</strong>
+              <span>{{ character.role_occupation }} · {{ character.alignment_display }}</span>
+            </a>
+          }
+        </div>
+      </section>
+    }
+
+    @if (
+      !encounter.enemies.length &&
+      !encounter.battlefield_description.trim() &&
+      !encounter.objects.length &&
+      !encounter.loot.length &&
+      !encounter.further_notes.trim() &&
+      !encounter.characters.length
+    ) {
+      <div class="glass-panel empty-state">
+        <p>No details yet. Edit this encounter to add enemies, battlefield notes, and loot.</p>
+      </div>
+    }
+  }
+</section>

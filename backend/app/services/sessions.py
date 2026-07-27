@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import Select, delete, func, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import GameSession, NPC, SessionBeat, SessionClue, SessionSecret, SessionStoryPath
+from app.models import Encounter, GameSession, NPC, SessionBeat, SessionClue, SessionSecret, SessionStoryPath
 from app.schemas import SessionStoryPathWrite
 
 
@@ -67,12 +67,40 @@ def sync_characters(db: Session, session: GameSession, character_ids: list[int])
     session.characters = [npc_map[character_id] for character_id in unique_ids]
 
 
+def sync_encounters(db: Session, session: GameSession, encounter_ids: list[int]) -> None:
+    if not encounter_ids:
+        session.encounters = []
+        return
+
+    unique_ids: list[int] = []
+    seen: set[int] = set()
+    for encounter_id in encounter_ids:
+        if encounter_id not in seen:
+            seen.add(encounter_id)
+            unique_ids.append(encounter_id)
+
+    encounters = db.scalars(select(Encounter).where(Encounter.id.in_(unique_ids))).all()
+    encounter_map = {encounter.id: encounter for encounter in encounters}
+    if len(encounter_map) != len(unique_ids):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="One or more encounters not found.")
+
+    for encounter in encounters:
+        if encounter.campaign_id != session.campaign_id:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail="Encounters must belong to the session's campaign.",
+            )
+
+    session.encounters = [encounter_map[encounter_id] for encounter_id in unique_ids]
+
+
 def session_query_options(stmt: Select[tuple[GameSession]]) -> Select[tuple[GameSession]]:
     return stmt.options(
         selectinload(GameSession.story_paths).selectinload(SessionStoryPath.beats),
         selectinload(GameSession.clues),
         selectinload(GameSession.secrets),
         selectinload(GameSession.characters),
+        selectinload(GameSession.encounters),
     )
 
 

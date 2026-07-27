@@ -138,6 +138,7 @@ export interface SessionDetail extends SessionSummary {
   clues: SessionLineItem[];
   secrets: SessionLineItem[];
   characters: SessionCharacter[];
+  encounters: SessionEncounterRef[];
 }
 
 export interface SessionWritePayload {
@@ -147,6 +148,84 @@ export interface SessionWritePayload {
   story_paths?: SessionStoryPathWrite[];
   clues?: string[];
   secrets?: string[];
+  character_ids?: number[];
+  encounter_ids?: number[];
+}
+
+export interface SessionEncounterRef {
+  id: number;
+  title: string;
+  short_description: string;
+}
+
+export interface EncounterEnemy {
+  id: number;
+  quantity: number;
+  name: string;
+  creature_type: string;
+  sort_order: number;
+}
+
+export interface EncounterEnemyWrite {
+  quantity: number;
+  name: string;
+  creature_type: string;
+}
+
+export interface EncounterLoot {
+  id: number;
+  description: string;
+  sort_order: number;
+}
+
+export interface EncounterObject {
+  id: number;
+  name: string;
+  description: string;
+  sort_order: number;
+}
+
+export interface EncounterObjectWrite {
+  name: string;
+  description: string;
+}
+
+export interface EncounterCharacter {
+  id: number;
+  name: string;
+  role_occupation: string;
+  alignment: AlignmentCode;
+  alignment_display: string;
+}
+
+export interface EncounterSummary {
+  id: number;
+  campaign: number;
+  title: string;
+  short_description: string;
+  enemy_count: number;
+  character_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EncounterDetail extends EncounterSummary {
+  battlefield_description: string;
+  further_notes: string;
+  enemies: EncounterEnemy[];
+  loot: EncounterLoot[];
+  objects: EncounterObject[];
+  characters: EncounterCharacter[];
+}
+
+export interface EncounterWritePayload {
+  title: string;
+  short_description?: string;
+  battlefield_description?: string;
+  further_notes?: string;
+  enemies?: EncounterEnemyWrite[];
+  loot?: string[];
+  objects?: EncounterObjectWrite[];
   character_ids?: number[];
 }
 

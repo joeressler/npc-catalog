@@ -10,7 +10,12 @@ import {
 } from '@angular/forms';
 
 import { ApiService } from '../../services/api.service';
-import { NPC, SessionStoryPath, SessionWritePayload } from '../../models/npc.models';
+import {
+  EncounterSummary,
+  NPC,
+  SessionStoryPath,
+  SessionWritePayload,
+} from '../../models/npc.models';
 
 @Component({
   selector: 'app-session-form',
@@ -29,7 +34,9 @@ export class SessionFormComponent implements OnInit {
   sessionId: number | null = null;
   campaignId: number | null = null;
   campaignNpcs: NPC[] = [];
+  campaignEncounters: EncounterSummary[] = [];
   selectedCharacterIds = new Set<number>();
+  selectedEncounterIds = new Set<number>();
   saving = false;
   error = '';
 
@@ -53,6 +60,12 @@ export class SessionFormComponent implements OnInit {
       },
     });
 
+    this.api.getCampaignEncounters(this.campaignId).subscribe({
+      next: (response) => {
+        this.campaignEncounters = response.results;
+      },
+    });
+
     if (sessionIdParam && sessionIdParam !== 'new') {
       this.editing = true;
       this.sessionId = Number(sessionIdParam);
@@ -71,6 +84,7 @@ export class SessionFormComponent implements OnInit {
           this.setLineItems('clues', session.clues.map((item) => item.text));
           this.setLineItems('secrets', session.secrets.map((item) => item.text));
           this.selectedCharacterIds = new Set(session.characters.map((character) => character.id));
+          this.selectedEncounterIds = new Set(session.encounters.map((encounter) => encounter.id));
         },
         error: () => {
           this.error = 'Session not found.';
@@ -143,6 +157,18 @@ export class SessionFormComponent implements OnInit {
     }
   }
 
+  isEncounterSelected(encounterId: number): boolean {
+    return this.selectedEncounterIds.has(encounterId);
+  }
+
+  toggleEncounter(encounterId: number): void {
+    if (this.selectedEncounterIds.has(encounterId)) {
+      this.selectedEncounterIds.delete(encounterId);
+    } else {
+      this.selectedEncounterIds.add(encounterId);
+    }
+  }
+
   submit(): void {
     if (this.form.invalid || this.saving || !this.campaignId) {
       this.form.markAllAsTouched();
@@ -157,6 +183,7 @@ export class SessionFormComponent implements OnInit {
       clues: this.lineItemValues('clues'),
       secrets: this.lineItemValues('secrets'),
       character_ids: [...this.selectedCharacterIds],
+      encounter_ids: [...this.selectedEncounterIds],
     };
 
     if (this.editing) {

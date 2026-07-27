@@ -22,6 +22,9 @@ import {
   SessionDetail,
   SessionSummary,
   SessionWritePayload,
+  EncounterDetail,
+  EncounterSummary,
+  EncounterWritePayload,
   Tag,
 } from '../models/npc.models';
 
@@ -133,6 +136,35 @@ export class ApiService {
 
   deleteSession(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/sessions/${id}/`);
+  }
+
+  getCampaignEncounters(campaignId: number): Observable<PaginatedResponse<EncounterSummary>> {
+    return this.http.get<PaginatedResponse<EncounterSummary>>(
+      `${this.base}/campaigns/${campaignId}/encounters/`,
+    );
+  }
+
+  getEncounter(id: number): Observable<EncounterDetail> {
+    return this.http.get<EncounterDetail>(`${this.base}/encounters/${id}/`);
+  }
+
+  createEncounter(campaignId: number, payload: EncounterWritePayload): Observable<EncounterDetail> {
+    return this.http.post<EncounterDetail>(
+      `${this.base}/campaigns/${campaignId}/encounters/`,
+      payload,
+    );
+  }
+
+  updateEncounter(id: number, payload: Partial<EncounterWritePayload>): Observable<EncounterDetail> {
+    return this.http.patch<EncounterDetail>(`${this.base}/encounters/${id}/`, payload);
+  }
+
+  deleteEncounter(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/encounters/${id}/`);
+  }
+
+  cloneEncounter(id: number): Observable<EncounterDetail> {
+    return this.http.post<EncounterDetail>(`${this.base}/encounters/${id}/clone/`, {});
   }
 
   getCampaignGraphs(campaignId: number): Observable<PaginatedResponse<GraphSummary>> {
