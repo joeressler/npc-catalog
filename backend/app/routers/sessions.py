@@ -16,6 +16,7 @@ from app.services.sessions import (
     sync_story_paths,
     sync_characters,
     sync_clues,
+    sync_encounters,
     sync_secrets,
 )
 
@@ -51,6 +52,8 @@ def update_session(session_id: int, payload: SessionWritePartial, db: Session = 
         sync_secrets(db, session, payload.secrets)
     if payload.character_ids is not None:
         sync_characters(db, session, payload.character_ids)
+    if payload.encounter_ids is not None:
+        sync_encounters(db, session, payload.encounter_ids)
 
     db.commit()
     session = get_session_or_404(db, session_id)
@@ -114,6 +117,7 @@ def create_campaign_session(
     sync_clues(db, session, payload.clues)
     sync_secrets(db, session, payload.secrets)
     sync_characters(db, session, payload.character_ids)
+    sync_encounters(db, session, payload.encounter_ids)
     db.commit()
     session = get_session_or_404(db, session.id)
     return serialize_session_detail(session)

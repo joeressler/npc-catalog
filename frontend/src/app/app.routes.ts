@@ -37,6 +37,28 @@ export const routes: Routes = [
       import('./pages/session-list/session-list.component').then((m) => m.SessionListComponent),
   },
   {
+    path: 'campaigns/:campaignId/encounters/new',
+    loadComponent: () =>
+      import('./pages/encounter-form/encounter-form.component').then((m) => m.EncounterFormComponent),
+  },
+  {
+    path: 'campaigns/:campaignId/encounters/:encounterId/edit',
+    loadComponent: () =>
+      import('./pages/encounter-form/encounter-form.component').then((m) => m.EncounterFormComponent),
+  },
+  {
+    path: 'campaigns/:campaignId/encounters/:encounterId',
+    loadComponent: () =>
+      import('./pages/encounter-detail/encounter-detail.component').then(
+        (m) => m.EncounterDetailComponent,
+      ),
+  },
+  {
+    path: 'campaigns/:campaignId/encounters',
+    loadComponent: () =>
+      import('./pages/encounter-list/encounter-list.component').then((m) => m.EncounterListComponent),
+  },
+  {
     path: 'campaigns/:campaignId/graphs/new',
     loadComponent: () =>
       import('./pages/graph-form/graph-form.component').then((m) => m.GraphFormComponent),

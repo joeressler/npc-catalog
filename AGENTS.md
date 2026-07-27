@@ -7,6 +7,7 @@
 - When overhauling the backend, prefer a fresh cutover (new schema, wipe/recreate data) over preserving Django admin or migrating legacy data.
 - Character relationship webs should be interactive visuals, support multiple named webs per campaign, directed and easy bidirectional relations, a synthetic Party node, and optional PC sub-nodes under Party for one-off PC–NPC ties.
 - Campaign sessions should auto-assign the next number; story beats are DM-orderable branching paths; clues and secrets are line items; overall notes are free text.
+- Campaign encounters are reusable, cloneable set-pieces (title, short description, enemy quantities/types, battlefield text, objects/interaction points, loot line items, further notes) with soft NPC links; sessions can soft-link encounters without owning them.
 
 ## Learned Workspace Facts
 
@@ -14,5 +15,6 @@
 - `docker compose up --build` serves the app at http://localhost:0314; data and campaign images live under `/data` in the backend volume.
 - Backend was migrated from Django to FastAPI with a wipe/recreate cutover; Django admin is not part of the stack.
 - NPCs are campaign-scoped with core fields (name, aliases, role, alignment, location, faction, attitude, party relationship, tags) plus optional DM detail sections (appearance, voice, personality, motivation, secrets, knowledge, inventory, notes, session history).
-- Campaign sessions are a per-campaign numbered notes feature (story beats/paths, linked NPCs, notes, clues, secrets).
+- Campaign sessions are a per-campaign numbered notes feature (story beats/paths, linked NPCs, notes, clues, secrets, optional linked encounters).
+- Campaign encounters are reusable combat/set-piece notes (enemies, battlefield, objects, loot, linked NPCs) that can be cloned; not owned by sessions.
 - Character graphs (relationship webs) are campaign-scoped; relation types are an editable set list; graph UI uses Cytoscape.

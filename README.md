@@ -60,6 +60,11 @@ The dev server proxies `/api` and `/media` to the backend when configured in `pr
 | GET | `/api/npcs/?q=&alignment=&tag=&location=&faction=` | Filter NPCs |
 | GET/POST | `/api/campaigns/{id}/graphs/` | List / create relationship webs |
 | GET/PATCH/DELETE | `/api/graphs/{id}/` | Graph detail (nodes + edges) |
+| GET/POST | `/api/campaigns/{id}/sessions/` | List / create session notes |
+| GET/PATCH/DELETE | `/api/sessions/{id}/` | Session detail |
+| GET/POST | `/api/campaigns/{id}/encounters/` | List / create encounters |
+| GET/PATCH/DELETE | `/api/encounters/{id}/` | Encounter detail |
+| POST | `/api/encounters/{id}/clone/` | Clone an encounter |
 | GET/POST | `/api/campaigns/{id}/relation-types/` | List / add relation types |
 | PATCH/DELETE | `/api/relation-types/{id}/` | Update / delete relation type |
 | POST | `/api/graphs/{id}/nodes/` | Add NPC, Party, or PC node |

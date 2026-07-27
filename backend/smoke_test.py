@@ -57,7 +57,11 @@ def main() -> int:
         "aliases": ["Mithrandir", "Grey Pilgrim"],
         "tags": ["ally", "wizard"],
     }
-    status, npc = request("POST", f"/campaigns/{campaign_id}/npcs/", data=npc_payload)
+    status, npc = request(
+        "POST",
+        f"/campaigns/{campaign_id}/npcs/",
+        multipart={"payload": json.dumps(npc_payload)},
+    )
     assert status == 201, npc
     assert npc["alignment_display"] == "Neutral Good"
     assert len(npc["aliases"]) == 2
@@ -78,9 +82,59 @@ def main() -> int:
     assert status == 200 and detail["session_log"] == ""
     print("GET /npcs/{id}/ OK")
 
-    status, patched = request("PATCH", f"/npcs/{npc_id}/", data={"attitude": "Gruff"})
+    status, patched = request(
+        "PATCH",
+        f"/npcs/{npc_id}/",
+        multipart={"payload": json.dumps({"attitude": "Gruff"})},
+    )
     assert status == 200 and patched["attitude"] == "Gruff"
     print("PATCH /npcs/{id}/ OK")
+
+    encounter_payload = {
+        "title": "Ambush at Weathertop",
+        "short_description": "Ringwraiths press the party on the hilltop.",
+        "battlefield_description": "Rocky outcrop with sparse cover and a ruined watchtower.",
+        "further_notes": "Fleeing into the woods breaks line of sight after 2 rounds.",
+        "enemies": [
+            {"quantity": 5, "name": "Nazgul", "creature_type": "Wraith"},
+            {"quantity": 1, "name": "Witch-king", "creature_type": "Wraith Lord"},
+        ],
+        "loot": ["Morgul blade shard", "Black riding cloak"],
+        "objects": [
+            {"name": "Broken beacon brazier", "description": "Can be toppled for difficult terrain."},
+            {"name": "Watchtower stair", "description": "Half cover; collapses if damaged twice."},
+        ],
+        "character_ids": [npc_id],
+    }
+    status, encounter = request(
+        "POST",
+        f"/campaigns/{campaign_id}/encounters/",
+        data=encounter_payload,
+    )
+    assert status == 201, encounter
+    assert encounter["title"] == "Ambush at Weathertop"
+    assert len(encounter["enemies"]) == 2
+    assert encounter["enemies"][0]["quantity"] == 5
+    assert encounter["enemies"][0]["creature_type"] == "Wraith"
+    assert len(encounter["loot"]) == 2
+    assert len(encounter["objects"]) == 2
+    assert len(encounter["characters"]) == 1
+    encounter_id = encounter["id"]
+    print(f"POST /campaigns/{{id}}/encounters/ OK id={encounter_id}")
+
+    status, encounters = request("GET", f"/campaigns/{campaign_id}/encounters/")
+    assert status == 200 and encounters["count"] == 1
+    assert encounters["results"][0]["enemy_count"] == 2
+    assert encounters["results"][0]["character_count"] == 1
+    print("GET /campaigns/{id}/encounters/ OK")
+
+    status, cloned = request("POST", f"/encounters/{encounter_id}/clone/")
+    assert status == 201, cloned
+    assert cloned["title"] == "Ambush at Weathertop (copy)"
+    assert len(cloned["enemies"]) == 2
+    assert cloned["id"] != encounter_id
+    cloned_id = cloned["id"]
+    print("POST /encounters/{id}/clone/ OK")
 
     session_payload = {
         "title": "The Grey Council",
@@ -98,6 +152,7 @@ def main() -> int:
         "clues": ["Strange tracks near the river"],
         "secrets": ["Gandalf knows more than he admits"],
         "character_ids": [npc_id],
+        "encounter_ids": [encounter_id],
     }
     status, session = request("POST", f"/campaigns/{campaign_id}/sessions/", data=session_payload)
     assert status == 201, session
@@ -111,6 +166,8 @@ def main() -> int:
     assert session["story_paths"][1]["beats"][0]["text"] == "They linger in Bree"
     assert len(session["characters"]) == 1
     assert session["characters"][0]["id"] == npc_id
+    assert len(session["encounters"]) == 1
+    assert session["encounters"][0]["id"] == encounter_id
     session_id = session["id"]
     print(f"POST /campaigns/{{id}}/sessions/ OK id={session_id}")
 
@@ -121,6 +178,7 @@ def main() -> int:
 
     status, session2 = request("POST", f"/campaigns/{campaign_id}/sessions/", data={"title": "Session Two"})
     assert status == 201 and session2["number"] == 2
+    assert session2["encounters"] == []
     print("POST auto-number session 2 OK")
 
     reordered_paths = [
@@ -136,11 +194,12 @@ def main() -> int:
     status, updated = request(
         "PATCH",
         f"/sessions/{session_id}/",
-        data={"story_paths": reordered_paths},
+        data={"story_paths": reordered_paths, "encounter_ids": [encounter_id, cloned_id]},
     )
     assert status == 200, updated
     assert [beat["text"] for beat in updated["story_paths"][0]["beats"]] == reordered_paths[0]["beats"]
     assert [beat["text"] for beat in updated["story_paths"][1]["beats"]] == reordered_paths[1]["beats"]
+    assert len(updated["encounters"]) == 2
     print("PATCH /sessions/{id}/ reorder story paths OK")
 
     status, detail = request("GET", f"/sessions/{session_id}/")
@@ -150,6 +209,16 @@ def main() -> int:
     status, _ = request("DELETE", f"/sessions/{session_id}/")
     assert status == 204
     print("DELETE /sessions/{id}/ OK")
+
+    status, encounter_detail = request("GET", f"/encounters/{encounter_id}/")
+    assert status == 200 and encounter_detail["title"] == "Ambush at Weathertop"
+    print("GET /encounters/{id}/ OK after session delete")
+
+    status, _ = request("DELETE", f"/encounters/{encounter_id}/")
+    assert status == 204
+    status, _ = request("DELETE", f"/encounters/{cloned_id}/")
+    assert status == 204
+    print("DELETE /encounters/{id}/ OK")
 
     status, global_list = request("GET", "/npcs/?alignment=NG")
     assert status == 200 and global_list["count"] >= 1

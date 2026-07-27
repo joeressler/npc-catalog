@@ -150,6 +150,31 @@
       }
     </section>
 
+    <section class="form-section">
+      <h2>Linked encounters</h2>
+      @if (campaignEncounters.length === 0) {
+        <p class="hint">No encounters in this campaign yet. Create encounters to link them here.</p>
+      } @else {
+        <div class="character-grid">
+          @for (encounter of campaignEncounters; track encounter.id) {
+            <label class="character-option">
+              <input
+                type="checkbox"
+                [checked]="isEncounterSelected(encounter.id)"
+                (change)="toggleEncounter(encounter.id)"
+              />
+              <span>
+                <strong>{{ encounter.title }}</strong>
+                <small>
+                  {{ encounter.enemy_count }} enem{{ encounter.enemy_count === 1 ? 'y' : 'ies' }}
+                </small>
+              </span>
+            </label>
+          }
+        </div>
+      }
+    </section>
+
     @if (error) {
       <p class="form-error">{{ error }}</p>
     }
