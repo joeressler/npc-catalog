@@ -16,11 +16,22 @@ import {
   EncounterWritePayload,
   NPC,
 } from '../../models/domain.models';
+import { moveFormArrayItem, toggleIdInSet } from '../../shared/form-array.util';
+import { PageHeaderComponent } from '../../shared/page-header.component';
+import { NpcMultiSelectComponent } from '../../shared/npc-multi-select.component';
+import { LineItemListComponent } from '../../shared/line-item-list.component';
 
 @Component({
   selector: 'app-encounter-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    PageHeaderComponent,
+    NpcMultiSelectComponent,
+    LineItemListComponent,
+  ],
   templateUrl: './encounter-form.component.html',
   styleUrl: './encounter-form.component.scss',
 })
@@ -105,7 +116,7 @@ export class EncounterFormComponent implements OnInit {
   }
 
   moveEnemy(index: number, direction: -1 | 1): void {
-    this.moveFormArrayItem(this.enemies, index, direction);
+    moveFormArrayItem(this.enemies, index, direction);
   }
 
   addLoot(): void {
@@ -117,7 +128,7 @@ export class EncounterFormComponent implements OnInit {
   }
 
   moveLoot(index: number, direction: -1 | 1): void {
-    this.moveFormArrayItem(this.loot, index, direction);
+    moveFormArrayItem(this.loot, index, direction);
   }
 
   addObject(): void {
@@ -129,7 +140,7 @@ export class EncounterFormComponent implements OnInit {
   }
 
   moveObject(index: number, direction: -1 | 1): void {
-    this.moveFormArrayItem(this.objects, index, direction);
+    moveFormArrayItem(this.objects, index, direction);
   }
 
   isNpcSelected(npcId: number): boolean {
@@ -137,11 +148,7 @@ export class EncounterFormComponent implements OnInit {
   }
 
   toggleNpc(npcId: number): void {
-    if (this.selectedNpcIds.has(npcId)) {
-      this.selectedNpcIds.delete(npcId);
-    } else {
-      this.selectedNpcIds.add(npcId);
-    }
+    toggleIdInSet(this.selectedNpcIds, npcId);
   }
 
   submit(): void {
@@ -253,15 +260,5 @@ export class EncounterFormComponent implements OnInit {
         return { name, description };
       })
       .filter((obj) => obj.name.length > 0);
-  }
-
-  private moveFormArrayItem(array: FormArray, index: number, direction: -1 | 1): void {
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= array.length) {
-      return;
-    }
-    const current = array.at(index);
-    array.setControl(index, array.at(targetIndex));
-    array.setControl(targetIndex, current);
   }
 }

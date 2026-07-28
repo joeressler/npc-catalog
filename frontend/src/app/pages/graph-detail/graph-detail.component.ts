@@ -12,26 +12,29 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import cytoscape, { Core, ElementDefinition } from 'cytoscape';
+import { Core } from 'cytoscape';
 
 import { ApiService } from '../../services/api.service';
 import {
   GraphDetail,
   GraphEdge,
   GraphNode,
-  GraphNodeKind,
   NPC,
   RELATION_POLARITIES,
   RelationPolarity,
   RelationType,
 } from '../../models/domain.models';
-
-interface EndpointOption {
-  key: string;
-  nodeId: number;
-  kind: GraphNodeKind;
-  label: string;
-}
+import { createGraphCytoscape } from './graph-cytoscape';
+import {
+  EndpointOption,
+  GRAPH_STYLESHEET,
+  availableNpcs,
+  buildCyElements,
+  endpointKey,
+  hasPartyNode,
+  mapEndpointOptions,
+  parseCyNodeId,
+} from './graph-model';
 
 @Component({
   selector: 'app-graph-detail',
@@ -143,33 +146,25 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   endpointKey(nodeId: number): string {
-    return `node:${nodeId}`;
+    return endpointKey(nodeId);
   }
 
   endpointOptions(): EndpointOption[] {
     if (!this.graph) {
       return [];
     }
-    return this.graph.nodes.map((node) => ({
-      key: this.endpointKey(node.id),
-      nodeId: node.id,
-      kind: node.kind,
-      label: node.kind === 'pc' ? `${node.label} (PC)` : node.label,
-    }));
+    return mapEndpointOptions(this.graph.nodes);
   }
 
   hasPartyNode(): boolean {
-    return this.graph?.nodes.some((node) => node.kind === 'party') ?? false;
+    return hasPartyNode(this.graph?.nodes ?? []);
   }
 
   availableNpcs(): NPC[] {
     if (!this.graph) {
       return this.campaignNpcs;
     }
-    const onGraph = new Set(
-      this.graph.nodes.filter((node) => node.kind === 'npc').map((node) => node.npc_id),
-    );
-    return this.campaignNpcs.filter((npc) => !onGraph.has(npc.id));
+    return availableNpcs(this.campaignNpcs, this.graph.nodes);
   }
 
   addPartyNode(): void {
@@ -353,7 +348,7 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     layout.one('layoutstop', () => {
       this.cy?.nodes().forEach((node) => {
-        const nodeId = Number(node.id().replace('node-', ''));
+        const nodeId = parseCyNodeId(node.id());
         if (!Number.isNaN(nodeId)) {
           this.persistNodePosition(nodeId, node.position());
         }
@@ -423,127 +418,32 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const container = this.cyContainer.nativeElement;
-    const elements = this.buildElements(this.graph);
+    const elements = buildCyElements(this.graph);
     this.destroyCy();
 
     this.zone.runOutsideAngular(() => {
-      this.cy = cytoscape({
-        container,
-        elements,
-        minZoom: 0.2,
-        maxZoom: 2.5,
-        wheelSensitivity: 0.25,
-        style: [
-          {
-            selector: 'node',
-            style: {
-              label: 'data(label)',
-              'text-valign': 'center',
-              'text-halign': 'center',
-              'background-color': '#ffffff',
-              'border-color': '#7b5cff',
-              'border-width': 2,
-              color: '#2a1f4a',
-              'font-family': 'Figtree, sans-serif',
-              'font-size': 12,
-              width: 72,
-              height: 72,
-              'text-wrap': 'wrap',
-              'text-max-width': '64px',
-              'overlay-padding': 6,
-            },
-          },
-          {
-            selector: 'node[kind = "party"]',
-            style: {
-              shape: 'round-rectangle',
-              'background-color': '#e8dcff',
-              'background-opacity': 0.45,
-              'border-color': '#4a2d7a',
-              'border-width': 3,
-              'font-size': 13,
-              'font-weight': 700,
-              'text-valign': 'top',
-              'text-halign': 'center',
-              'text-margin-y': 10,
-              padding: '36px',
-            },
-          },
-          {
-            selector: 'node[kind = "pc"]',
-            style: {
-              shape: 'ellipse',
-              width: 64,
-              height: 64,
-              'background-color': '#d8e8ff',
-              'border-color': '#4a2d7a',
-              'border-width': 2,
-              'font-size': 11,
-            },
-          },
-          {
-            selector: 'node:selected',
-            style: {
-              'border-width': 4,
-              'border-color': '#4a2d7a',
-            },
-          },
-          {
-            selector: 'edge',
-            style: {
-              label: 'data(label)',
-              'curve-style': 'bezier',
-              'target-arrow-shape': 'triangle',
-              width: 2,
-              'line-color': 'data(color)',
-              'target-arrow-color': 'data(color)',
-              color: '#2a1f4a',
-              'font-size': 10,
-              'text-background-color': 'rgba(255,255,255,0.75)',
-              'text-background-opacity': 1,
-              'text-background-padding': '2px',
-              'text-rotation': 'autorotate',
-            },
-          },
-          {
-            selector: 'edge:selected',
-            style: {
-              width: 3,
-            },
-          },
-        ],
-        layout: { name: 'preset' },
-      });
-
-      this.cy.on('tap', 'node', (event) => {
-        this.zone.run(() => {
-          this.selectedEdgeId = null;
-          this.selectedNodeId = Number(event.target.id().replace('node-', ''));
-        });
-      });
-
-      this.cy.on('tap', 'edge', (event) => {
-        this.zone.run(() => {
-          this.selectedNodeId = null;
-          this.selectedEdgeId = Number(event.target.id().replace('edge-', ''));
-        });
-      });
-
-      this.cy.on('tap', (event) => {
-        if (event.target === this.cy) {
+      this.cy = createGraphCytoscape(container, elements, GRAPH_STYLESHEET, {
+        onNodeTap: (nodeId) => {
+          this.zone.run(() => {
+            this.selectedEdgeId = null;
+            this.selectedNodeId = nodeId;
+          });
+        },
+        onEdgeTap: (edgeId) => {
+          this.zone.run(() => {
+            this.selectedNodeId = null;
+            this.selectedEdgeId = edgeId;
+          });
+        },
+        onBackgroundTap: () => {
           this.zone.run(() => {
             this.selectedNodeId = null;
             this.selectedEdgeId = null;
           });
-        }
-      });
-
-      this.cy.on('dragfree', 'node', (event) => {
-        const nodeId = Number(event.target.id().replace('node-', ''));
-        if (Number.isNaN(nodeId)) {
-          return;
-        }
-        this.persistNodePosition(nodeId, event.target.position());
+        },
+        onNodeDragFree: (nodeId, position) => {
+          this.persistNodePosition(nodeId, position);
+        },
       });
     });
 
@@ -569,74 +469,6 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cy.fit(undefined, 48);
       }, delay),
     );
-  }
-
-  private buildElements(graph: GraphDetail): ElementDefinition[] {
-    const kindOrder: Record<string, number> = { party: 0, pc: 1, npc: 2 };
-    const sortedNodes = [...graph.nodes].sort(
-      (a, b) => (kindOrder[a.kind] ?? 9) - (kindOrder[b.kind] ?? 9) || a.id - b.id,
-    );
-    const party = sortedNodes.find((node) => node.kind === 'party');
-
-    const nodes: ElementDefinition[] = sortedNodes.map((node, index) => {
-      const data: Record<string, string | number | null> = {
-        id: `node-${node.id}`,
-        label: node.label,
-        kind: node.kind,
-        npcId: node.npc_id,
-      };
-      // Nest PCs under Party for the "sub-node" UX. Party must be first in elements
-      // (ensured by sort) so the parent exists before children are added.
-      if (node.kind === 'pc' && party) {
-        data['parent'] = `node-${party.id}`;
-      }
-
-      let position: { x: number; y: number };
-      if (node.pos_x !== null && node.pos_y !== null) {
-        position = { x: node.pos_x, y: node.pos_y };
-      } else if (node.kind === 'pc' && party?.pos_x != null && party?.pos_y != null) {
-        position = { x: 70, y: 40 + index * 30 };
-      } else {
-        position = {
-          x: 140 + (index % 5) * 150,
-          y: 140 + Math.floor(index / 5) * 130,
-        };
-      }
-
-      return { data, position };
-    });
-
-    const nodeIds = new Set(sortedNodes.map((node) => `node-${node.id}`));
-    const edges: ElementDefinition[] = graph.edges
-      .filter(
-        (edge) =>
-          nodeIds.has(`node-${edge.from_endpoint.node_id}`) &&
-          nodeIds.has(`node-${edge.to_endpoint.node_id}`),
-      )
-      .map((edge) => ({
-        data: {
-          id: `edge-${edge.id}`,
-          source: `node-${edge.from_endpoint.node_id}`,
-          target: `node-${edge.to_endpoint.node_id}`,
-          label: edge.relation_type.name,
-          color: this.polarityColor(edge.relation_type.polarity),
-        },
-      }));
-
-    return [...nodes, ...edges];
-  }
-
-  private polarityColor(polarity: RelationPolarity): string {
-    switch (polarity) {
-      case 'positive':
-        return '#2d8a6e';
-      case 'negative':
-        return '#c0396b';
-      case 'complex':
-        return '#7b5cff';
-      default:
-        return '#6b628a';
-    }
   }
 
   private persistNodePosition(nodeId: number, position: { x: number; y: number }): void {

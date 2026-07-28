@@ -16,11 +16,22 @@ import {
   SessionStoryPath,
   SessionWritePayload,
 } from '../../models/domain.models';
+import { moveFormArrayItem, toggleIdInSet } from '../../shared/form-array.util';
+import { PageHeaderComponent } from '../../shared/page-header.component';
+import { NpcMultiSelectComponent } from '../../shared/npc-multi-select.component';
+import { LineItemListComponent } from '../../shared/line-item-list.component';
 
 @Component({
   selector: 'app-session-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    PageHeaderComponent,
+    NpcMultiSelectComponent,
+    LineItemListComponent,
+  ],
   templateUrl: './session-form.component.html',
   styleUrl: './session-form.component.scss',
 })
@@ -118,7 +129,7 @@ export class SessionFormComponent implements OnInit {
   }
 
   moveStoryPath(pathIndex: number, direction: -1 | 1): void {
-    this.moveFormArrayItem(this.storyPaths, pathIndex, direction);
+    moveFormArrayItem(this.storyPaths, pathIndex, direction);
   }
 
   addPathBeat(pathIndex: number): void {
@@ -130,7 +141,7 @@ export class SessionFormComponent implements OnInit {
   }
 
   movePathBeat(pathIndex: number, beatIndex: number, direction: -1 | 1): void {
-    this.moveFormArrayItem(this.pathBeats(pathIndex), beatIndex, direction);
+    moveFormArrayItem(this.pathBeats(pathIndex), beatIndex, direction);
   }
 
   addLineItem(field: 'clues' | 'secrets'): void {
@@ -142,7 +153,7 @@ export class SessionFormComponent implements OnInit {
   }
 
   moveLineItem(field: 'clues' | 'secrets', index: number, direction: -1 | 1): void {
-    this.moveFormArrayItem(this.lineItems(field), index, direction);
+    moveFormArrayItem(this.lineItems(field), index, direction);
   }
 
   isNpcSelected(npcId: number): boolean {
@@ -150,11 +161,7 @@ export class SessionFormComponent implements OnInit {
   }
 
   toggleNpc(npcId: number): void {
-    if (this.selectedNpcIds.has(npcId)) {
-      this.selectedNpcIds.delete(npcId);
-    } else {
-      this.selectedNpcIds.add(npcId);
-    }
+    toggleIdInSet(this.selectedNpcIds, npcId);
   }
 
   isEncounterSelected(encounterId: number): boolean {
@@ -162,11 +169,7 @@ export class SessionFormComponent implements OnInit {
   }
 
   toggleEncounter(encounterId: number): void {
-    if (this.selectedEncounterIds.has(encounterId)) {
-      this.selectedEncounterIds.delete(encounterId);
-    } else {
-      this.selectedEncounterIds.add(encounterId);
-    }
+    toggleIdInSet(this.selectedEncounterIds, encounterId);
   }
 
   submit(): void {
@@ -260,15 +263,5 @@ export class SessionFormComponent implements OnInit {
     return this.lineItems(field)
       .controls.map((control) => String(control.value || '').trim())
       .filter(Boolean);
-  }
-
-  private moveFormArrayItem(array: FormArray, index: number, direction: -1 | 1): void {
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= array.length) {
-      return;
-    }
-    const current = array.at(index);
-    array.setControl(index, array.at(targetIndex));
-    array.setControl(targetIndex, current);
   }
 }

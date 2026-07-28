@@ -4,11 +4,12 @@ import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
 import { Campaign, SessionSummary } from '../../models/domain.models';
+import { PageHeaderComponent } from '../../shared/page-header.component';
 
 @Component({
   selector: 'app-session-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, PageHeaderComponent],
   templateUrl: './session-list.component.html',
   styleUrl: './session-list.component.scss',
 })
@@ -56,5 +57,10 @@ export class SessionListComponent implements OnInit {
 
   imageUrl(): string | null {
     return this.campaign ? this.api.mediaUrl(this.campaign.image) : null;
+  }
+
+  subtitle(): string {
+    const count = this.sessions.length;
+    return `${count} session${count === 1 ? '' : 's'} recorded`;
   }
 }

@@ -1,13 +1,10 @@
 <section class="page-shell view-enter">
-  <header class="page-header">
-    <div>
-      <h1 class="page-title">{{ editing ? 'Edit Encounter' : 'New Encounter' }}</h1>
-      <p class="page-subtitle">
-        Design enemies, battlefield details, interaction points, loot, and linked NPCs.
-      </p>
-    </div>
+  <app-page-header
+    [title]="editing ? 'Edit Encounter' : 'New Encounter'"
+    subtitle="Design enemies, battlefield details, interaction points, loot, and linked NPCs."
+  >
     <a [routerLink]="backLink()" class="btn btn-secondary">Back</a>
-  </header>
+  </app-page-header>
 
   <form class="encounter-form glass-panel" [formGroup]="form" (ngSubmit)="submit()">
     <section class="form-section">
@@ -160,38 +157,13 @@
         <h2>Loot &amp; rewards</h2>
         <button type="button" class="btn btn-secondary btn-sm" (click)="addLoot()">Add loot</button>
       </div>
-      <div class="line-items" formArrayName="loot">
-        @for (control of loot.controls; track control; let lootIndex = $index) {
-          <div class="line-item">
-            <textarea
-              [formControlName]="lootIndex"
-              rows="2"
-              placeholder="Reward description for clearing the encounter"
-            ></textarea>
-            <div class="line-actions">
-              <button
-                type="button"
-                class="btn btn-secondary btn-sm"
-                (click)="moveLoot(lootIndex, -1)"
-                [disabled]="lootIndex === 0"
-              >
-                Up
-              </button>
-              <button
-                type="button"
-                class="btn btn-secondary btn-sm"
-                (click)="moveLoot(lootIndex, 1)"
-                [disabled]="lootIndex === loot.length - 1"
-              >
-                Down
-              </button>
-              <button type="button" class="btn btn-danger btn-sm" (click)="removeLoot(lootIndex)">
-                Remove
-              </button>
-            </div>
-          </div>
-        }
-      </div>
+      <app-line-item-list
+        [formArray]="loot"
+        controlType="textarea"
+        placeholder="Reward description for clearing the encounter"
+        (move)="moveLoot($event.index, $event.direction)"
+        (remove)="removeLoot($event)"
+      ></app-line-item-list>
     </section>
 
     <section class="form-section">
@@ -199,21 +171,11 @@
       @if (campaignNpcs.length === 0) {
         <p class="hint">No NPCs in this campaign yet. Add NPCs to link them here.</p>
       } @else {
-        <div class="character-grid">
-          @for (npc of campaignNpcs; track npc.id) {
-            <label class="character-option">
-              <input
-                type="checkbox"
-                [checked]="isNpcSelected(npc.id)"
-                (change)="toggleNpc(npc.id)"
-              />
-              <span>
-                <strong>{{ npc.name }}</strong>
-                <small>{{ npc.role_occupation }}</small>
-              </span>
-            </label>
-          }
-        </div>
+        <app-npc-multi-select
+          [npcs]="campaignNpcs"
+          [selectedIds]="selectedNpcIds"
+          (toggle)="toggleNpc($event)"
+        ></app-npc-multi-select>
       }
     </section>
 
