@@ -22,7 +22,7 @@ src/app/
   app.routes.ts          # Lazy routes; folders mirror URLs
   pages/<feature>/       # One screen per folder (ts/html/scss)
   services/api.service.ts
-  models/npc.models.ts   # Domain types (campaigns, NPCs, sessions, …)
+  models/domain.models.ts   # Domain types (campaigns, NPCs, sessions, …)
 src/styles.scss          # Design tokens + shared utilities
 ```
 

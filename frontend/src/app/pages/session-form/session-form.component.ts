@@ -15,7 +15,7 @@ import {
   NPC,
   SessionStoryPath,
   SessionWritePayload,
-} from '../../models/npc.models';
+} from '../../models/domain.models';
 
 @Component({
   selector: 'app-session-form',
@@ -35,7 +35,7 @@ export class SessionFormComponent implements OnInit {
   campaignId: number | null = null;
   campaignNpcs: NPC[] = [];
   campaignEncounters: EncounterSummary[] = [];
-  selectedCharacterIds = new Set<number>();
+  selectedNpcIds = new Set<number>();
   selectedEncounterIds = new Set<number>();
   saving = false;
   error = '';
@@ -83,7 +83,7 @@ export class SessionFormComponent implements OnInit {
           this.setStoryPaths(session.story_paths);
           this.setLineItems('clues', session.clues.map((item) => item.text));
           this.setLineItems('secrets', session.secrets.map((item) => item.text));
-          this.selectedCharacterIds = new Set(session.characters.map((character) => character.id));
+          this.selectedNpcIds = new Set(session.npcs.map((npc) => npc.id));
           this.selectedEncounterIds = new Set(session.encounters.map((encounter) => encounter.id));
         },
         error: () => {
@@ -145,15 +145,15 @@ export class SessionFormComponent implements OnInit {
     this.moveFormArrayItem(this.lineItems(field), index, direction);
   }
 
-  isCharacterSelected(npcId: number): boolean {
-    return this.selectedCharacterIds.has(npcId);
+  isNpcSelected(npcId: number): boolean {
+    return this.selectedNpcIds.has(npcId);
   }
 
-  toggleCharacter(npcId: number): void {
-    if (this.selectedCharacterIds.has(npcId)) {
-      this.selectedCharacterIds.delete(npcId);
+  toggleNpc(npcId: number): void {
+    if (this.selectedNpcIds.has(npcId)) {
+      this.selectedNpcIds.delete(npcId);
     } else {
-      this.selectedCharacterIds.add(npcId);
+      this.selectedNpcIds.add(npcId);
     }
   }
 
@@ -182,7 +182,7 @@ export class SessionFormComponent implements OnInit {
       story_paths: this.storyPathValues(),
       clues: this.lineItemValues('clues'),
       secrets: this.lineItemValues('secrets'),
-      character_ids: [...this.selectedCharacterIds],
+      npc_ids: [...this.selectedNpcIds],
       encounter_ids: [...this.selectedEncounterIds],
     };
 

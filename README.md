@@ -14,7 +14,7 @@ Data persists in the `npc_data` Docker volume (SQLite database + campaign images
 
 ### Fresh cutover (wipe existing data)
 
-When migrating from the old Django backend or resetting all data:
+When migrating from the old Django backend, resetting all data, or after breaking API contract changes (e.g. session/encounter `npc_ids`):
 
 ```bash
 docker compose down -v
@@ -26,7 +26,7 @@ docker compose up --build
 | Layer | Location |
 |-------|----------|
 | Angular pages + `ApiService` | `frontend/src/app/` |
-| FastAPI app | `backend/app/` (`routers/` → `services/` → models/schemas/serializers) |
+| FastAPI app | `backend/app/` (`routers/` → `services/` → `models/` / `schemas/` / `mappers.py`) |
 | Migrations | `backend/alembic/versions/` |
 | SQLite + media | Docker volume `npc_data` → `/data` |
 

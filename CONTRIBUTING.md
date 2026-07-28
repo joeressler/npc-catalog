@@ -7,16 +7,16 @@ NPC Catalog is a single-user local DM tool: Angular frontend + FastAPI backend +
 ```
 backend/app/          # The only backend package — start here
   main.py             # App factory, router mounts, /media, /health
-  models.py           # SQLAlchemy ORM
-  schemas.py          # Pydantic request/response shapes
-  serializers.py      # ORM → response DTO mapping (not Django REST)
-  routers/            # HTTP endpoints
-  services/           # Queries, validation, 404 helpers
+  models/             # SQLAlchemy ORM (campaign, npc, session, encounter, graph)
+  schemas/            # Pydantic request/response shapes (same domains)
+  mappers.py          # ORM → response DTO mapping (not Django REST serializers)
+  routers/            # HTTP endpoints (graphs/ is a subpackage)
+  services/           # Queries, validation, 404 helpers (may raise HTTPException)
   media.py            # Image storage under MEDIA_ROOT
 frontend/src/app/
   pages/              # One folder per screen (lazy-loaded routes)
   services/api.service.ts
-  models/npc.models.ts  # Domain TypeScript types (all entities, not only NPCs)
+  models/domain.models.ts  # Domain TypeScript types (all entities)
 ```
 
 Alembic migrations live under `backend/alembic/versions/`. There is no Django app package.
@@ -32,16 +32,16 @@ When adding CRUD, **copy encounters or sessions** as the template. Do not copy c
 
 ## Add a domain feature
 
-1. Add SQLAlchemy models in `backend/app/models.py`.
+1. Add SQLAlchemy models under `backend/app/models/` and re-export from `__init__.py`.
 2. Add an Alembic revision under `backend/alembic/versions/` and run `alembic upgrade head`.
-3. Add Pydantic Write / Read / WritePartial schemas in `backend/app/schemas.py`.
-4. Add `serialize_*` helpers in `backend/app/serializers.py`.
+3. Add Pydantic Write / Read / WritePartial schemas under `backend/app/schemas/` and re-export.
+4. Add `serialize_*` helpers in `backend/app/mappers.py`.
 5. Put queries and validation in `backend/app/services/<domain>.py` (services may raise `HTTPException`).
 6. Add routers under `backend/app/routers/` (usually a campaign-nested list/create router plus an entity detail router).
 7. Mount routers in `backend/app/main.py` with `prefix="/api"`.
-8. Add TypeScript types in `frontend/src/app/models/npc.models.ts`.
+8. Add TypeScript types in `frontend/src/app/models/domain.models.ts`.
 9. Add methods on `frontend/src/app/services/api.service.ts`.
-10. Add pages under `frontend/src/app/pages/` and routes in `frontend/src/app/app.routes.ts`.
+10. Add pages under `frontend/src/app/pages/` and routes in `frontend/src/app/app.routes.ts` (campaign param is always `:campaignId`).
 11. Extend `backend/smoke_test.py` when the HTTP contract grows.
 
 Prefer FastAPI `/docs` (when the API is running) plus the smoke test as living contracts.
@@ -69,5 +69,5 @@ cd backend && python smoke_test.py http://127.0.0.1:8000/api
 ## Naming notes
 
 - ORM model `GameSession` maps to table/API `sessions` (avoids clashing with SQLAlchemy `Session`).
-- Session/encounter payloads currently use `character_ids` / `characters` for linked NPCs; prefer documenting that alias until a later rename lands.
+- Session/encounter payloads use `npc_ids` (write) and `npcs` (read) for linked NPCs. Association tables in the DB remain `session_npcs` / `encounter_npcs`.
 - Product language for graphs is “relationship webs”; URL paths stay `/graphs/`.

@@ -87,14 +87,14 @@
       </section>
     }
 
-    @if (encounter.characters.length) {
+    @if (encounter.npcs.length) {
       <section class="section glass-panel">
         <h2>Linked NPCs</h2>
         <div class="character-list">
-          @for (character of encounter.characters; track character.id) {
-            <a [routerLink]="['/npcs', character.id]" class="character-link">
-              <strong>{{ character.name }}</strong>
-              <span>{{ character.role_occupation }} · {{ character.alignment_display }}</span>
+          @for (npc of encounter.npcs; track npc.id) {
+            <a [routerLink]="['/npcs', npc.id]" class="character-link">
+              <strong>{{ npc.name }}</strong>
+              <span>{{ npc.role_occupation }} · {{ npc.alignment_display }}</span>
             </a>
           }
         </div>
@@ -107,7 +107,7 @@
       !encounter.objects.length &&
       !encounter.loot.length &&
       !encounter.further_notes.trim() &&
-      !encounter.characters.length
+      !encounter.npcs.length
     ) {
       <div class="glass-panel empty-state">
         <p>No details yet. Edit this encounter to add enemies, battlefield notes, and loot.</p>

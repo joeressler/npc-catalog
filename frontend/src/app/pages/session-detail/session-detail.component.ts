@@ -3,7 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
-import { SessionDetail } from '../../models/npc.models';
+import { SessionDetail } from '../../models/domain.models';
 
 @Component({
   selector: 'app-session-detail',
