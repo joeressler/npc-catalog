@@ -21,6 +21,24 @@ docker compose down -v
 docker compose up --build
 ```
 
+## Architecture
+
+| Layer | Location |
+|-------|----------|
+| Angular pages + `ApiService` | `frontend/src/app/` |
+| FastAPI app | `backend/app/` (`routers/` → `services/` → models/schemas/serializers) |
+| Migrations | `backend/alembic/versions/` |
+| SQLite + media | Docker volume `npc_data` → `/data` |
+
+**Contributing:** see [CONTRIBUTING.md](CONTRIBUTING.md) for layout, request shapes, and how to add a feature.
+
+### Request shapes
+
+- **Campaigns & NPCs:** `multipart/form-data` (supports image upload).
+- **Sessions, encounters, graphs, relation types, nodes, edges:** JSON bodies.
+
+Copy **encounters/sessions** when adding typical JSON CRUD—not campaigns/NPCs—unless you need uploads.
+
 ## Development
 
 Copy environment defaults:
@@ -38,6 +56,8 @@ alembic upgrade head
 uvicorn app.main:app --reload --port 8000
 ```
 
+Interactive OpenAPI docs: **http://127.0.0.1:8000/docs**
+
 ### Frontend only
 
 ```bash
@@ -46,7 +66,7 @@ npm install
 npm start
 ```
 
-The dev server proxies `/api` and `/media` to the backend when configured in `proxy.conf.json`.
+The dev server proxies `/api` and `/media` to the backend when configured in `proxy.conf.json`. See [frontend/README.md](frontend/README.md).
 
 ## API
 
