@@ -13,9 +13,9 @@
 ## Learned Workspace Facts
 
 - Stack is Angular (standalone) frontend, FastAPI + SQLAlchemy + Alembic backend, SQLite on a Docker volume (`npc_data`); no auth (single-user local tool).
-- `docker compose up --build` serves the app at http://localhost:0314; data and campaign images live under `/data` in the backend volume.
+- `docker compose up --build` serves the app at http://localhost:0314; data and uploaded images (campaigns, NPCs, locations) live under `/data` in the backend volume.
 - Backend was migrated from Django to FastAPI with a wipe/recreate cutover; Django admin is not part of the stack.
-- NPCs are campaign-scoped with core fields (name, aliases, role, alignment, location free-text, optional catalog location, faction, attitude, party relationship, tags) plus optional DM detail sections (appearance, voice, personality, motivation, secrets, knowledge, inventory, notes, session history).
+- NPCs are campaign-scoped with core fields (name, aliases, role, alignment, location free-text, optional catalog location, faction, attitude, party relationship, tags) plus optional image and optional DM detail sections (appearance, voice, personality, motivation, secrets, knowledge, inventory, notes, session history).
 - Campaign sessions are a per-campaign numbered notes feature (story beats/paths, linked NPCs, notes, clues, secrets, optional linked encounters and locations).
 - Campaign encounters are reusable combat/set-piece notes (enemies, battlefield, objects, loot, linked NPCs) that can be cloned; not owned by sessions.
 - Character graphs (relationship webs) are campaign-scoped; relation types are an editable set list; graph UI uses Cytoscape.
