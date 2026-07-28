@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { ApiService } from '../../services/api.service';
-import { ALIGNMENTS, AlignmentCode, NPCWritePayload } from '../../models/domain.models';
+import { ALIGNMENTS, AlignmentCode, LocationSummary, NPC, NPCWritePayload } from '../../models/domain.models';
 
 @Component({
   selector: 'app-npc-form',
@@ -26,6 +26,7 @@ export class NpcFormComponent implements OnInit, OnDestroy {
   error = '';
   dossierOpen = false;
   alignments = ALIGNMENTS;
+  campaignLocations: LocationSummary[] = [];
   currentImage: string | null = null;
   selectedFile: File | null = null;
   previewUrl: string | null = null;
@@ -36,7 +37,8 @@ export class NpcFormComponent implements OnInit, OnDestroy {
     aliases: [''],
     role_occupation: ['', Validators.required],
     alignment: ['N' as AlignmentCode, Validators.required],
-    location: ['', Validators.required],
+    location: [''],
+    location_id: [''],
     faction: [''],
     attitude: ['', Validators.required],
     party_relationship: ['', Validators.required],
@@ -61,29 +63,7 @@ export class NpcFormComponent implements OnInit, OnDestroy {
       this.npcId = Number(npcIdParam);
       this.api.getNpc(this.npcId).subscribe({
         next: (npc) => {
-          this.campaignId = npc.campaign;
-          this.currentImage = this.api.mediaUrl(npc.image);
-          this.form.patchValue({
-            name: npc.name,
-            aliases: npc.aliases.map((a) => a.name).join(', '),
-            role_occupation: npc.role_occupation,
-            alignment: npc.alignment,
-            location: npc.location,
-            faction: npc.faction,
-            attitude: npc.attitude,
-            party_relationship: npc.party_relationship,
-            tags: npc.tags.map((t) => t.name).join(', '),
-            appearance: npc.appearance,
-            voice_mannerisms: npc.voice_mannerisms,
-            personality_traits: npc.personality_traits,
-            motivation_goal: npc.motivation_goal,
-            secret_hook: npc.secret_hook,
-            knowledge: npc.knowledge,
-            inventory: npc.inventory,
-            dm_notes: npc.dm_notes,
-            session_log: npc.session_log,
-          });
-          this.dossierOpen = this.hasDossierContent();
+          this.patchNpcForm(npc);
         },
         error: () => {
           this.error = 'NPC not found.';
@@ -91,7 +71,44 @@ export class NpcFormComponent implements OnInit, OnDestroy {
       });
     } else if (campaignIdParam) {
       this.campaignId = Number(campaignIdParam);
+      this.loadCampaignLocations(this.campaignId);
     }
+  }
+
+  private loadCampaignLocations(campaignId: number): void {
+    this.api.getCampaignLocations(campaignId).subscribe({
+      next: (response) => {
+        this.campaignLocations = response.results;
+      },
+    });
+  }
+
+  private patchNpcForm(npc: NPC): void {
+    this.campaignId = npc.campaign;
+    this.loadCampaignLocations(npc.campaign);
+    this.currentImage = this.api.mediaUrl(npc.image);
+    this.form.patchValue({
+      name: npc.name,
+      aliases: npc.aliases.map((a) => a.name).join(', '),
+      role_occupation: npc.role_occupation,
+      alignment: npc.alignment,
+      location: npc.location,
+      location_id: npc.catalog_location ? String(npc.catalog_location.id) : '',
+      faction: npc.faction,
+      attitude: npc.attitude,
+      party_relationship: npc.party_relationship,
+      tags: npc.tags.map((t) => t.name).join(', '),
+      appearance: npc.appearance,
+      voice_mannerisms: npc.voice_mannerisms,
+      personality_traits: npc.personality_traits,
+      motivation_goal: npc.motivation_goal,
+      secret_hook: npc.secret_hook,
+      knowledge: npc.knowledge,
+      inventory: npc.inventory,
+      dm_notes: npc.dm_notes,
+      session_log: npc.session_log,
+    });
+    this.dossierOpen = this.hasDossierContent();
   }
 
   ngOnDestroy(): void {
@@ -132,11 +149,13 @@ export class NpcFormComponent implements OnInit, OnDestroy {
     }
 
     const raw = this.form.getRawValue();
+    const locationIdRaw = raw.location_id?.trim();
     const payload: NPCWritePayload = {
       name: raw.name!.trim(),
       role_occupation: raw.role_occupation!.trim(),
       alignment: raw.alignment as AlignmentCode,
-      location: raw.location!.trim(),
+      location: raw.location?.trim() || '',
+      location_id: locationIdRaw ? Number(locationIdRaw) : null,
       faction: raw.faction?.trim() || '',
       attitude: raw.attitude!.trim(),
       party_relationship: raw.party_relationship!.trim(),

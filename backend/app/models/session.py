@@ -51,6 +51,10 @@ class GameSession(Base):
         secondary="session_encounters",
         order_by="Encounter.title",
     )
+    locations: Mapped[list["Location"]] = relationship(
+        secondary="session_locations",
+        order_by="Location.title",
+    )
 
 
 class SessionStoryPath(Base):

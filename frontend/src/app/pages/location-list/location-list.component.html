@@ -1,0 +1,64 @@
+<section class="page-shell view-enter">
+  @if (campaign) {
+    <header class="list-header glass-panel">
+      <div class="list-title">
+        @if (campaignImageUrl(); as src) {
+          <img class="campaign-thumb" [src]="src" [alt]="campaign.name" />
+        }
+        <div>
+          <p class="eyebrow">Campaign Locations</p>
+          <h1 class="page-title">{{ campaign.name }}</h1>
+          <p class="page-subtitle">
+            {{ locations.length }} location{{ locations.length === 1 ? '' : 's' }} cataloged
+          </p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a [routerLink]="['/campaigns', campaign.id]" class="btn btn-secondary">Back to Roster</a>
+        <a [routerLink]="['/campaigns', campaign.id, 'locations', 'new']" class="btn btn-primary">
+          Add Location
+        </a>
+      </div>
+    </header>
+
+    @if (loading) {
+      <p class="empty-state">Loading locations…</p>
+    } @else if (error) {
+      <p class="empty-state">{{ error }}</p>
+    } @else if (locations.length === 0) {
+      <div class="glass-panel empty-state">
+        <p>No locations yet. Map your first town, dungeon, or landmark.</p>
+        <a [routerLink]="['/campaigns', campaign.id, 'locations', 'new']" class="btn btn-primary">
+          Create First Location
+        </a>
+      </div>
+    } @else {
+      <div class="location-list">
+        @for (location of locations; track location.id) {
+          <a
+            [routerLink]="['/campaigns', campaign.id, 'locations', location.id]"
+            class="location-row glass-panel"
+          >
+            @if (imageUrl(location.image); as src) {
+              <img class="location-thumb" [src]="src" [alt]="location.title" />
+            }
+            <div class="location-copy">
+              <h2>{{ location.title }}</h2>
+              <p class="meta-line">
+                {{ location.npc_count }} NPC{{ location.npc_count === 1 ? '' : 's' }} associated
+              </p>
+              @if (location.description.trim()) {
+                <p class="desc-line">{{ location.description }}</p>
+              }
+            </div>
+            <span class="row-action">Open →</span>
+          </a>
+        }
+      </div>
+    }
+  } @else if (error) {
+    <p class="empty-state">{{ error }}</p>
+  } @else {
+    <p class="empty-state">Loading…</p>
+  }
+</section>

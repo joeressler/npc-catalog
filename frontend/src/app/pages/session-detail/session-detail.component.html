@@ -81,6 +81,44 @@
       </article>
     }
 
+    @if (session.encounters.length) {
+      <article class="section glass-panel">
+        <h2>Linked encounters</h2>
+        <div class="character-list">
+          @for (encounter of session.encounters; track encounter.id) {
+            <a
+              [routerLink]="['/campaigns', session.campaign, 'encounters', encounter.id]"
+              class="character-link"
+            >
+              <strong>{{ encounter.title }}</strong>
+              @if (encounter.short_description.trim()) {
+                <span>{{ encounter.short_description }}</span>
+              }
+            </a>
+          }
+        </div>
+      </article>
+    }
+
+    @if (session.locations.length) {
+      <article class="section glass-panel">
+        <h2>Linked locations</h2>
+        <div class="character-list">
+          @for (location of session.locations; track location.id) {
+            <a
+              [routerLink]="['/campaigns', session.campaign, 'locations', location.id]"
+              class="character-link"
+            >
+              <strong>{{ location.title }}</strong>
+              @if (location.description.trim()) {
+                <span>{{ location.description }}</span>
+              }
+            </a>
+          }
+        </div>
+      </article>
+    }
+
     @if (session.clues.length) {
       <article class="section glass-panel">
         <h2>Clues</h2>
@@ -106,6 +144,7 @@
     @if (
       !session.overall_notes.trim() &&
       !session.story_paths.length &&
+      !session.locations.length &&
       !session.npcs.length &&
       !session.encounters.length &&
       !session.clues.length &&

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.media import (
     delete_campaign_image,
+    delete_location_image,
     delete_npc_image,
     save_campaign_image,
 )
@@ -82,5 +83,7 @@ def delete_campaign(db: Session, campaign: Campaign) -> None:
     delete_campaign_image(campaign.image_path)
     for npc in campaign.npcs:
         delete_npc_image(npc.image_path)
+    for location in campaign.locations:
+        delete_location_image(location.image_path)
     db.delete(campaign)
     db.commit()

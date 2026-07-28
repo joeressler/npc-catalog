@@ -12,6 +12,7 @@ import {
 import { ApiService } from '../../services/api.service';
 import {
   EncounterSummary,
+  LocationSummary,
   NPC,
   SessionStoryPath,
   SessionWritePayload,
@@ -35,6 +36,8 @@ export class SessionFormComponent implements OnInit {
   campaignId: number | null = null;
   campaignNpcs: NPC[] = [];
   campaignEncounters: EncounterSummary[] = [];
+  campaignLocations: LocationSummary[] = [];
+  selectedLocationIds = new Set<number>();
   selectedNpcIds = new Set<number>();
   selectedEncounterIds = new Set<number>();
   saving = false;
@@ -66,6 +69,12 @@ export class SessionFormComponent implements OnInit {
       },
     });
 
+    this.api.getCampaignLocations(this.campaignId).subscribe({
+      next: (response) => {
+        this.campaignLocations = response.results;
+      },
+    });
+
     if (sessionIdParam && sessionIdParam !== 'new') {
       this.editing = true;
       this.sessionId = Number(sessionIdParam);
@@ -83,6 +92,7 @@ export class SessionFormComponent implements OnInit {
           this.setStoryPaths(session.story_paths);
           this.setLineItems('clues', session.clues.map((item) => item.text));
           this.setLineItems('secrets', session.secrets.map((item) => item.text));
+          this.selectedLocationIds = new Set(session.locations.map((location) => location.id));
           this.selectedNpcIds = new Set(session.npcs.map((npc) => npc.id));
           this.selectedEncounterIds = new Set(session.encounters.map((encounter) => encounter.id));
         },
@@ -169,6 +179,18 @@ export class SessionFormComponent implements OnInit {
     }
   }
 
+  isLocationSelected(locationId: number): boolean {
+    return this.selectedLocationIds.has(locationId);
+  }
+
+  toggleLocation(locationId: number): void {
+    if (this.selectedLocationIds.has(locationId)) {
+      this.selectedLocationIds.delete(locationId);
+    } else {
+      this.selectedLocationIds.add(locationId);
+    }
+  }
+
   submit(): void {
     if (this.form.invalid || this.saving || !this.campaignId) {
       this.form.markAllAsTouched();
@@ -182,6 +204,7 @@ export class SessionFormComponent implements OnInit {
       story_paths: this.storyPathValues(),
       clues: this.lineItemValues('clues'),
       secrets: this.lineItemValues('secrets'),
+      location_ids: [...this.selectedLocationIds],
       npc_ids: [...this.selectedNpcIds],
       encounter_ids: [...this.selectedEncounterIds],
     };

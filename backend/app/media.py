@@ -13,6 +13,7 @@ def ensure_media_root() -> Path:
     root = settings.media_root
     (root / "campaigns").mkdir(parents=True, exist_ok=True)
     (root / "npcs").mkdir(parents=True, exist_ok=True)
+    (root / "locations").mkdir(parents=True, exist_ok=True)
     return root
 
 
@@ -59,6 +60,15 @@ def save_npc_image(upload: UploadFile) -> str:
 
 
 def delete_npc_image(image_path: str | None) -> None:
+    _delete_image(image_path)
+
+
+def save_location_image(upload: UploadFile) -> str:
+    """Persist a validated location image and return its relative storage path."""
+    return _save_image(upload, "locations")
+
+
+def delete_location_image(image_path: str | None) -> None:
     _delete_image(image_path)
 
 

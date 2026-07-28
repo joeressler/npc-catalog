@@ -18,6 +18,7 @@ from app.services.npcs import (
     npc_query_options,
     sync_aliases,
     sync_tags,
+    validate_npc_location_id,
 )
 from app.services.pagination import paginate_select
 
@@ -130,6 +131,10 @@ async def update_npc(npc_id: int, request: Request, db: Session = Depends(get_db
     if payload.campaign is not None:
         get_campaign_or_404(db, payload.campaign)
 
+    campaign_id = payload.campaign if payload.campaign is not None else npc.campaign_id
+    if payload.location_id is not None or "location_id" in data:
+        validate_npc_location_id(db, campaign_id=campaign_id, location_id=payload.location_id)
+
     _apply_write_fields(npc, payload, partial=True)
     _apply_image_from_form(npc, form)
 
@@ -198,6 +203,12 @@ async def create_campaign_npc(
     data = _parse_json_form_payload(payload)
     data["campaign"] = campaign_id
     write_payload = _parse_write_payload(data)
+
+    validate_npc_location_id(
+        db,
+        campaign_id=campaign_id,
+        location_id=write_payload.location_id,
+    )
 
     image_path = None
     if image and image.filename:

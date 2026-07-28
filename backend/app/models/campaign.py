@@ -43,3 +43,8 @@ class Campaign(Base):
         cascade="all, delete-orphan",
         order_by="Encounter.title",
     )
+    locations: Mapped[list["Location"]] = relationship(
+        back_populates="campaign",
+        cascade="all, delete-orphan",
+        order_by="Location.title",
+    )

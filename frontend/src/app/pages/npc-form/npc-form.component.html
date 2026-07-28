@@ -32,8 +32,22 @@
           </select>
         </div>
         <div class="field">
-          <label for="location">Location</label>
-          <input id="location" type="text" formControlName="location" />
+          <label for="catalog_location">Catalog location (optional)</label>
+          <select id="catalog_location" formControlName="location_id">
+            <option value="">None</option>
+            @for (place of campaignLocations; track place.id) {
+              <option [value]="place.id">{{ place.title }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="location">Location notes (optional)</label>
+          <input
+            id="location"
+            type="text"
+            formControlName="location"
+            placeholder="Free-text detail, e.g. back room, dock 3…"
+          />
         </div>
         <div class="field">
           <label for="faction">Faction (optional)</label>

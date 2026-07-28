@@ -2,11 +2,12 @@ from fastapi import Request
 
 from app.constants import ALIGNMENT_DISPLAY
 from app.media import build_media_url
-from app.models import Campaign, CharacterGraph, Encounter, GameSession, GraphEdge, GraphNode, NPC
+from app.models import Campaign, CharacterGraph, Encounter, GameSession, GraphEdge, GraphNode, Location, NPC
 from app.schemas import (
     AliasRead,
     CampaignListRead,
     CampaignRead,
+    CatalogLocationRead,
     EncounterDetailRead,
     EncounterEnemyRead,
     EncounterListRead,
@@ -18,6 +19,11 @@ from app.schemas import (
     GraphEndpointRead,
     GraphListRead,
     GraphNodeRead,
+    LocationDetailRead,
+    LocationListRead,
+    LocationLootRead,
+    LocationNpcRead,
+    LocationObjectRead,
     NPCDetailRead,
     NPCListRead,
     RelationTypeRead,
@@ -25,6 +31,7 @@ from app.schemas import (
     SessionEncounterRead,
     SessionLineItemRead,
     SessionListRead,
+    SessionLocationRead,
     SessionNpcRead,
     SessionStoryPathRead,
     TagRead,
@@ -49,6 +56,12 @@ def serialize_campaign(campaign: Campaign, request: Request, *, npc_count: int |
 
 def serialize_npc_list(npc: NPC, request: Request | None = None) -> NPCListRead:
     image = build_media_url(str(request.base_url), npc.image_path) if request else None
+    catalog_location = None
+    if npc.catalog_location is not None:
+        catalog_location = CatalogLocationRead(
+            id=npc.catalog_location.id,
+            title=npc.catalog_location.title,
+        )
     return NPCListRead(
         id=npc.id,
         campaign=npc.campaign_id,
@@ -57,6 +70,7 @@ def serialize_npc_list(npc: NPC, request: Request | None = None) -> NPCListRead:
         alignment=npc.alignment,
         alignment_display=ALIGNMENT_DISPLAY[npc.alignment],
         location=npc.location,
+        catalog_location=catalog_location,
         faction=npc.faction,
         attitude=npc.attitude,
         party_relationship=npc.party_relationship,
@@ -142,6 +156,14 @@ def serialize_session_detail(session: GameSession) -> SessionDetailRead:
             )
             for encounter in session.encounters
         ],
+        locations=[
+            SessionLocationRead(
+                id=location.id,
+                title=location.title,
+                description=location.description,
+            )
+            for location in session.locations
+        ],
         created_at=session.created_at,
         updated_at=session.updated_at,
     )
@@ -212,6 +234,70 @@ def serialize_encounter_detail(encounter: Encounter) -> EncounterDetailRead:
         ],
         created_at=encounter.created_at,
         updated_at=encounter.updated_at,
+    )
+
+
+def _serialize_location_npc(npc: NPC) -> LocationNpcRead:
+    return LocationNpcRead(
+        id=npc.id,
+        name=npc.name,
+        role_occupation=npc.role_occupation,
+        alignment=npc.alignment,
+        alignment_display=ALIGNMENT_DISPLAY[npc.alignment],
+    )
+
+
+def serialize_location_list(
+    location: Location,
+    request: Request,
+    *,
+    npc_count: int | None = None,
+) -> LocationListRead:
+    linked = npc_count
+    if linked is None:
+        resident_ids = {npc.id for npc in location.residents}
+        linked_ids = {npc.id for npc in location.npcs}
+        linked = len(resident_ids | linked_ids)
+    return LocationListRead(
+        id=location.id,
+        campaign=location.campaign_id,
+        title=location.title,
+        description=location.description,
+        image=build_media_url(str(request.base_url), location.image_path),
+        npc_count=linked,
+        created_at=location.created_at,
+        updated_at=location.updated_at,
+    )
+
+
+def serialize_location_detail(location: Location, request: Request) -> LocationDetailRead:
+    return LocationDetailRead(
+        id=location.id,
+        campaign=location.campaign_id,
+        title=location.title,
+        description=location.description,
+        image=build_media_url(str(request.base_url), location.image_path),
+        loot=[
+            LocationLootRead(
+                id=item.id,
+                description=item.description,
+                sort_order=item.sort_order,
+            )
+            for item in location.loot
+        ],
+        objects=[
+            LocationObjectRead(
+                id=obj.id,
+                name=obj.name,
+                description=obj.description,
+                sort_order=obj.sort_order,
+            )
+            for obj in location.objects
+        ],
+        npcs=[_serialize_location_npc(npc) for npc in location.npcs],
+        residents=[_serialize_location_npc(npc) for npc in location.residents],
+        created_at=location.created_at,
+        updated_at=location.updated_at,
     )
 
 

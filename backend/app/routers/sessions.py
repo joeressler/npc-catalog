@@ -19,6 +19,7 @@ from app.services.sessions import (
     next_session_number,
     sync_clues,
     sync_encounters,
+    sync_locations,
     sync_npcs,
     sync_secrets,
     sync_story_paths,
@@ -58,6 +59,8 @@ def update_session(session_id: int, payload: SessionWritePartial, db: Session = 
         sync_npcs(db, session, payload.npc_ids)
     if payload.encounter_ids is not None:
         sync_encounters(db, session, payload.encounter_ids)
+    if payload.location_ids is not None:
+        sync_locations(db, session, payload.location_ids)
 
     db.commit()
     session = get_session_or_404(db, session_id)
@@ -122,6 +125,7 @@ def create_campaign_session(
     sync_secrets(db, session, payload.secrets)
     sync_npcs(db, session, payload.npc_ids)
     sync_encounters(db, session, payload.encounter_ids)
+    sync_locations(db, session, payload.location_ids)
     db.commit()
     session = get_session_or_404(db, session.id)
     return serialize_session_detail(session)

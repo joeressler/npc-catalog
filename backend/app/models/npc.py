@@ -33,6 +33,10 @@ class NPC(Base):
     role_occupation: Mapped[str] = mapped_column(String(200))
     alignment: Mapped[str] = mapped_column(String(2))
     location: Mapped[str] = mapped_column(String(200))
+    location_id: Mapped[int | None] = mapped_column(
+        ForeignKey("locations.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     faction: Mapped[str] = mapped_column(String(200), default="")
     attitude: Mapped[str] = mapped_column(String(200))
     party_relationship: Mapped[str] = mapped_column(String(200))
@@ -57,6 +61,7 @@ class NPC(Base):
     )
 
     campaign: Mapped["Campaign"] = relationship(back_populates="npcs")
+    catalog_location: Mapped["Location | None"] = relationship(back_populates="residents")
     aliases: Mapped[list["Alias"]] = relationship(
         back_populates="npc",
         cascade="all, delete-orphan",

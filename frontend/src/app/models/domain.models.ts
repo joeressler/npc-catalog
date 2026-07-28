@@ -17,6 +17,11 @@ export interface Alias {
   name: string;
 }
 
+export interface CatalogLocation {
+  id: number;
+  title: string;
+}
+
 export interface NPC {
   id: number;
   campaign: number;
@@ -25,6 +30,8 @@ export interface NPC {
   alignment: AlignmentCode;
   alignment_display: string;
   location: string;
+  catalog_location?: CatalogLocation | null;
+  location_id?: number | null;
   faction: string;
   attitude: string;
   party_relationship: string;
@@ -67,7 +74,8 @@ export interface NPCWritePayload {
   name: string;
   role_occupation: string;
   alignment: AlignmentCode;
-  location: string;
+  location?: string;
+  location_id?: number | null;
   faction?: string;
   attitude: string;
   party_relationship: string;
@@ -137,6 +145,7 @@ export interface SessionDetail extends SessionSummary {
   story_paths: SessionStoryPath[];
   clues: SessionLineItem[];
   secrets: SessionLineItem[];
+  locations: SessionLocationRef[];
   npcs: SessionNpc[];
   encounters: SessionEncounterRef[];
 }
@@ -148,6 +157,7 @@ export interface SessionWritePayload {
   story_paths?: SessionStoryPathWrite[];
   clues?: string[];
   secrets?: string[];
+  location_ids?: number[];
   npc_ids?: number[];
   encounter_ids?: number[];
 }
@@ -156,6 +166,12 @@ export interface SessionEncounterRef {
   id: number;
   title: string;
   short_description: string;
+}
+
+export interface SessionLocationRef {
+  id: number;
+  title: string;
+  description: string;
 }
 
 export interface EncounterEnemy {
@@ -226,6 +242,58 @@ export interface EncounterWritePayload {
   enemies?: EncounterEnemyWrite[];
   loot?: string[];
   objects?: EncounterObjectWrite[];
+  npc_ids?: number[];
+}
+
+export interface LocationLoot {
+  id: number;
+  description: string;
+  sort_order: number;
+}
+
+export interface LocationObject {
+  id: number;
+  name: string;
+  description: string;
+  sort_order: number;
+}
+
+export interface LocationObjectWrite {
+  name: string;
+  description: string;
+}
+
+export interface LocationNpc {
+  id: number;
+  name: string;
+  role_occupation: string;
+  alignment: AlignmentCode;
+  alignment_display: string;
+}
+
+export interface LocationSummary {
+  id: number;
+  campaign: number;
+  title: string;
+  description: string;
+  image: string | null;
+  npc_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LocationDetail extends LocationSummary {
+  loot: LocationLoot[];
+  objects: LocationObject[];
+  npcs: LocationNpc[];
+  residents: LocationNpc[];
+}
+
+export interface LocationWritePayload {
+  title: string;
+  description?: string;
+  loot?: string[];
+  objects?: LocationObjectWrite[];
   npc_ids?: number[];
 }
 

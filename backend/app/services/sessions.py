@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import Select, delete, func, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import Encounter, GameSession, NPC, SessionBeat, SessionClue, SessionSecret, SessionStoryPath
+from app.models import Encounter, GameSession, Location, NPC, SessionBeat, SessionClue, SessionSecret, SessionStoryPath
 from app.schemas import SessionStoryPathWrite
 
 
@@ -94,6 +94,33 @@ def sync_encounters(db: Session, session: GameSession, encounter_ids: list[int])
     session.encounters = [encounter_map[encounter_id] for encounter_id in unique_ids]
 
 
+def sync_locations(db: Session, session: GameSession, location_ids: list[int]) -> None:
+    if not location_ids:
+        session.locations = []
+        return
+
+    unique_ids: list[int] = []
+    seen: set[int] = set()
+    for location_id in location_ids:
+        if location_id not in seen:
+            seen.add(location_id)
+            unique_ids.append(location_id)
+
+    locations = db.scalars(select(Location).where(Location.id.in_(unique_ids))).all()
+    location_map = {location.id: location for location in locations}
+    if len(location_map) != len(unique_ids):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="One or more locations not found.")
+
+    for location in locations:
+        if location.campaign_id != session.campaign_id:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail="Locations must belong to the session's campaign.",
+            )
+
+    session.locations = [location_map[location_id] for location_id in unique_ids]
+
+
 def session_query_options(stmt: Select[tuple[GameSession]]) -> Select[tuple[GameSession]]:
     return stmt.options(
         selectinload(GameSession.story_paths).selectinload(SessionStoryPath.beats),
@@ -101,6 +128,7 @@ def session_query_options(stmt: Select[tuple[GameSession]]) -> Select[tuple[Game
         selectinload(GameSession.secrets),
         selectinload(GameSession.npcs),
         selectinload(GameSession.encounters),
+        selectinload(GameSession.locations),
     )
 
 

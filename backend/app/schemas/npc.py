@@ -4,6 +4,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.constants import VALID_ALIGNMENTS
+from app.schemas.location import CatalogLocationRead
 
 
 class TagRead(BaseModel):
@@ -25,7 +26,8 @@ class NPCWrite(BaseModel):
     name: str = Field(max_length=200)
     role_occupation: str = Field(max_length=200)
     alignment: str = Field(max_length=2)
-    location: str = Field(max_length=200)
+    location: str = Field(default="", max_length=200)
+    location_id: int | None = None
     faction: str = ""
     attitude: str = Field(max_length=200)
     party_relationship: str = Field(max_length=200)
@@ -55,6 +57,7 @@ class NPCWritePartial(BaseModel):
     role_occupation: str | None = Field(default=None, max_length=200)
     alignment: str | None = Field(default=None, max_length=2)
     location: str | None = Field(default=None, max_length=200)
+    location_id: int | None = None
     faction: str | None = None
     attitude: str | None = Field(default=None, max_length=200)
     party_relationship: str | None = Field(default=None, max_length=200)
@@ -86,6 +89,7 @@ class NPCListRead(BaseModel):
     alignment: str
     alignment_display: str
     location: str
+    catalog_location: CatalogLocationRead | None = None
     faction: str
     attitude: str
     party_relationship: str

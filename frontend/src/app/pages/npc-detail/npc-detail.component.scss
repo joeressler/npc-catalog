@@ -37,6 +37,12 @@
   color: var(--aero-text-muted);
 }
 
+.location-notes {
+  margin: 0.35rem 0 0;
+  color: var(--aero-text-muted);
+  font-size: 0.92rem;
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;

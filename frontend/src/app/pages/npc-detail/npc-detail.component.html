@@ -15,7 +15,22 @@
           @if (npc.aliases.length) {
             <p class="aliases">Also known as {{ aliasList() }}</p>
           }
-          <p class="role">{{ npc.role_occupation }} · {{ npc.location }}</p>
+          <p class="role">
+            {{ npc.role_occupation }}
+            @if (locationLabel()) {
+              ·
+              @if (npc.catalog_location) {
+                <a [routerLink]="['/campaigns', npc.campaign, 'locations', npc.catalog_location.id]">
+                  {{ locationLabel() }}
+                </a>
+              } @else {
+                {{ locationLabel() }}
+              }
+            }
+          </p>
+          @if (locationNotes()) {
+            <p class="location-notes">{{ locationNotes() }}</p>
+          }
           <div class="chips">
             <span class="chip">{{ npc.alignment_display }}</span>
             <span class="chip">{{ npc.attitude }}</span>

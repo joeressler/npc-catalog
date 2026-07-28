@@ -36,6 +36,12 @@ class SessionEncounterRead(BaseModel):
     short_description: str
 
 
+class SessionLocationRead(BaseModel):
+    id: int
+    title: str
+    description: str
+
+
 class SessionListRead(BaseModel):
     id: int
     campaign: int
@@ -57,6 +63,7 @@ class SessionDetailRead(BaseModel):
     secrets: list[SessionLineItemRead]
     npcs: list[SessionNpcRead]
     encounters: list[SessionEncounterRead]
+    locations: list[SessionLocationRead]
     created_at: datetime
     updated_at: datetime
 
@@ -70,6 +77,7 @@ class SessionWrite(BaseModel):
     secrets: list[str] = Field(default_factory=list)
     npc_ids: list[int] = Field(default_factory=list)
     encounter_ids: list[int] = Field(default_factory=list)
+    location_ids: list[int] = Field(default_factory=list)
 
 
 class SessionWritePartial(BaseModel):
@@ -81,6 +89,7 @@ class SessionWritePartial(BaseModel):
     secrets: list[str] | None = None
     npc_ids: list[int] | None = None
     encounter_ids: list[int] | None = None
+    location_ids: list[int] | None = None
 
 
 def dump_session_partial(payload: SessionWritePartial) -> dict[str, Any]:

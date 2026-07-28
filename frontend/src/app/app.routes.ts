@@ -59,6 +59,26 @@ export const routes: Routes = [
       import('./pages/encounter-list/encounter-list.component').then((m) => m.EncounterListComponent),
   },
   {
+    path: 'campaigns/:campaignId/locations/new',
+    loadComponent: () =>
+      import('./pages/location-form/location-form.component').then((m) => m.LocationFormComponent),
+  },
+  {
+    path: 'campaigns/:campaignId/locations/:locationId/edit',
+    loadComponent: () =>
+      import('./pages/location-form/location-form.component').then((m) => m.LocationFormComponent),
+  },
+  {
+    path: 'campaigns/:campaignId/locations/:locationId',
+    loadComponent: () =>
+      import('./pages/location-detail/location-detail.component').then((m) => m.LocationDetailComponent),
+  },
+  {
+    path: 'campaigns/:campaignId/locations',
+    loadComponent: () =>
+      import('./pages/location-list/location-list.component').then((m) => m.LocationListComponent),
+  },
+  {
     path: 'campaigns/:campaignId/graphs/new',
     loadComponent: () =>
       import('./pages/graph-form/graph-form.component').then((m) => m.GraphFormComponent),
