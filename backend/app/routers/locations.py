@@ -1,23 +1,31 @@
 import json
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
+from fastapi import (
+    APIRouter,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+    status,
+)
 from pydantic import ValidationError
 from sqlalchemy import func, or_, select
-from sqlalchemy.orm import Session
 
-from app.deps import get_db
-from app.media import delete_location_image, save_location_image
-from app.models import Location, LocationNPC, NPC
-from app.schemas import LocationWrite, LocationWritePartial, dump_location_partial
+from app.deps import DbSession
 from app.mappers import serialize_location_detail, serialize_location_list
+from app.media import delete_location_image, save_location_image
+from app.models import NPC, Location, LocationNPC
+from app.schemas import LocationWrite, LocationWritePartial
+from app.services.campaigns import get_campaign_or_404
 from app.services.locations import (
     apply_location_write,
     get_location_or_404,
-    sync_npcs,
     sync_loot,
+    sync_npcs,
     sync_objects,
 )
-from app.services.campaigns import get_campaign_or_404
 from app.services.pagination import paginate_select
 
 router = APIRouter(tags=["locations"])
@@ -66,13 +74,13 @@ def _apply_image_from_form(location: Location, form) -> None:
 
 
 @router.get("/locations/{location_id}/")
-def get_location(location_id: int, request: Request, db: Session = Depends(get_db)):
+def get_location(location_id: int, request: Request, db: DbSession):
     location = get_location_or_404(db, location_id)
     return serialize_location_detail(location, request)
 
 
 @router.patch("/locations/{location_id}/")
-async def update_location(location_id: int, request: Request, db: Session = Depends(get_db)):
+async def update_location(location_id: int, request: Request, db: DbSession):
     location = get_location_or_404(db, location_id)
     form = await request.form()
     data = _parse_json_form_payload(form.get("payload"))
@@ -100,7 +108,7 @@ async def update_location(location_id: int, request: Request, db: Session = Depe
 
 
 @router.delete("/locations/{location_id}/", status_code=status.HTTP_204_NO_CONTENT)
-def delete_location(location_id: int, db: Session = Depends(get_db)):
+def delete_location(location_id: int, db: DbSession):
     location = get_location_or_404(db, location_id)
     delete_location_image(location.image_path)
     db.delete(location)
@@ -111,8 +119,8 @@ def delete_location(location_id: int, db: Session = Depends(get_db)):
 def list_campaign_locations(
     campaign_id: int,
     request: Request,
+    db: DbSession,
     page: int = 1,
-    db: Session = Depends(get_db),
 ):
     get_campaign_or_404(db, campaign_id)
     npc_count = (
@@ -149,9 +157,9 @@ def list_campaign_locations(
 async def create_campaign_location(
     campaign_id: int,
     request: Request,
-    payload: str = Form(...),
-    image: UploadFile | None = File(default=None),
-    db: Session = Depends(get_db),
+    payload: Annotated[str, Form()],
+    db: DbSession,
+    image: Annotated[UploadFile | None, File()] = None,
 ):
     get_campaign_or_404(db, campaign_id)
     data = _parse_json_form_payload(payload)
@@ -176,5 +184,3 @@ async def create_campaign_location(
     db.commit()
     location = get_location_or_404(db, location.id)
     return serialize_location_detail(location, request)
-
-

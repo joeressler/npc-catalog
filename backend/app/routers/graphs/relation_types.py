@@ -1,8 +1,7 @@
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import HTTPException, Request, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
-from app.deps import get_db
+from app.deps import DbSession
 from app.mappers import serialize_relation_type
 from app.models import GraphEdge, RelationType
 from app.routers.graphs.shared import campaign_relation_types_router, relation_types_router
@@ -21,8 +20,8 @@ from app.services.pagination import paginate_select
 def list_campaign_relation_types(
     campaign_id: int,
     request: Request,
+    db: DbSession,
     page: int = 1,
-    db: Session = Depends(get_db),
 ):
     get_campaign_or_404(db, campaign_id)
 
@@ -53,7 +52,7 @@ def list_campaign_relation_types(
 def create_campaign_relation_type(
     campaign_id: int,
     payload: RelationTypeWrite,
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
     get_campaign_or_404(db, campaign_id)
     ensure_default_relation_types(db, campaign_id)
@@ -74,7 +73,7 @@ def create_campaign_relation_type(
 def update_relation_type(
     relation_type_id: int,
     payload: RelationTypeWritePartial,
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
     relation_type = get_relation_type_or_404(db, relation_type_id)
     data = payload.model_dump(exclude_unset=True)
@@ -98,7 +97,7 @@ def update_relation_type(
     "/relation-types/{relation_type_id}/",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-def delete_relation_type(relation_type_id: int, db: Session = Depends(get_db)):
+def delete_relation_type(relation_type_id: int, db: DbSession):
     relation_type = get_relation_type_or_404(db, relation_type_id)
     in_use = db.scalar(
         select(GraphEdge.id).where(GraphEdge.relation_type_id == relation_type_id).limit(1)

@@ -3,11 +3,11 @@ from sqlalchemy import Select, delete, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models import (
+    NPC,
     Encounter,
     EncounterEnemy,
     EncounterLoot,
     EncounterObject,
-    NPC,
 )
 from app.schemas import EncounterEnemyWrite, EncounterObjectWrite
 

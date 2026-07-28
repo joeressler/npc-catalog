@@ -2,7 +2,16 @@ from fastapi import HTTPException, status
 from sqlalchemy import Select, delete, func, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import Encounter, GameSession, Location, NPC, SessionBeat, SessionClue, SessionSecret, SessionStoryPath
+from app.models import (
+    NPC,
+    Encounter,
+    GameSession,
+    Location,
+    SessionBeat,
+    SessionClue,
+    SessionSecret,
+    SessionStoryPath,
+)
 from app.schemas import SessionStoryPathWrite
 
 

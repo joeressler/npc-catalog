@@ -1,7 +1,7 @@
 from sqlalchemy import Select, delete, func, or_, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from app.models import Alias, Location, NPC, NPCTag, Tag
+from app.models import NPC, Alias, Location, NPCTag, Tag
 
 
 def _clean_alias_names(alias_names: list[str]) -> list[str]:

@@ -1,7 +1,6 @@
-from fastapi import Depends, status
-from sqlalchemy.orm import Session
+from fastapi import status
 
-from app.deps import get_db
+from app.deps import DbSession
 from app.mappers import serialize_graph_node
 from app.routers.graphs.shared import graph_nodes_router, router
 from app.schemas import GraphNodePositionWrite, GraphNodeRead, GraphNodeWrite
@@ -17,7 +16,7 @@ from app.services.graphs import (
 def add_graph_node(
     graph_id: int,
     payload: GraphNodeWrite,
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
     graph = get_graph_or_404(db, graph_id)
     node = create_graph_node(
@@ -35,7 +34,7 @@ def add_graph_node(
 def update_graph_node_position(
     node_id: int,
     payload: GraphNodePositionWrite,
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
     node = get_graph_node_or_404(db, node_id)
     node.pos_x = payload.pos_x
@@ -46,7 +45,7 @@ def update_graph_node_position(
 
 
 @graph_nodes_router.delete("/graph-nodes/{node_id}/", status_code=status.HTTP_204_NO_CONTENT)
-def delete_graph_node(node_id: int, db: Session = Depends(get_db)):
+def delete_graph_node(node_id: int, db: DbSession):
     node = get_graph_node_or_404(db, node_id)
     delete_graph_node_and_dependents(db, node)
     db.commit()

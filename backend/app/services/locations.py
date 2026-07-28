@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import Select, delete, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import Location, LocationLoot, LocationObject, NPC
+from app.models import NPC, Location, LocationLoot, LocationObject
 from app.schemas import LocationObjectWrite
 
 

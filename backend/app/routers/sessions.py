@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Request, status
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
 
-from app.deps import get_db
+from app.deps import DbSession
 from app.mappers import serialize_session_detail, serialize_session_list
 from app.models import GameSession, SessionNPC
 from app.schemas import (
@@ -30,13 +29,13 @@ campaign_sessions_router = APIRouter(prefix="/campaigns/{campaign_id}/sessions",
 
 
 @router.get("/sessions/{session_id}/", response_model=SessionDetailRead)
-def get_session(session_id: int, db: Session = Depends(get_db)):
+def get_session(session_id: int, db: DbSession):
     session = get_session_or_404(db, session_id)
     return serialize_session_detail(session)
 
 
 @router.patch("/sessions/{session_id}/", response_model=SessionDetailRead)
-def update_session(session_id: int, payload: SessionWritePartial, db: Session = Depends(get_db)):
+def update_session(session_id: int, payload: SessionWritePartial, db: DbSession):
     session = get_session_or_404(db, session_id)
     data = dump_session_partial(payload)
 
@@ -68,7 +67,7 @@ def update_session(session_id: int, payload: SessionWritePartial, db: Session = 
 
 
 @router.delete("/sessions/{session_id}/", status_code=status.HTTP_204_NO_CONTENT)
-def delete_session(session_id: int, db: Session = Depends(get_db)):
+def delete_session(session_id: int, db: DbSession):
     session = get_session_or_404(db, session_id)
     db.delete(session)
     db.commit()
@@ -78,8 +77,8 @@ def delete_session(session_id: int, db: Session = Depends(get_db)):
 def list_campaign_sessions(
     campaign_id: int,
     request: Request,
+    db: DbSession,
     page: int = 1,
-    db: Session = Depends(get_db),
 ):
     get_campaign_or_404(db, campaign_id)
     npc_count = (
@@ -104,7 +103,7 @@ def list_campaign_sessions(
 def create_campaign_session(
     campaign_id: int,
     payload: SessionWrite,
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
     get_campaign_or_404(db, campaign_id)
     number = payload.number if payload.number is not None else next_session_number(db, campaign_id)

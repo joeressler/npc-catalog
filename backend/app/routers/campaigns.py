@@ -1,15 +1,20 @@
-from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, status
-from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from typing import Annotated
 
-from app.deps import get_db
+from fastapi import APIRouter, File, Form, Request, UploadFile, status
+from sqlalchemy import func, select
+
+from app.deps import DbSession
 from app.mappers import serialize_campaign
 from app.media import save_campaign_image
-from app.models import Campaign, NPC
+from app.models import NPC, Campaign
 from app.schemas import CampaignRead
 from app.services.campaigns import (
     create_campaign as create_campaign_service,
+)
+from app.services.campaigns import (
     delete_campaign as delete_campaign_service,
+)
+from app.services.campaigns import (
     ensure_unique_campaign_name,
     get_campaign_or_404,
     update_campaign_fields,
@@ -22,8 +27,8 @@ router = APIRouter(prefix="/campaigns", tags=["campaigns"])
 @router.get("/")
 def list_campaigns(
     request: Request,
+    db: DbSession,
     page: int = 1,
-    db: Session = Depends(get_db),
 ):
     npc_count = (
         select(func.count(NPC.id))
@@ -42,9 +47,9 @@ def list_campaigns(
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=CampaignRead)
 def create_campaign(
     request: Request,
-    name: str = Form(...),
-    image: UploadFile | None = File(default=None),
-    db: Session = Depends(get_db),
+    name: Annotated[str, Form()],
+    db: DbSession,
+    image: Annotated[UploadFile | None, File()] = None,
 ):
     ensure_unique_campaign_name(db, name=name)
 
@@ -60,7 +65,7 @@ def create_campaign(
 def get_campaign(
     campaign_id: int,
     request: Request,
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
     campaign = get_campaign_or_404(db, campaign_id)
     return serialize_campaign(campaign, request)
@@ -70,7 +75,7 @@ def get_campaign(
 async def update_campaign(
     campaign_id: int,
     request: Request,
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
     campaign = get_campaign_or_404(db, campaign_id)
 
@@ -86,6 +91,6 @@ async def update_campaign(
 
 
 @router.delete("/{campaign_id}/", status_code=status.HTTP_204_NO_CONTENT)
-def delete_campaign(campaign_id: int, db: Session = Depends(get_db)):
+def delete_campaign(campaign_id: int, db: DbSession):
     campaign = get_campaign_or_404(db, campaign_id)
     delete_campaign_service(db, campaign)

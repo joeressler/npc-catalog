@@ -1,15 +1,24 @@
 import json
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
+from fastapi import (
+    APIRouter,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+    status,
+)
 from pydantic import ValidationError
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
-from app.deps import get_db
+from app.deps import DbSession
+from app.mappers import serialize_npc_detail, serialize_npc_list
 from app.media import delete_npc_image, save_npc_image
 from app.models import NPC
 from app.schemas import NPCDetailRead, NPCWrite, NPCWritePartial, dump_partial
-from app.mappers import serialize_npc_detail, serialize_npc_list
 from app.services.campaigns import get_campaign_or_404
 from app.services.npcs import (
     apply_npc_filters,
@@ -84,6 +93,7 @@ def _apply_image_from_form(npc: NPC, form) -> None:
 @router.get("/npcs/")
 def list_npcs(
     request: Request,
+    db: DbSession,
     page: int = 1,
     q: str | None = None,
     alignment: str | None = None,
@@ -91,8 +101,7 @@ def list_npcs(
     campaign: int | None = None,
     location: str | None = None,
     faction: str | None = None,
-    ordering: str | None = Query(default=None),
-    db: Session = Depends(get_db),
+    ordering: Annotated[str | None, Query()] = None,
 ):
     stmt = npc_query_options(select(NPC))
     stmt = apply_npc_filters(
@@ -116,13 +125,13 @@ def list_npcs(
 
 
 @router.get("/npcs/{npc_id}/", response_model=NPCDetailRead)
-def get_npc(npc_id: int, request: Request, db: Session = Depends(get_db)):
+def get_npc(npc_id: int, request: Request, db: DbSession):
     npc = get_npc_or_404(db, npc_id)
     return serialize_npc_detail(npc, request)
 
 
 @router.patch("/npcs/{npc_id}/", response_model=NPCDetailRead)
-async def update_npc(npc_id: int, request: Request, db: Session = Depends(get_db)):
+async def update_npc(npc_id: int, request: Request, db: DbSession):
     npc = get_npc_or_404(db, npc_id)
     form = await request.form()
     data = _parse_json_form_payload(form.get("payload"))
@@ -149,7 +158,7 @@ async def update_npc(npc_id: int, request: Request, db: Session = Depends(get_db
 
 
 @router.delete("/npcs/{npc_id}/", status_code=status.HTTP_204_NO_CONTENT)
-def delete_npc(npc_id: int, db: Session = Depends(get_db)):
+def delete_npc(npc_id: int, db: DbSession):
     npc = get_npc_or_404(db, npc_id)
     delete_npc_image(npc.image_path)
     db.delete(npc)
@@ -160,14 +169,14 @@ def delete_npc(npc_id: int, db: Session = Depends(get_db)):
 def list_campaign_npcs(
     campaign_id: int,
     request: Request,
+    db: DbSession,
     page: int = 1,
     q: str | None = None,
     alignment: str | None = None,
     tag: str | None = None,
     location: str | None = None,
     faction: str | None = None,
-    ordering: str | None = Query(default=None),
-    db: Session = Depends(get_db),
+    ordering: Annotated[str | None, Query()] = None,
 ):
     get_campaign_or_404(db, campaign_id)
     stmt = npc_query_options(select(NPC))
@@ -195,9 +204,9 @@ def list_campaign_npcs(
 async def create_campaign_npc(
     campaign_id: int,
     request: Request,
-    payload: str = Form(...),
-    image: UploadFile | None = File(default=None),
-    db: Session = Depends(get_db),
+    payload: Annotated[str, Form()],
+    db: DbSession,
+    image: Annotated[UploadFile | None, File()] = None,
 ):
     get_campaign_or_404(db, campaign_id)
     data = _parse_json_form_payload(payload)
