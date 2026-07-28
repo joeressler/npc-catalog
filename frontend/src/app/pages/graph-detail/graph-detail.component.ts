@@ -24,7 +24,7 @@ import {
   RELATION_POLARITIES,
   RelationPolarity,
   RelationType,
-} from '../../models/npc.models';
+} from '../../models/domain.models';
 
 interface EndpointOption {
   key: string;
@@ -119,7 +119,7 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: () => {
         this.zone.run(() => {
-          this.error = 'Graph not found.';
+          this.error = 'Relationship web not found.';
           this.loading = false;
         });
       },
@@ -329,7 +329,7 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         this.router.navigate(['/campaigns', this.campaignId, 'graphs']);
       },
       error: () => {
-        this.actionError = 'Could not delete graph.';
+        this.actionError = 'Could not delete relationship web.';
         this.deleting = false;
       },
     });

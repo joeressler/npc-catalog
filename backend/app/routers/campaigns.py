@@ -1,11 +1,19 @@
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.deps import get_db
-from app.media import delete_campaign_image, delete_location_image, delete_npc_image, save_campaign_image
-from app.models import Campaign, Location, NPC
-from app.serializers import serialize_campaign
+from app.mappers import serialize_campaign
+from app.media import save_campaign_image
+from app.models import Campaign, NPC
+from app.schemas import CampaignRead
+from app.services.campaigns import (
+    create_campaign as create_campaign_service,
+    delete_campaign as delete_campaign_service,
+    ensure_unique_campaign_name,
+    get_campaign_or_404,
+    update_campaign_fields,
+)
 from app.services.pagination import paginate_select
 
 router = APIRouter(prefix="/campaigns", tags=["campaigns"])
@@ -31,90 +39,53 @@ def list_campaigns(
     return paginate_select(db, request, stmt, page, serialize)
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=CampaignRead)
 def create_campaign(
     request: Request,
     name: str = Form(...),
     image: UploadFile | None = File(default=None),
     db: Session = Depends(get_db),
 ):
-    existing = db.scalar(select(Campaign).where(func.lower(Campaign.name) == name.strip().lower()))
-    if existing:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Campaign with this name already exists.")
+    ensure_unique_campaign_name(db, name=name)
 
     image_path = None
     if image and image.filename:
         image_path = save_campaign_image(image)
 
-    campaign = Campaign(name=name.strip(), image_path=image_path)
-    db.add(campaign)
-    db.commit()
-    db.refresh(campaign)
+    campaign = create_campaign_service(db, name=name, image_path=image_path)
     return serialize_campaign(campaign, request)
 
 
-@router.get("/{campaign_id}/")
+@router.get("/{campaign_id}/", response_model=CampaignRead)
 def get_campaign(
     campaign_id: int,
     request: Request,
     db: Session = Depends(get_db),
 ):
-    campaign = db.get(Campaign, campaign_id)
-    if campaign is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Campaign not found.")
+    campaign = get_campaign_or_404(db, campaign_id)
     return serialize_campaign(campaign, request)
 
 
-@router.patch("/{campaign_id}/")
+@router.patch("/{campaign_id}/", response_model=CampaignRead)
 async def update_campaign(
     campaign_id: int,
     request: Request,
     db: Session = Depends(get_db),
 ):
-    campaign = db.get(Campaign, campaign_id)
-    if campaign is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Campaign not found.")
+    campaign = get_campaign_or_404(db, campaign_id)
 
     form = await request.form()
-    name = form.get("name")
-    if not name or not str(name).strip():
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Name is required.")
-
-    trimmed_name = str(name).strip()
-    duplicate = db.scalar(
-        select(Campaign).where(
-            func.lower(Campaign.name) == trimmed_name.lower(),
-            Campaign.id != campaign_id,
-        )
+    campaign = update_campaign_fields(
+        db,
+        campaign,
+        name=form.get("name"),
+        image_field=form.get("image"),
+        image_provided="image" in form,
     )
-    if duplicate:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Campaign with this name already exists.")
-
-    campaign.name = trimmed_name
-
-    if "image" in form:
-        image_field = form.get("image")
-        if image_field == "" or (isinstance(image_field, str) and image_field == ""):
-            delete_campaign_image(campaign.image_path)
-            campaign.image_path = None
-        elif isinstance(image_field, UploadFile) and image_field.filename:
-            delete_campaign_image(campaign.image_path)
-            campaign.image_path = save_campaign_image(image_field)
-
-    db.commit()
-    db.refresh(campaign)
     return serialize_campaign(campaign, request)
 
 
 @router.delete("/{campaign_id}/", status_code=status.HTTP_204_NO_CONTENT)
 def delete_campaign(campaign_id: int, db: Session = Depends(get_db)):
-    campaign = db.get(Campaign, campaign_id)
-    if campaign is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Campaign not found.")
-    delete_campaign_image(campaign.image_path)
-    for npc in campaign.npcs:
-        delete_npc_image(npc.image_path)
-    for location in campaign.locations:
-        delete_location_image(location.image_path)
-    db.delete(campaign)
-    db.commit()
+    campaign = get_campaign_or_404(db, campaign_id)
+    delete_campaign_service(db, campaign)

@@ -47,7 +47,7 @@ export class GraphFormComponent implements OnInit {
           });
         },
         error: () => {
-          this.error = 'Graph not found.';
+          this.error = 'Relationship web not found.';
         },
       });
     }
@@ -86,7 +86,7 @@ export class GraphFormComponent implements OnInit {
         this.router.navigate(['/campaigns', graph.campaign, 'graphs', graph.id]);
       },
       error: () => {
-        this.error = 'Could not save graph.';
+        this.error = 'Could not save relationship web.';
         this.saving = false;
       },
     });

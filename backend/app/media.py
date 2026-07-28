@@ -80,8 +80,8 @@ def _delete_image(image_path: str | None) -> None:
         full_path.unlink()
 
 
-def build_media_url(base_url: str, image_path: str | None) -> str | None:
+def build_media_url(_base_url: str, image_path: str | None) -> str | None:
     if not image_path:
         return None
-    # Relative path so the SPA host/port (e.g. localhost:314) serves /media via nginx.
+    # Relative path (base_url intentionally unused) so the SPA host/port serves /media via nginx.
     return f"/media/{image_path.lstrip('/')}"

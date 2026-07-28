@@ -3,7 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
-import { LocationDetail } from '../../models/npc.models';
+import { LocationDetail } from '../../models/domain.models';
 
 @Component({
   selector: 'app-location-detail',

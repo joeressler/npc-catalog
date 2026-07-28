@@ -9,15 +9,15 @@ from app.deps import get_db
 from app.media import delete_location_image, save_location_image
 from app.models import Location, LocationNPC, NPC
 from app.schemas import LocationWrite, LocationWritePartial, dump_location_partial
-from app.serializers import serialize_location_detail, serialize_location_list
+from app.mappers import serialize_location_detail, serialize_location_list
 from app.services.locations import (
     apply_location_write,
     get_location_or_404,
-    sync_characters,
+    sync_npcs,
     sync_loot,
     sync_objects,
 )
-from app.services.npcs import get_campaign_or_404
+from app.services.campaigns import get_campaign_or_404
 from app.services.pagination import paginate_select
 
 router = APIRouter(tags=["locations"])
@@ -89,8 +89,8 @@ async def update_location(location_id: int, request: Request, db: Session = Depe
         sync_loot(db, location, payload.loot)
     if payload.objects is not None:
         sync_objects(db, location, payload.objects)
-    if payload.character_ids is not None:
-        sync_characters(db, location, payload.character_ids)
+    if payload.npc_ids is not None:
+        sync_npcs(db, location, payload.npc_ids)
 
     _apply_image_from_form(location, form)
 
@@ -172,7 +172,9 @@ async def create_campaign_location(
     db.flush()
     sync_loot(db, location, write_payload.loot)
     sync_objects(db, location, write_payload.objects)
-    sync_characters(db, location, write_payload.character_ids)
+    sync_npcs(db, location, write_payload.npc_ids)
     db.commit()
     location = get_location_or_404(db, location.id)
     return serialize_location_detail(location, request)
+
+

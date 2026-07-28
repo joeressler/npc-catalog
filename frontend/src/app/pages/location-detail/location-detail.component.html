@@ -69,25 +69,25 @@
         <h2>Residents</h2>
         <p class="section-note">NPCs whose home location is set to this place.</p>
         <div class="character-list">
-          @for (character of location.residents; track character.id) {
-            <a [routerLink]="['/npcs', character.id]" class="character-link">
-              <strong>{{ character.name }}</strong>
-              <span>{{ character.role_occupation }} · {{ character.alignment_display }}</span>
+          @for (npc of location.residents; track npc.id) {
+            <a [routerLink]="['/npcs', npc.id]" class="character-link">
+              <strong>{{ npc.name }}</strong>
+              <span>{{ npc.role_occupation }} · {{ npc.alignment_display }}</span>
             </a>
           }
         </div>
       </section>
     }
 
-    @if (location.characters.length) {
+    @if (location.npcs.length) {
       <section class="section glass-panel">
         <h2>Linked NPCs</h2>
         <p class="section-note">NPCs soft-linked to this location.</p>
         <div class="character-list">
-          @for (character of location.characters; track character.id) {
-            <a [routerLink]="['/npcs', character.id]" class="character-link">
-              <strong>{{ character.name }}</strong>
-              <span>{{ character.role_occupation }} · {{ character.alignment_display }}</span>
+          @for (npc of location.npcs; track npc.id) {
+            <a [routerLink]="['/npcs', npc.id]" class="character-link">
+              <strong>{{ npc.name }}</strong>
+              <span>{{ npc.role_occupation }} · {{ npc.alignment_display }}</span>
             </a>
           }
         </div>
@@ -99,7 +99,7 @@
       !location.objects.length &&
       !location.loot.length &&
       !location.residents.length &&
-      !location.characters.length &&
+      !location.npcs.length &&
       !imageUrl()
     ) {
       <div class="glass-panel empty-state">

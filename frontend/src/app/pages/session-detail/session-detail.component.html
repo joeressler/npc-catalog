@@ -48,14 +48,33 @@
       </article>
     }
 
-    @if (session.characters.length) {
+    @if (session.npcs.length) {
       <article class="section glass-panel">
-        <h2>Characters of note</h2>
+        <h2>NPCs of note</h2>
         <div class="character-list">
-          @for (character of session.characters; track character.id) {
-            <a [routerLink]="['/npcs', character.id]" class="character-link">
-              <strong>{{ character.name }}</strong>
-              <span>{{ character.role_occupation }} · {{ character.alignment_display }}</span>
+          @for (npc of session.npcs; track npc.id) {
+            <a [routerLink]="['/npcs', npc.id]" class="character-link">
+              <strong>{{ npc.name }}</strong>
+              <span>{{ npc.role_occupation }} · {{ npc.alignment_display }}</span>
+            </a>
+          }
+        </div>
+      </article>
+    }
+
+    @if (session.encounters.length) {
+      <article class="section glass-panel">
+        <h2>Linked encounters</h2>
+        <div class="character-list">
+          @for (encounter of session.encounters; track encounter.id) {
+            <a
+              [routerLink]="['/campaigns', session.campaign, 'encounters', encounter.id]"
+              class="character-link"
+            >
+              <strong>{{ encounter.title }}</strong>
+              @if (encounter.short_description.trim()) {
+                <span>{{ encounter.short_description }}</span>
+              }
             </a>
           }
         </div>
@@ -125,9 +144,9 @@
     @if (
       !session.overall_notes.trim() &&
       !session.story_paths.length &&
-      !session.characters.length &&
-      !session.encounters.length &&
       !session.locations.length &&
+      !session.npcs.length &&
+      !session.encounters.length &&
       !session.clues.length &&
       !session.secrets.length
     ) {

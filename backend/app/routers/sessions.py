@@ -3,35 +3,39 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.deps import get_db
+from app.mappers import serialize_session_detail, serialize_session_list
 from app.models import GameSession, SessionNPC
-from app.schemas import SessionWrite, SessionWritePartial, dump_session_partial
-from app.serializers import serialize_session_detail, serialize_session_list
-from app.services.npcs import get_campaign_or_404
+from app.schemas import (
+    SessionDetailRead,
+    SessionWrite,
+    SessionWritePartial,
+    dump_session_partial,
+)
+from app.services.campaigns import get_campaign_or_404
 from app.services.pagination import paginate_select
 from app.services.sessions import (
     apply_session_write,
     get_session_or_404,
     next_session_number,
-    session_query_options,
-    sync_story_paths,
-    sync_characters,
     sync_clues,
     sync_encounters,
     sync_locations,
+    sync_npcs,
     sync_secrets,
+    sync_story_paths,
 )
 
 router = APIRouter(tags=["sessions"])
 campaign_sessions_router = APIRouter(prefix="/campaigns/{campaign_id}/sessions", tags=["sessions"])
 
 
-@router.get("/sessions/{session_id}/")
+@router.get("/sessions/{session_id}/", response_model=SessionDetailRead)
 def get_session(session_id: int, db: Session = Depends(get_db)):
     session = get_session_or_404(db, session_id)
     return serialize_session_detail(session)
 
 
-@router.patch("/sessions/{session_id}/")
+@router.patch("/sessions/{session_id}/", response_model=SessionDetailRead)
 def update_session(session_id: int, payload: SessionWritePartial, db: Session = Depends(get_db)):
     session = get_session_or_404(db, session_id)
     data = dump_session_partial(payload)
@@ -51,8 +55,8 @@ def update_session(session_id: int, payload: SessionWritePartial, db: Session = 
         sync_clues(db, session, payload.clues)
     if payload.secrets is not None:
         sync_secrets(db, session, payload.secrets)
-    if payload.character_ids is not None:
-        sync_characters(db, session, payload.character_ids)
+    if payload.npc_ids is not None:
+        sync_npcs(db, session, payload.npc_ids)
     if payload.encounter_ids is not None:
         sync_encounters(db, session, payload.encounter_ids)
     if payload.location_ids is not None:
@@ -78,25 +82,25 @@ def list_campaign_sessions(
     db: Session = Depends(get_db),
 ):
     get_campaign_or_404(db, campaign_id)
-    character_count = (
+    npc_count = (
         select(func.count(SessionNPC.npc_id))
         .where(SessionNPC.session_id == GameSession.id)
         .scalar_subquery()
     )
     stmt = (
-        select(GameSession, character_count.label("character_count"))
+        select(GameSession, npc_count.label("npc_count"))
         .where(GameSession.campaign_id == campaign_id)
         .order_by(GameSession.number.asc())
     )
 
     def serialize(row: tuple[GameSession, int]) -> dict:
         session, count = row[0], row[1]
-        return serialize_session_list(session, character_count=count).model_dump()
+        return serialize_session_list(session, npc_count=count).model_dump()
 
     return paginate_select(db, request, stmt, page, serialize)
 
 
-@campaign_sessions_router.post("/", status_code=status.HTTP_201_CREATED)
+@campaign_sessions_router.post("/", status_code=status.HTTP_201_CREATED, response_model=SessionDetailRead)
 def create_campaign_session(
     campaign_id: int,
     payload: SessionWrite,
@@ -119,7 +123,7 @@ def create_campaign_session(
     sync_story_paths(db, session, payload.story_paths)
     sync_clues(db, session, payload.clues)
     sync_secrets(db, session, payload.secrets)
-    sync_characters(db, session, payload.character_ids)
+    sync_npcs(db, session, payload.npc_ids)
     sync_encounters(db, session, payload.encounter_ids)
     sync_locations(db, session, payload.location_ids)
     db.commit()

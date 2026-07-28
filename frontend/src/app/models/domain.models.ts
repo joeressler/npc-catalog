@@ -122,7 +122,7 @@ export interface SessionStoryPathWrite {
   beats: string[];
 }
 
-export interface SessionCharacter {
+export interface SessionNpc {
   id: number;
   name: string;
   role_occupation: string;
@@ -135,7 +135,7 @@ export interface SessionSummary {
   campaign: number;
   number: number;
   title: string;
-  character_count: number;
+  npc_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -145,9 +145,9 @@ export interface SessionDetail extends SessionSummary {
   story_paths: SessionStoryPath[];
   clues: SessionLineItem[];
   secrets: SessionLineItem[];
-  characters: SessionCharacter[];
-  encounters: SessionEncounterRef[];
   locations: SessionLocationRef[];
+  npcs: SessionNpc[];
+  encounters: SessionEncounterRef[];
 }
 
 export interface SessionWritePayload {
@@ -157,9 +157,9 @@ export interface SessionWritePayload {
   story_paths?: SessionStoryPathWrite[];
   clues?: string[];
   secrets?: string[];
-  character_ids?: number[];
-  encounter_ids?: number[];
   location_ids?: number[];
+  npc_ids?: number[];
+  encounter_ids?: number[];
 }
 
 export interface SessionEncounterRef {
@@ -206,7 +206,7 @@ export interface EncounterObjectWrite {
   description: string;
 }
 
-export interface EncounterCharacter {
+export interface EncounterNpc {
   id: number;
   name: string;
   role_occupation: string;
@@ -220,7 +220,7 @@ export interface EncounterSummary {
   title: string;
   short_description: string;
   enemy_count: number;
-  character_count: number;
+  npc_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -231,7 +231,7 @@ export interface EncounterDetail extends EncounterSummary {
   enemies: EncounterEnemy[];
   loot: EncounterLoot[];
   objects: EncounterObject[];
-  characters: EncounterCharacter[];
+  npcs: EncounterNpc[];
 }
 
 export interface EncounterWritePayload {
@@ -242,7 +242,7 @@ export interface EncounterWritePayload {
   enemies?: EncounterEnemyWrite[];
   loot?: string[];
   objects?: EncounterObjectWrite[];
-  character_ids?: number[];
+  npc_ids?: number[];
 }
 
 export interface LocationLoot {
@@ -263,7 +263,7 @@ export interface LocationObjectWrite {
   description: string;
 }
 
-export interface LocationCharacter {
+export interface LocationNpc {
   id: number;
   name: string;
   role_occupation: string;
@@ -285,8 +285,8 @@ export interface LocationSummary {
 export interface LocationDetail extends LocationSummary {
   loot: LocationLoot[];
   objects: LocationObject[];
-  characters: LocationCharacter[];
-  residents: LocationCharacter[];
+  npcs: LocationNpc[];
+  residents: LocationNpc[];
 }
 
 export interface LocationWritePayload {
@@ -294,7 +294,7 @@ export interface LocationWritePayload {
   description?: string;
   loot?: string[];
   objects?: LocationObjectWrite[];
-  character_ids?: number[];
+  npc_ids?: number[];
 }
 
 export type RelationPolarity = 'positive' | 'negative' | 'neutral' | 'complex';

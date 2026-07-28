@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -29,13 +29,12 @@ import {
   LocationSummary,
   LocationWritePayload,
   Tag,
-} from '../models/npc.models';
+} from '../models/domain.models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
+  private readonly http = inject(HttpClient);
   private readonly base = '/api';
-
-  constructor(private http: HttpClient) {}
 
   getCampaigns(): Observable<PaginatedResponse<Campaign>> {
     return this.http.get<PaginatedResponse<Campaign>>(`${this.base}/campaigns/`);
@@ -74,12 +73,6 @@ export class ApiService {
       `${this.base}/campaigns/${campaignId}/npcs/`,
       { params: this.buildParams(filters) },
     );
-  }
-
-  getNpcs(filters: NPCFilters = {}): Observable<PaginatedResponse<NPC>> {
-    return this.http.get<PaginatedResponse<NPC>>(`${this.base}/npcs/`, {
-      params: this.buildParams(filters),
-    });
   }
 
   getNpc(id: number): Observable<NPC> {

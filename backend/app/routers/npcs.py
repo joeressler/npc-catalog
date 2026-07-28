@@ -8,12 +8,12 @@ from sqlalchemy.orm import Session
 from app.deps import get_db
 from app.media import delete_npc_image, save_npc_image
 from app.models import NPC
-from app.schemas import NPCWrite, NPCWritePartial, dump_partial
-from app.serializers import serialize_npc_detail, serialize_npc_list
+from app.schemas import NPCDetailRead, NPCWrite, NPCWritePartial, dump_partial
+from app.mappers import serialize_npc_detail, serialize_npc_list
+from app.services.campaigns import get_campaign_or_404
 from app.services.npcs import (
     apply_npc_filters,
     apply_npc_ordering,
-    get_campaign_or_404,
     get_npc_or_404,
     npc_query_options,
     sync_aliases,
@@ -115,13 +115,13 @@ def list_npcs(
     )
 
 
-@router.get("/npcs/{npc_id}/")
+@router.get("/npcs/{npc_id}/", response_model=NPCDetailRead)
 def get_npc(npc_id: int, request: Request, db: Session = Depends(get_db)):
     npc = get_npc_or_404(db, npc_id)
     return serialize_npc_detail(npc, request)
 
 
-@router.patch("/npcs/{npc_id}/")
+@router.patch("/npcs/{npc_id}/", response_model=NPCDetailRead)
 async def update_npc(npc_id: int, request: Request, db: Session = Depends(get_db)):
     npc = get_npc_or_404(db, npc_id)
     form = await request.form()
@@ -191,7 +191,7 @@ def list_campaign_npcs(
     )
 
 
-@campaign_npcs_router.post("/", status_code=status.HTTP_201_CREATED)
+@campaign_npcs_router.post("/", status_code=status.HTTP_201_CREATED, response_model=NPCDetailRead)
 async def create_campaign_npc(
     campaign_id: int,
     request: Request,

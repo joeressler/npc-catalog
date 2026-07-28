@@ -1,3 +1,12 @@
+// Frutiger Aero design system (global). Prefer these utilities in templates:
+//   .glass-panel — frosted panel surface
+//   .btn / .btn-primary / .btn-secondary / .btn-danger / .btn-sm — actions
+//   .field — labeled form control stack
+//   .chip — compact tag/pill
+//   .page-shell / .page-header / .page-title / .page-subtitle — page chrome
+//   .empty-state — empty list/message block
+//   .view-enter — short enter animation
+// Tokens (--aero-*, --font-*, --radius-*) live on :root below.
 :root {
   --aero-purple-deep: #4a2d7a;
   --aero-purple: #7b5cff;

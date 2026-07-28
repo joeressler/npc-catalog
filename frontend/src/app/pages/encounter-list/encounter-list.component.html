@@ -44,7 +44,7 @@
               <p class="meta-line">
                 {{ encounter.enemy_count }} enem{{ encounter.enemy_count === 1 ? 'y' : 'ies' }}
                 ·
-                {{ encounter.character_count }} NPC{{ encounter.character_count === 1 ? '' : 's' }} linked
+                {{ encounter.npc_count }} NPC{{ encounter.npc_count === 1 ? '' : 's' }} linked
               </p>
               @if (encounter.short_description.trim()) {
                 <p class="desc-line">{{ encounter.short_description }}</p>

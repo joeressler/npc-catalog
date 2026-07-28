@@ -12,7 +12,7 @@ export const routes: Routes = [
       import('./pages/campaign-form/campaign-form.component').then((m) => m.CampaignFormComponent),
   },
   {
-    path: 'campaigns/:id/edit',
+    path: 'campaigns/:campaignId/edit',
     loadComponent: () =>
       import('./pages/campaign-form/campaign-form.component').then((m) => m.CampaignFormComponent),
   },
@@ -99,7 +99,7 @@ export const routes: Routes = [
       import('./pages/graph-list/graph-list.component').then((m) => m.GraphListComponent),
   },
   {
-    path: 'campaigns/:id',
+    path: 'campaigns/:campaignId',
     loadComponent: () =>
       import('./pages/campaign-roster/campaign-roster.component').then((m) => m.CampaignRosterComponent),
   },
@@ -109,12 +109,12 @@ export const routes: Routes = [
       import('./pages/npc-form/npc-form.component').then((m) => m.NpcFormComponent),
   },
   {
-    path: 'npcs/:id',
+    path: 'npcs/:npcId',
     loadComponent: () =>
       import('./pages/npc-detail/npc-detail.component').then((m) => m.NpcDetailComponent),
   },
   {
-    path: 'npcs/:id/edit',
+    path: 'npcs/:npcId/edit',
     loadComponent: () =>
       import('./pages/npc-form/npc-form.component').then((m) => m.NpcFormComponent),
   },

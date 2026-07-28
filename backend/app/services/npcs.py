@@ -1,7 +1,7 @@
 from sqlalchemy import Select, delete, func, or_, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from app.models import Alias, Campaign, Location, NPC, NPCTag, Tag
+from app.models import Alias, Location, NPC, NPCTag, Tag
 
 
 def _clean_alias_names(alias_names: list[str]) -> list[str]:
@@ -106,15 +106,6 @@ def apply_npc_ordering(stmt: Select[tuple[NPC]], ordering: str | None) -> Select
     }
     column = column_map.get(key, NPC.name)
     return stmt.order_by(column.desc() if descending else column.asc())
-
-
-def get_campaign_or_404(db: Session, campaign_id: int) -> Campaign:
-    from fastapi import HTTPException, status
-
-    campaign = db.get(Campaign, campaign_id)
-    if campaign is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Campaign not found.")
-    return campaign
 
 
 def get_npc_or_404(db: Session, npc_id: int) -> NPC:

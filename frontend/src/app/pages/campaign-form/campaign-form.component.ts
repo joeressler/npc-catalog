@@ -32,7 +32,7 @@ export class CampaignFormComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    const idParam = this.route.snapshot.paramMap.get('id');
+    const idParam = this.route.snapshot.paramMap.get('campaignId');
     if (idParam) {
       this.editing = true;
       this.campaignId = Number(idParam);

@@ -4,18 +4,23 @@ from sqlalchemy.orm import Session
 
 from app.deps import get_db
 from app.models import Encounter, EncounterEnemy, EncounterNPC
-from app.schemas import EncounterWrite, EncounterWritePartial, dump_encounter_partial
-from app.serializers import serialize_encounter_detail, serialize_encounter_list
+from app.mappers import serialize_encounter_detail, serialize_encounter_list
+from app.schemas import (
+    EncounterDetailRead,
+    EncounterWrite,
+    EncounterWritePartial,
+    dump_encounter_partial,
+)
+from app.services.campaigns import get_campaign_or_404
 from app.services.encounters import (
     apply_encounter_write,
     clone_encounter,
     get_encounter_or_404,
-    sync_characters,
     sync_enemies,
     sync_loot,
+    sync_npcs,
     sync_objects,
 )
-from app.services.npcs import get_campaign_or_404
 from app.services.pagination import paginate_select
 
 router = APIRouter(tags=["encounters"])
@@ -25,13 +30,13 @@ campaign_encounters_router = APIRouter(
 )
 
 
-@router.get("/encounters/{encounter_id}/")
+@router.get("/encounters/{encounter_id}/", response_model=EncounterDetailRead)
 def get_encounter(encounter_id: int, db: Session = Depends(get_db)):
     encounter = get_encounter_or_404(db, encounter_id)
     return serialize_encounter_detail(encounter)
 
 
-@router.patch("/encounters/{encounter_id}/")
+@router.patch("/encounters/{encounter_id}/", response_model=EncounterDetailRead)
 def update_encounter(
     encounter_id: int,
     payload: EncounterWritePartial,
@@ -55,8 +60,8 @@ def update_encounter(
         sync_loot(db, encounter, payload.loot)
     if payload.objects is not None:
         sync_objects(db, encounter, payload.objects)
-    if payload.character_ids is not None:
-        sync_characters(db, encounter, payload.character_ids)
+    if payload.npc_ids is not None:
+        sync_npcs(db, encounter, payload.npc_ids)
 
     db.commit()
     encounter = get_encounter_or_404(db, encounter_id)
@@ -70,7 +75,11 @@ def delete_encounter(encounter_id: int, db: Session = Depends(get_db)):
     db.commit()
 
 
-@router.post("/encounters/{encounter_id}/clone/", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/encounters/{encounter_id}/clone/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=EncounterDetailRead,
+)
 def clone_encounter_endpoint(encounter_id: int, db: Session = Depends(get_db)):
     source = get_encounter_or_404(db, encounter_id)
     cloned = clone_encounter(db, source)
@@ -91,7 +100,7 @@ def list_campaign_encounters(
         .where(EncounterEnemy.encounter_id == Encounter.id)
         .scalar_subquery()
     )
-    character_count = (
+    npc_count = (
         select(func.count(EncounterNPC.npc_id))
         .where(EncounterNPC.encounter_id == Encounter.id)
         .scalar_subquery()
@@ -100,24 +109,28 @@ def list_campaign_encounters(
         select(
             Encounter,
             enemy_count.label("enemy_count"),
-            character_count.label("character_count"),
+            npc_count.label("npc_count"),
         )
         .where(Encounter.campaign_id == campaign_id)
         .order_by(Encounter.title.asc())
     )
 
     def serialize(row: tuple) -> dict:
-        encounter, enemies, characters = row[0], row[1], row[2]
+        encounter, enemies, npcs = row[0], row[1], row[2]
         return serialize_encounter_list(
             encounter,
             enemy_count=enemies,
-            character_count=characters,
+            npc_count=npcs,
         ).model_dump()
 
     return paginate_select(db, request, stmt, page, serialize)
 
 
-@campaign_encounters_router.post("/", status_code=status.HTTP_201_CREATED)
+@campaign_encounters_router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=EncounterDetailRead,
+)
 def create_campaign_encounter(
     campaign_id: int,
     payload: EncounterWrite,
@@ -138,7 +151,7 @@ def create_campaign_encounter(
     sync_enemies(db, encounter, payload.enemies)
     sync_loot(db, encounter, payload.loot)
     sync_objects(db, encounter, payload.objects)
-    sync_characters(db, encounter, payload.character_ids)
+    sync_npcs(db, encounter, payload.npc_ids)
     db.commit()
     encounter = get_encounter_or_404(db, encounter.id)
     return serialize_encounter_detail(encounter)

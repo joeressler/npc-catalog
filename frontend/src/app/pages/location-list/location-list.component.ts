@@ -3,7 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
-import { Campaign, LocationSummary } from '../../models/npc.models';
+import { Campaign, LocationSummary } from '../../models/domain.models';
 
 @Component({
   selector: 'app-location-list',

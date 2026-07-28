@@ -5,7 +5,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime } from 'rxjs/operators';
 
 import { ApiService } from '../../services/api.service';
-import { ALIGNMENTS, Campaign, NPC, Tag } from '../../models/npc.models';
+import { ALIGNMENTS, Campaign, NPC, Tag } from '../../models/domain.models';
 
 @Component({
   selector: 'app-campaign-roster',
@@ -37,7 +37,7 @@ export class CampaignRosterComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    const campaignId = Number(this.route.snapshot.paramMap.get('id'));
+    const campaignId = Number(this.route.snapshot.paramMap.get('campaignId'));
 
     this.api.getCampaign(campaignId).subscribe({
       next: (campaign) => {

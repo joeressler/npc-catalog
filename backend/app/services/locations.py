@@ -32,38 +32,38 @@ def sync_objects(db: Session, location: Location, objects: list[LocationObjectWr
         )
 
 
-def sync_characters(db: Session, location: Location, character_ids: list[int]) -> None:
-    if not character_ids:
-        location.characters = []
+def sync_npcs(db: Session, location: Location, npc_ids: list[int]) -> None:
+    if not npc_ids:
+        location.npcs = []
         return
 
     unique_ids: list[int] = []
     seen: set[int] = set()
-    for character_id in character_ids:
-        if character_id not in seen:
-            seen.add(character_id)
-            unique_ids.append(character_id)
+    for npc_id in npc_ids:
+        if npc_id not in seen:
+            seen.add(npc_id)
+            unique_ids.append(npc_id)
 
     npcs = db.scalars(select(NPC).where(NPC.id.in_(unique_ids))).all()
     npc_map = {npc.id: npc for npc in npcs}
     if len(npc_map) != len(unique_ids):
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="One or more characters not found.")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="One or more NPCs not found.")
 
     for npc in npcs:
         if npc.campaign_id != location.campaign_id:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
-                detail="Characters must belong to the location's campaign.",
+                detail="NPCs must belong to the location's campaign.",
             )
 
-    location.characters = [npc_map[character_id] for character_id in unique_ids]
+    location.npcs = [npc_map[npc_id] for npc_id in unique_ids]
 
 
 def location_query_options(stmt: Select[tuple[Location]]) -> Select[tuple[Location]]:
     return stmt.options(
         selectinload(Location.loot),
         selectinload(Location.objects),
-        selectinload(Location.characters),
+        selectinload(Location.npcs),
         selectinload(Location.residents),
     )
 

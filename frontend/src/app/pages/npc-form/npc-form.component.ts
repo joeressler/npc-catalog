@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { ApiService } from '../../services/api.service';
-import { ALIGNMENTS, AlignmentCode, LocationSummary, NPC, NPCWritePayload } from '../../models/npc.models';
+import { ALIGNMENTS, AlignmentCode, LocationSummary, NPC, NPCWritePayload } from '../../models/domain.models';
 
 @Component({
   selector: 'app-npc-form',
@@ -55,7 +55,7 @@ export class NpcFormComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
-    const npcIdParam = this.route.snapshot.paramMap.get('id');
+    const npcIdParam = this.route.snapshot.paramMap.get('npcId');
     const campaignIdParam = this.route.snapshot.paramMap.get('campaignId');
 
     if (npcIdParam) {

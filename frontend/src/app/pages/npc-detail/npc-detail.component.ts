@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
-import { NPC } from '../../models/npc.models';
+import { NPC } from '../../models/domain.models';
 
 interface DossierSection {
   title: string;
@@ -19,6 +19,10 @@ interface DossierSection {
   styleUrl: './npc-detail.component.scss',
 })
 export class NpcDetailComponent implements OnInit {
+  private readonly api = inject(ApiService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
   npc: NPC | null = null;
   portraitUrl: string | null = null;
   sections: DossierSection[] = [];
@@ -26,14 +30,8 @@ export class NpcDetailComponent implements OnInit {
   error = '';
   deleting = false;
 
-  constructor(
-    private api: ApiService,
-    private route: ActivatedRoute,
-    private router: Router,
-  ) {}
-
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
+    const id = Number(this.route.snapshot.paramMap.get('npcId'));
     this.api.getNpc(id).subscribe({
       next: (npc) => {
         this.npc = npc;

@@ -14,7 +14,7 @@ import {
   LocationObject,
   LocationWritePayload,
   NPC,
-} from '../../models/npc.models';
+} from '../../models/domain.models';
 
 @Component({
   selector: 'app-location-form',
@@ -33,7 +33,7 @@ export class LocationFormComponent implements OnInit, OnDestroy {
   locationId: number | null = null;
   campaignId: number | null = null;
   campaignNpcs: NPC[] = [];
-  selectedCharacterIds = new Set<number>();
+  selectedNpcIds = new Set<number>();
   saving = false;
   error = '';
   currentImage: string | null = null;
@@ -73,7 +73,7 @@ export class LocationFormComponent implements OnInit, OnDestroy {
           });
           this.setLoot(location.loot.map((item) => item.description));
           this.setObjects(location.objects);
-          this.selectedCharacterIds = new Set(location.characters.map((character) => character.id));
+          this.selectedNpcIds = new Set(location.npcs.map((npc) => npc.id));
         },
         error: () => {
           this.error = 'Location not found.';
@@ -141,15 +141,15 @@ export class LocationFormComponent implements OnInit, OnDestroy {
     this.moveFormArrayItem(this.objects, index, direction);
   }
 
-  isCharacterSelected(npcId: number): boolean {
-    return this.selectedCharacterIds.has(npcId);
+  isNpcSelected(npcId: number): boolean {
+    return this.selectedNpcIds.has(npcId);
   }
 
-  toggleCharacter(npcId: number): void {
-    if (this.selectedCharacterIds.has(npcId)) {
-      this.selectedCharacterIds.delete(npcId);
+  toggleNpc(npcId: number): void {
+    if (this.selectedNpcIds.has(npcId)) {
+      this.selectedNpcIds.delete(npcId);
     } else {
-      this.selectedCharacterIds.add(npcId);
+      this.selectedNpcIds.add(npcId);
     }
   }
 
@@ -165,7 +165,7 @@ export class LocationFormComponent implements OnInit, OnDestroy {
       description: raw.description?.trim() || '',
       loot: this.lootValues(),
       objects: this.objectValues(),
-      character_ids: [...this.selectedCharacterIds],
+      npc_ids: [...this.selectedNpcIds],
     };
 
     this.saving = true;
