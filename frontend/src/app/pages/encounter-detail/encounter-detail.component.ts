@@ -3,7 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
-import { EncounterDetail } from '../../models/npc.models';
+import { EncounterDetail } from '../../models/domain.models';
 
 @Component({
   selector: 'app-encounter-detail',

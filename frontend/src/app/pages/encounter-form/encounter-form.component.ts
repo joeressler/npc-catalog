@@ -15,7 +15,7 @@ import {
   EncounterObject,
   EncounterWritePayload,
   NPC,
-} from '../../models/npc.models';
+} from '../../models/domain.models';
 
 @Component({
   selector: 'app-encounter-form',
@@ -34,7 +34,7 @@ export class EncounterFormComponent implements OnInit {
   encounterId: number | null = null;
   campaignId: number | null = null;
   campaignNpcs: NPC[] = [];
-  selectedCharacterIds = new Set<number>();
+  selectedNpcIds = new Set<number>();
   saving = false;
   error = '';
 
@@ -75,7 +75,7 @@ export class EncounterFormComponent implements OnInit {
           this.setEnemies(encounter.enemies);
           this.setLoot(encounter.loot.map((item) => item.description));
           this.setObjects(encounter.objects);
-          this.selectedCharacterIds = new Set(encounter.characters.map((character) => character.id));
+          this.selectedNpcIds = new Set(encounter.npcs.map((npc) => npc.id));
         },
         error: () => {
           this.error = 'Encounter not found.';
@@ -132,15 +132,15 @@ export class EncounterFormComponent implements OnInit {
     this.moveFormArrayItem(this.objects, index, direction);
   }
 
-  isCharacterSelected(npcId: number): boolean {
-    return this.selectedCharacterIds.has(npcId);
+  isNpcSelected(npcId: number): boolean {
+    return this.selectedNpcIds.has(npcId);
   }
 
-  toggleCharacter(npcId: number): void {
-    if (this.selectedCharacterIds.has(npcId)) {
-      this.selectedCharacterIds.delete(npcId);
+  toggleNpc(npcId: number): void {
+    if (this.selectedNpcIds.has(npcId)) {
+      this.selectedNpcIds.delete(npcId);
     } else {
-      this.selectedCharacterIds.add(npcId);
+      this.selectedNpcIds.add(npcId);
     }
   }
 
@@ -159,7 +159,7 @@ export class EncounterFormComponent implements OnInit {
       enemies: this.enemyValues(),
       loot: this.lootValues(),
       objects: this.objectValues(),
-      character_ids: [...this.selectedCharacterIds],
+      npc_ids: [...this.selectedNpcIds],
     };
 
     this.saving = true;

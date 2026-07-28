@@ -204,8 +204,8 @@
             <label class="character-option">
               <input
                 type="checkbox"
-                [checked]="isCharacterSelected(npc.id)"
-                (change)="toggleCharacter(npc.id)"
+                [checked]="isNpcSelected(npc.id)"
+                (change)="toggleNpc(npc.id)"
               />
               <span>
                 <strong>{{ npc.name }}</strong>

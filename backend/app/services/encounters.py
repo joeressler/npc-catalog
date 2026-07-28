@@ -55,31 +55,31 @@ def sync_objects(db: Session, encounter: Encounter, objects: list[EncounterObjec
         )
 
 
-def sync_characters(db: Session, encounter: Encounter, character_ids: list[int]) -> None:
-    if not character_ids:
-        encounter.characters = []
+def sync_npcs(db: Session, encounter: Encounter, npc_ids: list[int]) -> None:
+    if not npc_ids:
+        encounter.npcs = []
         return
 
     unique_ids: list[int] = []
     seen: set[int] = set()
-    for character_id in character_ids:
-        if character_id not in seen:
-            seen.add(character_id)
-            unique_ids.append(character_id)
+    for npc_id in npc_ids:
+        if npc_id not in seen:
+            seen.add(npc_id)
+            unique_ids.append(npc_id)
 
     npcs = db.scalars(select(NPC).where(NPC.id.in_(unique_ids))).all()
     npc_map = {npc.id: npc for npc in npcs}
     if len(npc_map) != len(unique_ids):
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="One or more characters not found.")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="One or more NPCs not found.")
 
     for npc in npcs:
         if npc.campaign_id != encounter.campaign_id:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
-                detail="Characters must belong to the encounter's campaign.",
+                detail="NPCs must belong to the encounter's campaign.",
             )
 
-    encounter.characters = [npc_map[character_id] for character_id in unique_ids]
+    encounter.npcs = [npc_map[npc_id] for npc_id in unique_ids]
 
 
 def encounter_query_options(stmt: Select[tuple[Encounter]]) -> Select[tuple[Encounter]]:
@@ -87,7 +87,7 @@ def encounter_query_options(stmt: Select[tuple[Encounter]]) -> Select[tuple[Enco
         selectinload(Encounter.enemies),
         selectinload(Encounter.loot),
         selectinload(Encounter.objects),
-        selectinload(Encounter.characters),
+        selectinload(Encounter.npcs),
     )
 
 
@@ -168,6 +168,6 @@ def clone_encounter(db: Session, source: Encounter) -> Encounter:
                 sort_order=obj.sort_order,
             )
         )
-    clone.characters = list(source.characters)
+    clone.npcs = list(source.npcs)
     db.flush()
     return get_encounter_or_404(db, clone.id)

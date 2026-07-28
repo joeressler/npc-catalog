@@ -40,31 +40,31 @@ def sync_secrets(db: Session, session: GameSession, texts: list[str]) -> None:
         db.add(SessionSecret(session_id=session.id, text=text, sort_order=sort_order))
 
 
-def sync_characters(db: Session, session: GameSession, character_ids: list[int]) -> None:
-    if not character_ids:
-        session.characters = []
+def sync_npcs(db: Session, session: GameSession, npc_ids: list[int]) -> None:
+    if not npc_ids:
+        session.npcs = []
         return
 
     unique_ids: list[int] = []
     seen: set[int] = set()
-    for character_id in character_ids:
-        if character_id not in seen:
-            seen.add(character_id)
-            unique_ids.append(character_id)
+    for npc_id in npc_ids:
+        if npc_id not in seen:
+            seen.add(npc_id)
+            unique_ids.append(npc_id)
 
     npcs = db.scalars(select(NPC).where(NPC.id.in_(unique_ids))).all()
     npc_map = {npc.id: npc for npc in npcs}
     if len(npc_map) != len(unique_ids):
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="One or more characters not found.")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="One or more NPCs not found.")
 
     for npc in npcs:
         if npc.campaign_id != session.campaign_id:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
-                detail="Characters must belong to the session's campaign.",
+                detail="NPCs must belong to the session's campaign.",
             )
 
-    session.characters = [npc_map[character_id] for character_id in unique_ids]
+    session.npcs = [npc_map[npc_id] for npc_id in unique_ids]
 
 
 def sync_encounters(db: Session, session: GameSession, encounter_ids: list[int]) -> None:
@@ -99,7 +99,7 @@ def session_query_options(stmt: Select[tuple[GameSession]]) -> Select[tuple[Game
         selectinload(GameSession.story_paths).selectinload(SessionStoryPath.beats),
         selectinload(GameSession.clues),
         selectinload(GameSession.secrets),
-        selectinload(GameSession.characters),
+        selectinload(GameSession.npcs),
         selectinload(GameSession.encounters),
     )
 

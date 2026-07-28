@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
-import { Campaign } from '../../models/npc.models';
+import { Campaign } from '../../models/domain.models';
 
 @Component({
   selector: 'app-campaign-list',
@@ -13,11 +13,12 @@ import { Campaign } from '../../models/npc.models';
   styleUrl: './campaign-list.component.scss',
 })
 export class CampaignListComponent implements OnInit {
+  private readonly api = inject(ApiService);
+
   campaigns: Campaign[] = [];
   loading = true;
   error = '';
 
-  constructor(private api: ApiService) {}
 
   ngOnInit(): void {
     this.api.getCampaigns().subscribe({

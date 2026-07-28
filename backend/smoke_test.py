@@ -104,7 +104,7 @@ def main() -> int:
             {"name": "Broken beacon brazier", "description": "Can be toppled for difficult terrain."},
             {"name": "Watchtower stair", "description": "Half cover; collapses if damaged twice."},
         ],
-        "character_ids": [npc_id],
+        "npc_ids": [npc_id],
     }
     status, encounter = request(
         "POST",
@@ -118,14 +118,14 @@ def main() -> int:
     assert encounter["enemies"][0]["creature_type"] == "Wraith"
     assert len(encounter["loot"]) == 2
     assert len(encounter["objects"]) == 2
-    assert len(encounter["characters"]) == 1
+    assert len(encounter["npcs"]) == 1
     encounter_id = encounter["id"]
     print(f"POST /campaigns/{{id}}/encounters/ OK id={encounter_id}")
 
     status, encounters = request("GET", f"/campaigns/{campaign_id}/encounters/")
     assert status == 200 and encounters["count"] == 1
     assert encounters["results"][0]["enemy_count"] == 2
-    assert encounters["results"][0]["character_count"] == 1
+    assert encounters["results"][0]["npc_count"] == 1
     print("GET /campaigns/{id}/encounters/ OK")
 
     status, cloned = request("POST", f"/encounters/{encounter_id}/clone/")
@@ -151,7 +151,7 @@ def main() -> int:
         ],
         "clues": ["Strange tracks near the river"],
         "secrets": ["Gandalf knows more than he admits"],
-        "character_ids": [npc_id],
+        "npc_ids": [npc_id],
         "encounter_ids": [encounter_id],
     }
     status, session = request("POST", f"/campaigns/{campaign_id}/sessions/", data=session_payload)
@@ -164,8 +164,8 @@ def main() -> int:
     assert session["story_paths"][0]["beats"][0]["text"] == "Arrival at camp"
     assert session["story_paths"][0]["beats"][0]["sort_order"] == 0
     assert session["story_paths"][1]["beats"][0]["text"] == "They linger in Bree"
-    assert len(session["characters"]) == 1
-    assert session["characters"][0]["id"] == npc_id
+    assert len(session["npcs"]) == 1
+    assert session["npcs"][0]["id"] == npc_id
     assert len(session["encounters"]) == 1
     assert session["encounters"][0]["id"] == encounter_id
     session_id = session["id"]
@@ -173,7 +173,7 @@ def main() -> int:
 
     status, sessions = request("GET", f"/campaigns/{campaign_id}/sessions/")
     assert status == 200 and sessions["count"] == 1
-    assert sessions["results"][0]["character_count"] == 1
+    assert sessions["results"][0]["npc_count"] == 1
     print("GET /campaigns/{id}/sessions/ OK")
 
     status, session2 = request("POST", f"/campaigns/{campaign_id}/sessions/", data={"title": "Session Two"})

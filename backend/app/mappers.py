@@ -7,11 +7,11 @@ from app.schemas import (
     AliasRead,
     CampaignListRead,
     CampaignRead,
-    EncounterCharacterRead,
     EncounterDetailRead,
     EncounterEnemyRead,
     EncounterListRead,
     EncounterLootRead,
+    EncounterNpcRead,
     EncounterObjectRead,
     GraphDetailRead,
     GraphEdgeRead,
@@ -21,11 +21,11 @@ from app.schemas import (
     NPCDetailRead,
     NPCListRead,
     RelationTypeRead,
-    SessionCharacterRead,
     SessionDetailRead,
     SessionEncounterRead,
     SessionLineItemRead,
     SessionListRead,
+    SessionNpcRead,
     SessionStoryPathRead,
     TagRead,
 )
@@ -84,14 +84,14 @@ def serialize_npc_detail(npc: NPC, request: Request | None = None) -> NPCDetailR
     )
 
 
-def serialize_session_list(session: GameSession, *, character_count: int | None = None) -> SessionListRead:
-    count = character_count if character_count is not None else len(session.characters)
+def serialize_session_list(session: GameSession, *, npc_count: int | None = None) -> SessionListRead:
+    count = npc_count if npc_count is not None else len(session.npcs)
     return SessionListRead(
         id=session.id,
         campaign=session.campaign_id,
         number=session.number,
         title=session.title,
-        character_count=count,
+        npc_count=count,
         created_at=session.created_at,
         updated_at=session.updated_at,
     )
@@ -124,15 +124,15 @@ def serialize_session_detail(session: GameSession) -> SessionDetailRead:
             SessionLineItemRead(id=secret.id, text=secret.text, sort_order=secret.sort_order)
             for secret in session.secrets
         ],
-        characters=[
-            SessionCharacterRead(
+        npcs=[
+            SessionNpcRead(
                 id=npc.id,
                 name=npc.name,
                 role_occupation=npc.role_occupation,
                 alignment=npc.alignment,
                 alignment_display=ALIGNMENT_DISPLAY[npc.alignment],
             )
-            for npc in session.characters
+            for npc in session.npcs
         ],
         encounters=[
             SessionEncounterRead(
@@ -151,7 +151,7 @@ def serialize_encounter_list(
     encounter: Encounter,
     *,
     enemy_count: int | None = None,
-    character_count: int | None = None,
+    npc_count: int | None = None,
 ) -> EncounterListRead:
     return EncounterListRead(
         id=encounter.id,
@@ -159,7 +159,7 @@ def serialize_encounter_list(
         title=encounter.title,
         short_description=encounter.short_description,
         enemy_count=enemy_count if enemy_count is not None else len(encounter.enemies),
-        character_count=character_count if character_count is not None else len(encounter.characters),
+        npc_count=npc_count if npc_count is not None else len(encounter.npcs),
         created_at=encounter.created_at,
         updated_at=encounter.updated_at,
     )
@@ -200,15 +200,15 @@ def serialize_encounter_detail(encounter: Encounter) -> EncounterDetailRead:
             )
             for obj in encounter.objects
         ],
-        characters=[
-            EncounterCharacterRead(
+        npcs=[
+            EncounterNpcRead(
                 id=npc.id,
                 name=npc.name,
                 role_occupation=npc.role_occupation,
                 alignment=npc.alignment,
                 alignment_display=ALIGNMENT_DISPLAY[npc.alignment],
             )
-            for npc in encounter.characters
+            for npc in encounter.npcs
         ],
         created_at=encounter.created_at,
         updated_at=encounter.updated_at,
@@ -235,7 +235,7 @@ def serialize_graph_node(node: GraphNode) -> GraphNodeRead:
     )
 
 
-def serialize_graph_edge(graph: CharacterGraph, edge: GraphEdge) -> GraphEdgeRead:
+def serialize_graph_edge(edge: GraphEdge) -> GraphEdgeRead:
     return GraphEdgeRead(
         id=edge.id,
         relation_type=RelationTypeRead.model_validate(edge.relation_type),
@@ -270,7 +270,7 @@ def serialize_graph_detail(graph: CharacterGraph) -> GraphDetailRead:
         name=graph.name,
         notes=graph.notes,
         nodes=[serialize_graph_node(node) for node in graph.nodes],
-        edges=[serialize_graph_edge(graph, edge) for edge in graph.edges],
+        edges=[serialize_graph_edge(edge) for edge in graph.edges],
         created_at=graph.created_at,
         updated_at=graph.updated_at,
     )
