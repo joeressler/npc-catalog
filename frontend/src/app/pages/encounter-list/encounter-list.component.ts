@@ -4,11 +4,12 @@ import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
 import { Campaign, EncounterSummary } from '../../models/domain.models';
+import { PageHeaderComponent } from '../../shared/page-header.component';
 
 @Component({
   selector: 'app-encounter-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, PageHeaderComponent],
   templateUrl: './encounter-list.component.html',
   styleUrl: './encounter-list.component.scss',
 })
@@ -48,5 +49,10 @@ export class EncounterListComponent implements OnInit {
 
   imageUrl(): string | null {
     return this.campaign ? this.api.mediaUrl(this.campaign.image) : null;
+  }
+
+  subtitle(): string {
+    const count = this.encounters.length;
+    return `${count} encounter${count === 1 ? '' : 's'} prepared`;
   }
 }

@@ -1,13 +1,10 @@
 <section class="page-shell view-enter">
-  <header class="page-header">
-    <div>
-      <h1 class="page-title">{{ editing ? 'Edit Session' : 'New Session' }}</h1>
-      <p class="page-subtitle">
-        Plan branching story paths, clues, secrets, and the NPCs your players noticed.
-      </p>
-    </div>
+  <app-page-header
+    [title]="editing ? 'Edit Session' : 'New Session'"
+    subtitle="Plan branching story paths, clues, secrets, and the NPCs your players noticed."
+  >
     <a [routerLink]="backLink()" class="btn btn-secondary">Back</a>
-  </header>
+  </app-page-header>
 
   <form class="session-form glass-panel" [formGroup]="form" (ngSubmit)="submit()">
     <section class="form-section">
@@ -70,19 +67,13 @@
                 <h3>Beats in this path</h3>
                 <button type="button" class="btn btn-secondary btn-sm" (click)="addPathBeat(pathIndex)">Add beat</button>
               </div>
-              <div class="line-items" formArrayName="beats">
-                @for (beatControl of pathBeats(pathIndex).controls; track beatControl; let beatIndex = $index) {
-                  <div class="line-item">
-                    <span class="line-index">{{ beatIndex + 1 }}</span>
-                    <input type="text" [formControlName]="beatIndex" placeholder="What happens on this path?" />
-                    <div class="line-actions">
-                      <button type="button" class="btn btn-secondary btn-sm" (click)="movePathBeat(pathIndex, beatIndex, -1)" [disabled]="beatIndex === 0">Up</button>
-                      <button type="button" class="btn btn-secondary btn-sm" (click)="movePathBeat(pathIndex, beatIndex, 1)" [disabled]="beatIndex === pathBeats(pathIndex).length - 1">Down</button>
-                      <button type="button" class="btn btn-danger btn-sm" (click)="removePathBeat(pathIndex, beatIndex)">Remove</button>
-                    </div>
-                  </div>
-                }
-              </div>
+              <app-line-item-list
+                [formArray]="pathBeats(pathIndex)"
+                placeholder="What happens on this path?"
+                [showIndex]="true"
+                (move)="movePathBeat(pathIndex, $event.index, $event.direction)"
+                (remove)="removePathBeat(pathIndex, $event)"
+              ></app-line-item-list>
             </div>
           </article>
         }
@@ -94,18 +85,12 @@
         <h2>Clues (optional)</h2>
         <button type="button" class="btn btn-secondary btn-sm" (click)="addLineItem('clues')">Add clue</button>
       </div>
-      <div class="line-items" formArrayName="clues">
-        @for (control of clues.controls; track control; let clueIndex = $index) {
-          <div class="line-item">
-            <input type="text" [formControlName]="clueIndex" placeholder="Clue the party discovered" />
-            <div class="line-actions">
-              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('clues', clueIndex, -1)" [disabled]="clueIndex === 0">Up</button>
-              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('clues', clueIndex, 1)" [disabled]="clueIndex === clues.length - 1">Down</button>
-              <button type="button" class="btn btn-danger btn-sm" (click)="removeLineItem('clues', clueIndex)">Remove</button>
-            </div>
-          </div>
-        }
-      </div>
+      <app-line-item-list
+        [formArray]="clues"
+        placeholder="Clue the party discovered"
+        (move)="moveLineItem('clues', $event.index, $event.direction)"
+        (remove)="removeLineItem('clues', $event)"
+      ></app-line-item-list>
     </section>
 
     <section class="form-section">
@@ -113,18 +98,12 @@
         <h2>Secrets (optional)</h2>
         <button type="button" class="btn btn-secondary btn-sm" (click)="addLineItem('secrets')">Add secret</button>
       </div>
-      <div class="line-items" formArrayName="secrets">
-        @for (control of secrets.controls; track control; let secretIndex = $index) {
-          <div class="line-item">
-            <input type="text" [formControlName]="secretIndex" placeholder="Secret only the DM should remember" />
-            <div class="line-actions">
-              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('secrets', secretIndex, -1)" [disabled]="secretIndex === 0">Up</button>
-              <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('secrets', secretIndex, 1)" [disabled]="secretIndex === secrets.length - 1">Down</button>
-              <button type="button" class="btn btn-danger btn-sm" (click)="removeLineItem('secrets', secretIndex)">Remove</button>
-            </div>
-          </div>
-        }
-      </div>
+      <app-line-item-list
+        [formArray]="secrets"
+        placeholder="Secret only the DM should remember"
+        (move)="moveLineItem('secrets', $event.index, $event.direction)"
+        (remove)="removeLineItem('secrets', $event)"
+      ></app-line-item-list>
     </section>
 
     <section class="form-section">
@@ -132,21 +111,11 @@
       @if (campaignNpcs.length === 0) {
         <p class="hint">No NPCs in this campaign yet. Add NPCs to link them here.</p>
       } @else {
-        <div class="character-grid">
-          @for (npc of campaignNpcs; track npc.id) {
-            <label class="character-option">
-              <input
-                type="checkbox"
-                [checked]="isNpcSelected(npc.id)"
-                (change)="toggleNpc(npc.id)"
-              />
-              <span>
-                <strong>{{ npc.name }}</strong>
-                <small>{{ npc.role_occupation }}</small>
-              </span>
-            </label>
-          }
-        </div>
+        <app-npc-multi-select
+          [npcs]="campaignNpcs"
+          [selectedIds]="selectedNpcIds"
+          (toggle)="toggleNpc($event)"
+        ></app-npc-multi-select>
       }
     </section>
 

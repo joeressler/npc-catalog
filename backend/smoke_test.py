@@ -224,6 +224,62 @@ def main() -> int:
     assert status == 200 and global_list["count"] >= 1
     print("GET /npcs/ OK")
 
+    # --- Graphs ---
+    status, relation_types = request("GET", f"/campaigns/{campaign_id}/relation-types/")
+    assert status == 200 and relation_types["count"] >= 1
+    ally_rt = next(rt for rt in relation_types["results"] if rt["name"] == "Ally")
+    print(f"GET /campaigns/{{id}}/relation-types/ OK (count={relation_types['count']})")
+
+    status, graph = request(
+        "POST",
+        f"/campaigns/{campaign_id}/graphs/",
+        data={"name": "Smoke Graph", "notes": ""},
+    )
+    assert status == 201 and graph["name"] == "Smoke Graph"
+    graph_id = graph["id"]
+    print(f"POST /campaigns/{{id}}/graphs/ OK id={graph_id}")
+
+    status, npc_node = request(
+        "POST",
+        f"/graphs/{graph_id}/nodes/",
+        data={"kind": "npc", "npc_id": npc_id},
+    )
+    assert status == 201 and npc_node["kind"] == "npc"
+    npc_node_id = npc_node["id"]
+    print(f"POST /graphs/{{id}}/nodes/ (npc) OK id={npc_node_id}")
+
+    status, party_node = request(
+        "POST",
+        f"/graphs/{graph_id}/nodes/",
+        data={"kind": "party"},
+    )
+    assert status == 201 and party_node["kind"] == "party"
+    print(f"POST /graphs/{{id}}/nodes/ (party) OK id={party_node['id']}")
+
+    status, edge = request(
+        "POST",
+        f"/graphs/{graph_id}/edges/",
+        data={
+            "relation_type_id": ally_rt["id"],
+            "from_node_id": npc_node_id,
+            "to_node_id": party_node["id"],
+            "notes": "",
+            "bidirectional": False,
+        },
+    )
+    assert status == 201 and edge["relation_type"]["name"] == "Ally"
+    print(f"POST /graphs/{{id}}/edges/ OK id={edge['id']}")
+
+    status, graph_detail = request("GET", f"/graphs/{graph_id}/")
+    assert status == 200
+    assert len(graph_detail["nodes"]) == 2
+    assert len(graph_detail["edges"]) == 1
+    print("GET /graphs/{id}/ OK")
+
+    status, _ = request("DELETE", f"/graphs/{graph_id}/")
+    assert status == 204
+    print("DELETE /graphs/{id}/ OK")
+
     print("ALL SMOKE TESTS PASSED")
     return 0
 

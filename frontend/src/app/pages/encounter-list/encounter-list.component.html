@@ -1,25 +1,17 @@
 <section class="page-shell view-enter">
   @if (campaign) {
-    <header class="list-header glass-panel">
-      <div class="list-title">
-        @if (imageUrl(); as src) {
-          <img class="campaign-thumb" [src]="src" [alt]="campaign.name" />
-        }
-        <div>
-          <p class="eyebrow">Campaign Encounters</p>
-          <h1 class="page-title">{{ campaign.name }}</h1>
-          <p class="page-subtitle">
-            {{ encounters.length }} encounter{{ encounters.length === 1 ? '' : 's' }} prepared
-          </p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <a [routerLink]="['/campaigns', campaign.id]" class="btn btn-secondary">Back to Roster</a>
-        <a [routerLink]="['/campaigns', campaign.id, 'encounters', 'new']" class="btn btn-primary">
-          Add Encounter
-        </a>
-      </div>
-    </header>
+    <app-page-header
+      variant="list"
+      eyebrow="Campaign Encounters"
+      [title]="campaign.name"
+      [subtitle]="subtitle()"
+      [imageUrl]="imageUrl()"
+    >
+      <a [routerLink]="['/campaigns', campaign.id]" class="btn btn-secondary">Back to Roster</a>
+      <a [routerLink]="['/campaigns', campaign.id, 'encounters', 'new']" class="btn btn-primary">
+        Add Encounter
+      </a>
+    </app-page-header>
 
     @if (loading) {
       <p class="empty-state">Loading encounters…</p>
@@ -37,7 +29,7 @@
         @for (encounter of encounters; track encounter.id) {
           <a
             [routerLink]="['/campaigns', campaign.id, 'encounters', encounter.id]"
-            class="encounter-row glass-panel"
+            class="entity-row glass-panel"
           >
             <div>
               <h2>{{ encounter.title }}</h2>

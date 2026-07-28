@@ -4,11 +4,12 @@ import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
 import { Campaign, GraphSummary } from '../../models/domain.models';
+import { PageHeaderComponent } from '../../shared/page-header.component';
 
 @Component({
   selector: 'app-graph-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, PageHeaderComponent],
   templateUrl: './graph-list.component.html',
   styleUrl: './graph-list.component.scss',
 })
@@ -48,5 +49,10 @@ export class GraphListComponent implements OnInit {
 
   imageUrl(): string | null {
     return this.campaign ? this.api.mediaUrl(this.campaign.image) : null;
+  }
+
+  subtitle(): string {
+    const count = this.graphs.length;
+    return `${count} web${count === 1 ? '' : 's'} mapped`;
   }
 }

@@ -66,6 +66,31 @@ docker compose up --build
 cd backend && python smoke_test.py http://127.0.0.1:8000/api
 ```
 
+## Tests
+
+```bash
+# Backend tests
+cd backend && pip install -r requirements-dev.txt && pytest
+
+# Frontend unit tests
+cd frontend && npm test
+```
+
+The frontend `npm test` script runs Karma once against headless Chrome
+(`ng test --watch=false --browsers=ChromeHeadless`). In sandboxed/root CI
+containers where Chrome refuses to start, use the no-sandbox launcher defined in
+`karma.conf.js`: `npx ng test --watch=false --browsers=ChromeHeadlessNoSandbox`.
+
+## Frontend URL notes
+
+- NPCs are created under the campaign (`/campaigns/:campaignId/npcs/new`) so the
+  new NPC is scoped to its campaign, but viewed and edited at the flat
+  `/npcs/:npcId` and `/npcs/:npcId/edit` routes (an NPC id is globally unique).
+- Shared UI lives in `frontend/src/app/shared/` (`PageHeaderComponent`,
+  `NpcMultiSelectComponent`, `LineItemListComponent`, `form-array.util.ts`).
+  Shared list/form SCSS primitives live in `shared/_entity-list.scss`, imported
+  once from `src/styles.scss`.
+
 ## Naming notes
 
 - ORM model `GameSession` maps to table/API `sessions` (avoids clashing with SQLAlchemy `Session`).

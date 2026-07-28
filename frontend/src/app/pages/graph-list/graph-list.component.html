@@ -1,21 +1,15 @@
 <section class="page-shell view-enter">
   @if (campaign) {
-    <header class="list-header glass-panel">
-      <div class="list-title">
-        @if (imageUrl(); as src) {
-          <img class="campaign-thumb" [src]="src" [alt]="campaign.name" />
-        }
-        <div>
-          <p class="eyebrow">Relationship Webs</p>
-          <h1 class="page-title">{{ campaign.name }}</h1>
-          <p class="page-subtitle">{{ graphs.length }} web{{ graphs.length === 1 ? '' : 's' }} mapped</p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <a [routerLink]="['/campaigns', campaign.id]" class="btn btn-secondary">Back to Roster</a>
-        <a [routerLink]="['/campaigns', campaign.id, 'graphs', 'new']" class="btn btn-primary">New Web</a>
-      </div>
-    </header>
+    <app-page-header
+      variant="list"
+      eyebrow="Relationship Webs"
+      [title]="campaign.name"
+      [subtitle]="subtitle()"
+      [imageUrl]="imageUrl()"
+    >
+      <a [routerLink]="['/campaigns', campaign.id]" class="btn btn-secondary">Back to Roster</a>
+      <a [routerLink]="['/campaigns', campaign.id, 'graphs', 'new']" class="btn btn-primary">New Web</a>
+    </app-page-header>
 
     @if (loading) {
       <p class="empty-state">Loading webs…</p>
@@ -31,7 +25,7 @@
         @for (graph of graphs; track graph.id) {
           <a
             [routerLink]="['/campaigns', campaign.id, 'graphs', graph.id]"
-            class="graph-row glass-panel"
+            class="entity-row glass-panel"
           >
             <div>
               <h2>{{ graph.name }}</h2>

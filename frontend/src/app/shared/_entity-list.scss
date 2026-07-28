@@ -1,0 +1,164 @@
+// Shared entity list + form layout primitives, imported once from styles.scss.
+// These complement the Frutiger Aero utilities defined in styles.scss and are
+// reused by list screens (sessions/encounters/graphs), the shared page-header,
+// and the session/encounter forms.
+
+.list-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.list-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--aero-text-muted);
+}
+
+.campaign-thumb {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  border: 1px solid var(--aero-glass-border);
+}
+
+// Generic glass row used by list screens.
+.entity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.entity-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px var(--aero-shadow);
+}
+
+.entity-row h2 {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+}
+
+.entity-row .meta-line,
+.entity-row .desc-line {
+  margin: 0;
+  color: var(--aero-text-muted);
+  font-size: 0.92rem;
+}
+
+.entity-row .desc-line {
+  margin-top: 0.35rem;
+}
+
+.entity-row .row-action {
+  color: var(--aero-text-muted);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+// Form section chrome shared by session/encounter forms.
+.form-section h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.line-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.line-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.line-item.has-index {
+  grid-template-columns: auto 1fr auto;
+}
+
+.line-item.is-textarea {
+  align-items: start;
+}
+
+.line-index {
+  width: 1.5rem;
+  text-align: center;
+  color: var(--aero-text-muted);
+  font-size: 0.9rem;
+}
+
+.line-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.character-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.65rem;
+}
+
+.character-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.22);
+  cursor: pointer;
+}
+
+.character-option strong {
+  display: block;
+}
+
+.character-option small {
+  color: var(--aero-text-muted);
+}
+
+@media (max-width: 720px) {
+  .line-item,
+  .line-item.has-index {
+    grid-template-columns: 1fr;
+  }
+
+  .line-index {
+    display: none;
+  }
+}
