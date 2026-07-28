@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Request, status
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
 
-from app.deps import get_db
-from app.models import Encounter, EncounterEnemy, EncounterNPC
+from app.deps import DbSession
 from app.mappers import serialize_encounter_detail, serialize_encounter_list
+from app.models import Encounter, EncounterEnemy, EncounterNPC
 from app.schemas import (
     EncounterDetailRead,
     EncounterWrite,
@@ -31,7 +30,7 @@ campaign_encounters_router = APIRouter(
 
 
 @router.get("/encounters/{encounter_id}/", response_model=EncounterDetailRead)
-def get_encounter(encounter_id: int, db: Session = Depends(get_db)):
+def get_encounter(encounter_id: int, db: DbSession):
     encounter = get_encounter_or_404(db, encounter_id)
     return serialize_encounter_detail(encounter)
 
@@ -40,7 +39,7 @@ def get_encounter(encounter_id: int, db: Session = Depends(get_db)):
 def update_encounter(
     encounter_id: int,
     payload: EncounterWritePartial,
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
     encounter = get_encounter_or_404(db, encounter_id)
     data = dump_encounter_partial(payload)
@@ -69,7 +68,7 @@ def update_encounter(
 
 
 @router.delete("/encounters/{encounter_id}/", status_code=status.HTTP_204_NO_CONTENT)
-def delete_encounter(encounter_id: int, db: Session = Depends(get_db)):
+def delete_encounter(encounter_id: int, db: DbSession):
     encounter = get_encounter_or_404(db, encounter_id)
     db.delete(encounter)
     db.commit()
@@ -80,7 +79,7 @@ def delete_encounter(encounter_id: int, db: Session = Depends(get_db)):
     status_code=status.HTTP_201_CREATED,
     response_model=EncounterDetailRead,
 )
-def clone_encounter_endpoint(encounter_id: int, db: Session = Depends(get_db)):
+def clone_encounter_endpoint(encounter_id: int, db: DbSession):
     source = get_encounter_or_404(db, encounter_id)
     cloned = clone_encounter(db, source)
     db.commit()
@@ -91,8 +90,8 @@ def clone_encounter_endpoint(encounter_id: int, db: Session = Depends(get_db)):
 def list_campaign_encounters(
     campaign_id: int,
     request: Request,
+    db: DbSession,
     page: int = 1,
-    db: Session = Depends(get_db),
 ):
     get_campaign_or_404(db, campaign_id)
     enemy_count = (
@@ -134,7 +133,7 @@ def list_campaign_encounters(
 def create_campaign_encounter(
     campaign_id: int,
     payload: EncounterWrite,
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
     get_campaign_or_404(db, campaign_id)
     encounter = Encounter(campaign_id=campaign_id, title="")

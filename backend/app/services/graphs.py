@@ -8,7 +8,7 @@ from app.constants import (
     RELATION_POLARITIES,
     VALID_NODE_KINDS,
 )
-from app.models import CharacterGraph, GraphEdge, GraphNode, NPC, RelationType
+from app.models import NPC, CharacterGraph, GraphEdge, GraphNode, RelationType
 
 
 def ensure_default_relation_types(db: Session, campaign_id: int) -> None:

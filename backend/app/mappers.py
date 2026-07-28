@@ -2,7 +2,16 @@ from fastapi import Request
 
 from app.constants import ALIGNMENT_DISPLAY
 from app.media import build_media_url
-from app.models import Campaign, CharacterGraph, Encounter, GameSession, GraphEdge, GraphNode, Location, NPC
+from app.models import (
+    NPC,
+    Campaign,
+    CharacterGraph,
+    Encounter,
+    GameSession,
+    GraphEdge,
+    GraphNode,
+    Location,
+)
 from app.schemas import (
     AliasRead,
     CampaignListRead,

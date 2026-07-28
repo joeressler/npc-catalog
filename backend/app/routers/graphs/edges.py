@@ -1,7 +1,6 @@
-from fastapi import Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
 
-from app.deps import get_db
+from app.deps import DbSession
 from app.mappers import serialize_graph_edge
 from app.routers.graphs.shared import graph_edges_router, router
 from app.schemas import GraphEdgeRead, GraphEdgeWrite, GraphEdgeWritePartial
@@ -17,7 +16,7 @@ from app.services.graphs import (
 def add_graph_edge(
     graph_id: int,
     payload: GraphEdgeWrite,
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
     graph = get_graph_or_404(db, graph_id)
     edge = create_graph_edge(
@@ -47,7 +46,7 @@ def add_graph_edge(
 def update_graph_edge(
     edge_id: int,
     payload: GraphEdgeWritePartial,
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
     edge = get_graph_edge_or_404(db, edge_id)
     graph = get_graph_or_404(db, edge.graph_id)
@@ -70,7 +69,7 @@ def update_graph_edge(
 
 
 @graph_edges_router.delete("/graph-edges/{edge_id}/", status_code=status.HTTP_204_NO_CONTENT)
-def delete_graph_edge(edge_id: int, db: Session = Depends(get_db)):
+def delete_graph_edge(edge_id: int, db: DbSession):
     edge = get_graph_edge_or_404(db, edge_id)
     db.delete(edge)
     db.commit()

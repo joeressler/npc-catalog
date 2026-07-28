@@ -1,12 +1,16 @@
-from fastapi import Depends, Request, status
+from fastapi import Request, status
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
 
-from app.deps import get_db
+from app.deps import DbSession
 from app.mappers import serialize_graph_detail, serialize_graph_list
 from app.models import CharacterGraph, GraphEdge, GraphNode
 from app.routers.graphs.shared import campaign_graphs_router, router
-from app.schemas import GraphDetailRead, GraphWrite, GraphWritePartial, dump_graph_partial
+from app.schemas import (
+    GraphDetailRead,
+    GraphWrite,
+    GraphWritePartial,
+    dump_graph_partial,
+)
 from app.services.campaigns import get_campaign_or_404
 from app.services.graphs import (
     ensure_default_relation_types,
@@ -17,13 +21,13 @@ from app.services.pagination import paginate_select
 
 
 @router.get("/graphs/{graph_id}/", response_model=GraphDetailRead)
-def get_graph(graph_id: int, db: Session = Depends(get_db)):
+def get_graph(graph_id: int, db: DbSession):
     graph = get_graph_or_404(db, graph_id)
     return serialize_graph_detail(graph)
 
 
 @router.patch("/graphs/{graph_id}/", response_model=GraphDetailRead)
-def update_graph(graph_id: int, payload: GraphWritePartial, db: Session = Depends(get_db)):
+def update_graph(graph_id: int, payload: GraphWritePartial, db: DbSession):
     graph = get_graph_or_404(db, graph_id)
     data = dump_graph_partial(payload)
 
@@ -44,7 +48,7 @@ def update_graph(graph_id: int, payload: GraphWritePartial, db: Session = Depend
 
 
 @router.delete("/graphs/{graph_id}/", status_code=status.HTTP_204_NO_CONTENT)
-def delete_graph(graph_id: int, db: Session = Depends(get_db)):
+def delete_graph(graph_id: int, db: DbSession):
     graph = get_graph_or_404(db, graph_id)
     db.delete(graph)
     db.commit()
@@ -54,8 +58,8 @@ def delete_graph(graph_id: int, db: Session = Depends(get_db)):
 def list_campaign_graphs(
     campaign_id: int,
     request: Request,
+    db: DbSession,
     page: int = 1,
-    db: Session = Depends(get_db),
 ):
     get_campaign_or_404(db, campaign_id)
     node_count = (
@@ -85,7 +89,7 @@ def list_campaign_graphs(
 def create_campaign_graph(
     campaign_id: int,
     payload: GraphWrite,
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
     get_campaign_or_404(db, campaign_id)
     ensure_unique_graph_name(db, campaign_id=campaign_id, name=payload.name)
