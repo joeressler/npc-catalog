@@ -1,59 +1,43 @@
-# Frontend
+# Frontend (NPC Catalog)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.27.
+Angular 19 standalone app for the purple Frutiger Aero DM catalog UI.
 
-## Development server
+## Dev server
 
-To start a local development server, run:
-
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+With the backend on port **8000**:
 
 ```bash
-ng generate component component-name
+npm install
+npm start
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Opens **http://localhost:4200/**. [`proxy.conf.json`](proxy.conf.json) forwards `/api` and `/media` to `http://127.0.0.1:8000`.
 
-```bash
-ng generate --help
+Full stack via Docker (nginx + API) is **http://localhost:0314** from the repo root (`docker compose up --build`).
+
+## Layout
+
+```
+src/app/
+  app.routes.ts          # Lazy routes; folders mirror URLs
+  pages/<feature>/       # One screen per folder (ts/html/scss)
+  services/api.service.ts
+  models/npc.models.ts   # Domain types (campaigns, NPCs, sessions, …)
+src/styles.scss          # Design tokens + shared utilities
 ```
 
-## Building
+Prefer cloning **session** or **encounter** list/form pages for new JSON CRUD screens. Relationship webs live under `pages/graph-*` (Cytoscape).
 
-To build the project run:
+## Styling
 
-```bash
-ng build
-```
+Global Frutiger Aero tokens and utilities live in `src/styles.scss`. Prefer those classes (see the file header) over new one-off panel/button styles. Page SCSS should handle layout only.
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Scripts
 
-## Running unit tests
+| Command | Purpose |
+|---------|---------|
+| `npm start` | Dev server with API proxy |
+| `npm run build` | Production build → `dist/` |
+| `npm test` | Karma unit tests (few/no specs today; schematics use `skipTests`) |
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Contributor workflow for backend + feature checklist: see the root [CONTRIBUTING.md](../CONTRIBUTING.md).
