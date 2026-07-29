@@ -15,7 +15,7 @@ from sqlalchemy import func, or_, select
 
 from app.deps import DbSession
 from app.mappers import serialize_location_detail, serialize_location_list
-from app.media import delete_location_image, save_location_image
+from app.media import delete_location_image, is_upload_file, save_location_image
 from app.models import NPC, Location, LocationNPC
 from app.schemas import LocationWrite, LocationWritePartial
 from app.services.campaigns import get_campaign_or_404
@@ -68,7 +68,7 @@ def _apply_image_from_form(location: Location, form) -> None:
     if image_field == "" or (isinstance(image_field, str) and image_field == ""):
         delete_location_image(location.image_path)
         location.image_path = None
-    elif isinstance(image_field, UploadFile) and image_field.filename:
+    elif is_upload_file(image_field):
         delete_location_image(location.image_path)
         location.image_path = save_location_image(image_field)
 

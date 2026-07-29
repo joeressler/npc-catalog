@@ -16,7 +16,7 @@ from sqlalchemy import select
 
 from app.deps import DbSession
 from app.mappers import serialize_npc_detail, serialize_npc_list
-from app.media import delete_npc_image, save_npc_image
+from app.media import delete_npc_image, is_upload_file, save_npc_image
 from app.models import NPC
 from app.schemas import NPCDetailRead, NPCWrite, NPCWritePartial, dump_partial
 from app.services.campaigns import get_campaign_or_404
@@ -85,7 +85,7 @@ def _apply_image_from_form(npc: NPC, form) -> None:
     if image_field == "" or (isinstance(image_field, str) and image_field == ""):
         delete_npc_image(npc.image_path)
         npc.image_path = None
-    elif isinstance(image_field, UploadFile) and image_field.filename:
+    elif is_upload_file(image_field):
         delete_npc_image(npc.image_path)
         npc.image_path = save_npc_image(image_field)
 

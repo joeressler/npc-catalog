@@ -1,4 +1,4 @@
-from fastapi import HTTPException, UploadFile, status
+from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -6,6 +6,7 @@ from app.media import (
     delete_campaign_image,
     delete_location_image,
     delete_npc_image,
+    is_upload_file,
     save_campaign_image,
 )
 from app.models import Campaign
@@ -54,7 +55,7 @@ def update_campaign_fields(
     campaign: Campaign,
     *,
     name: str | None,
-    image_field: str | UploadFile | None,
+    image_field: object,
     image_provided: bool,
 ) -> Campaign:
     if not name or not str(name).strip():
@@ -70,7 +71,7 @@ def update_campaign_fields(
         if isinstance(image_field, str) and image_field == "":
             delete_campaign_image(campaign.image_path)
             campaign.image_path = None
-        elif isinstance(image_field, UploadFile) and image_field.filename:
+        elif is_upload_file(image_field):
             delete_campaign_image(campaign.image_path)
             campaign.image_path = save_campaign_image(image_field)
 

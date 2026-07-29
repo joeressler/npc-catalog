@@ -1,12 +1,19 @@
 import uuid
 from pathlib import Path
+from typing import TypeGuard
 
-from fastapi import HTTPException, UploadFile, status
+from fastapi import HTTPException, status
 from PIL import Image
+from starlette.datastructures import UploadFile
 
 from app.config import settings
 
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+
+
+def is_upload_file(value: object) -> TypeGuard[UploadFile]:
+    """True for multipart uploads from File() or request.form() (Starlette base class)."""
+    return isinstance(value, UploadFile) and bool(value.filename)
 
 
 def ensure_media_root() -> Path:
