@@ -17,10 +17,6 @@
   font-family: var(--font-display);
   font-size: clamp(2.4rem, 6vw, 3.8rem);
   letter-spacing: -0.03em;
-  background: linear-gradient(180deg, var(--aero-purple-deep), var(--aero-purple));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
 .hero-copy {
@@ -38,12 +34,16 @@
 
 .campaign-tile {
   overflow: hidden;
-  transition: transform 220ms ease, box-shadow 220ms ease;
+  transition:
+    transform var(--motion-med) var(--ease-aero),
+    box-shadow var(--motion-med) var(--ease-aero);
 }
 
 .campaign-tile:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 18px 48px rgba(74, 45, 122, 0.24);
+  transform: translateY(-5px);
+  box-shadow:
+    0 20px 52px rgba(74, 45, 122, 0.26),
+    0 0 28px rgba(196, 176, 255, 0.28);
 }
 
 .tile-media {
@@ -61,18 +61,6 @@
 
 .tile-fallback {
   background: linear-gradient(135deg, rgba(123, 92, 255, 0.35), rgba(196, 176, 255, 0.55));
-}
-
-.tile-sheen {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
-  transform: translateX(-120%);
-  transition: transform 600ms ease;
-}
-
-.campaign-tile:hover .tile-sheen {
-  transform: translateX(120%);
 }
 
 .tile-body {

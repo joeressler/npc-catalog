@@ -33,11 +33,11 @@
         </a>
       </div>
     } @else {
-      <div class="encounter-list">
+      <div class="encounter-list stagger-in">
         @for (encounter of encounters; track encounter.id) {
           <a
             [routerLink]="['/campaigns', campaign.id, 'encounters', encounter.id]"
-            class="encounter-row glass-panel"
+            class="encounter-row glass-panel glass-row-hover"
           >
             <div>
               <h2>{{ encounter.title }}</h2>

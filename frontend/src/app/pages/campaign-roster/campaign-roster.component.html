@@ -11,7 +11,7 @@
           <p class="page-subtitle">{{ npcs.length }} NPC{{ npcs.length === 1 ? '' : 's' }} cataloged</p>
         </div>
       </div>
-      <div class="header-actions">
+      <div class="header-actions stagger-in">
         <a routerLink="/" class="btn btn-secondary">All Campaigns</a>
         <a [routerLink]="['/campaigns', campaign.id, 'edit']" class="btn btn-secondary">Edit</a>
         <a [routerLink]="['/campaigns', campaign.id, 'sessions']" class="btn btn-secondary">Sessions</a>
@@ -21,7 +21,7 @@
         <button type="button" class="btn btn-danger" (click)="deleteCampaign()" [disabled]="deleting">
           {{ deleting ? 'Deleting…' : 'Delete' }}
         </button>
-        <a [routerLink]="['/campaigns', campaign.id, 'npcs', 'new']" class="btn btn-primary">Add NPC</a>
+        <a [routerLink]="['/campaigns', campaign.id, 'npcs', 'new']" class="btn btn-primary fey-glow">Add NPC</a>
       </div>
     </header>
 
@@ -69,9 +69,9 @@
         <a [routerLink]="['/campaigns', campaign.id, 'npcs', 'new']" class="btn btn-primary">Create First NPC</a>
       </div>
     } @else {
-      <div class="npc-list">
+      <div class="npc-list stagger-in">
         @for (npc of npcs; track npc.id) {
-          <a [routerLink]="['/npcs', npc.id]" class="npc-row glass-panel">
+          <a [routerLink]="['/npcs', npc.id]" class="npc-row glass-panel glass-row-hover">
             <div class="npc-identity">
               @if (npcImageUrl(npc); as src) {
                 <img class="npc-thumb" [src]="src" [alt]="npc.name" />

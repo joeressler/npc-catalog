@@ -1,7 +1,7 @@
 <section class="page-shell view-enter">
   <header class="hero glass-panel">
     <p class="eyebrow">Dungeon Master Toolkit</p>
-    <h1 class="brand">NPC Catalog</h1>
+    <h1 class="brand brand-shimmer">NPC Catalog</h1>
     <p class="hero-copy">Catalog every NPC as you invent them. Retrieve them instantly at the table.</p>
     <a routerLink="/campaigns/new" class="btn btn-primary">New Campaign</a>
   </header>
@@ -16,16 +16,16 @@
       <a routerLink="/campaigns/new" class="btn btn-primary">Create Campaign</a>
     </div>
   } @else {
-    <div class="campaign-grid">
+    <div class="campaign-grid stagger-in">
       @for (campaign of campaigns; track campaign.id) {
-        <a [routerLink]="['/campaigns', campaign.id]" class="campaign-tile glass-panel">
+        <a [routerLink]="['/campaigns', campaign.id]" class="campaign-tile glass-panel aero-sheen-trigger">
           <div class="tile-media">
             @if (imageUrl(campaign); as src) {
               <img [src]="src" [alt]="campaign.name" />
             } @else {
               <div class="tile-fallback"></div>
             }
-            <span class="tile-sheen"></span>
+            <span class="aero-sheen"></span>
           </div>
           <div class="tile-body">
             <h2>{{ campaign.name }}</h2>

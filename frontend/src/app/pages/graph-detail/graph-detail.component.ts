@@ -346,7 +346,9 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     const layout = this.cy.layout({
       name: 'cose',
-      animate: false,
+      animate: true,
+      animationDuration: 500,
+      animationEasing: 'ease-out',
       padding: 48,
       randomize: true,
       componentSpacing: 80,
@@ -470,6 +472,17 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
             },
           },
           {
+            selector: 'node[kind = "party"]:selected',
+            style: {
+              'border-width': 5,
+              'border-color': '#9b7dff',
+              'background-opacity': 0.65,
+              'overlay-color': '#c4b0ff',
+              'overlay-opacity': 0.18,
+              'overlay-padding': 10,
+            },
+          },
+          {
             selector: 'node[kind = "pc"]',
             style: {
               shape: 'ellipse',
@@ -485,7 +498,10 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
             selector: 'node:selected',
             style: {
               'border-width': 4,
-              'border-color': '#4a2d7a',
+              'border-color': '#9b7dff',
+              'overlay-color': '#c4b0ff',
+              'overlay-opacity': 0.15,
+              'overlay-padding': 8,
             },
           },
           {

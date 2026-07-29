@@ -91,13 +91,21 @@
   color: var(--aero-purple-deep);
 }
 
+.section-toggle:focus-visible {
+  outline: 2px solid var(--aero-lilac);
+  outline-offset: -2px;
+  border-radius: var(--radius-lg);
+}
+
 .section-body {
   padding: 0 1.1rem 1.1rem;
   line-height: 1.55;
   white-space: pre-wrap;
-  animation: fadeSlideIn 220ms ease;
+  animation: dossierReveal var(--motion-med) var(--ease-aero);
 }
 
 .section.open {
-  box-shadow: 0 14px 36px rgba(74, 45, 122, 0.18);
+  box-shadow:
+    0 14px 36px rgba(74, 45, 122, 0.18),
+    0 0 0 1px rgba(196, 176, 255, 0.45);
 }

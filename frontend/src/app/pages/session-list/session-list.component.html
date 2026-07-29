@@ -27,11 +27,11 @@
         <a [routerLink]="['/campaigns', campaign.id, 'sessions', 'new']" class="btn btn-primary">Create First Session</a>
       </div>
     } @else {
-      <div class="session-list">
+      <div class="session-list stagger-in">
         @for (session of sessions; track session.id) {
           <a
             [routerLink]="['/campaigns', campaign.id, 'sessions', session.id]"
-            class="session-row glass-panel"
+            class="session-row glass-panel glass-row-hover"
           >
             <div>
               <h2>{{ sessionLabel(session) }}</h2>

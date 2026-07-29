@@ -33,11 +33,11 @@
         </a>
       </div>
     } @else {
-      <div class="location-list">
+      <div class="location-list stagger-in">
         @for (location of locations; track location.id) {
           <a
             [routerLink]="['/campaigns', campaign.id, 'locations', location.id]"
-            class="location-row glass-panel"
+            class="location-row glass-panel glass-row-hover"
           >
             @if (imageUrl(location.image); as src) {
               <img class="location-thumb" [src]="src" [alt]="location.title" />

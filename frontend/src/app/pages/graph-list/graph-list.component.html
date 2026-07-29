@@ -27,11 +27,11 @@
         <a [routerLink]="['/campaigns', campaign.id, 'graphs', 'new']" class="btn btn-primary">Create First Web</a>
       </div>
     } @else {
-      <div class="graph-list">
+      <div class="graph-list stagger-in">
         @for (graph of graphs; track graph.id) {
           <a
             [routerLink]="['/campaigns', campaign.id, 'graphs', graph.id]"
-            class="graph-row glass-panel"
+            class="graph-row glass-panel glass-row-hover"
           >
             <div>
               <h2>{{ graph.name }}</h2>
