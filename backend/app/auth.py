@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import threading
 import time
+from collections import defaultdict
 from typing import Final
 
 from starlette.requests import Request
@@ -14,6 +16,15 @@ from app.config import settings
 
 COOKIE_NAME: Final = "npc_session"
 SESSION_MAX_AGE_SECONDS: Final = 60 * 60 * 24 * 14  # 14 days
+COOKIE_SAMESITE: Final = "lax"
+
+# In-process login lockout (defense if backend port is ever published).
+LOGIN_MAX_FAILURES: Final = 10
+LOGIN_WINDOW_SECONDS: Final = 60
+LOGIN_LOCKOUT_SECONDS: Final = 60
+
+_login_failures: dict[str, list[float]] = defaultdict(list)
+_login_lock = threading.Lock()
 
 
 def _signing_key() -> bytes:
@@ -65,20 +76,66 @@ def credentials_match(username: str, password: str) -> bool:
     return user_ok and pass_ok
 
 
+def client_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip() or "unknown"
+    if request.client and request.client.host:
+        return request.client.host
+    return "unknown"
+
+
+def _failure_key(ip: str, username: str) -> str:
+    return f"{ip}|{username.strip().lower()}"
+
+
+def login_is_locked(ip: str, username: str) -> bool:
+    key = _failure_key(ip, username)
+    now = time.time()
+    with _login_lock:
+        stamps = [t for t in _login_failures[key] if now - t < LOGIN_WINDOW_SECONDS]
+        _login_failures[key] = stamps
+        if len(stamps) < LOGIN_MAX_FAILURES:
+            return False
+        oldest = min(stamps)
+        return (now - oldest) < LOGIN_LOCKOUT_SECONDS
+
+
+def record_login_failure(ip: str, username: str) -> None:
+    key = _failure_key(ip, username)
+    now = time.time()
+    with _login_lock:
+        stamps = [t for t in _login_failures[key] if now - t < LOGIN_WINDOW_SECONDS]
+        stamps.append(now)
+        _login_failures[key] = stamps
+
+
+def clear_login_failures(ip: str, username: str) -> None:
+    key = _failure_key(ip, username)
+    with _login_lock:
+        _login_failures.pop(key, None)
+
+
 def set_session_cookie(response: Response, username: str) -> None:
     response.set_cookie(
         key=COOKIE_NAME,
         value=create_session_token(username),
         max_age=SESSION_MAX_AGE_SECONDS,
         httponly=True,
-        samesite="lax",
+        samesite=COOKIE_SAMESITE,
         secure=settings.auth_cookie_secure,
         path="/",
     )
 
 
 def clear_session_cookie(response: Response) -> None:
-    response.delete_cookie(key=COOKIE_NAME, path="/")
+    response.delete_cookie(
+        key=COOKIE_NAME,
+        path="/",
+        httponly=True,
+        samesite=COOKIE_SAMESITE,
+        secure=settings.auth_cookie_secure,
+    )
 
 
 def session_username(request: Request) -> str | None:
