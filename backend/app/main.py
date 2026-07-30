@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.config import settings
+from app.config import settings, validate_production_secrets
 from app.media import ensure_media_root
 from app.middleware_auth import AuthMiddleware
 from app.routers import auth, campaigns, encounters, graphs, locations, npcs, sessions, tags
@@ -12,12 +12,23 @@ from app.routers import auth, campaigns, encounters, graphs, locations, npcs, se
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    validate_production_secrets()
     ensure_media_root()
     settings.sqlite_path.parent.mkdir(parents=True, exist_ok=True)
     yield
 
 
-app = FastAPI(title="NPC Catalog API", lifespan=lifespan)
+_docs = "/docs" if settings.debug else None
+_redoc = "/redoc" if settings.debug else None
+_openapi = "/openapi.json" if settings.debug else None
+
+app = FastAPI(
+    title="NPC Catalog API",
+    lifespan=lifespan,
+    docs_url=_docs,
+    redoc_url=_redoc,
+    openapi_url=_openapi,
+)
 
 # Auth runs outermost so /api and /media are gated before route handlers.
 app.add_middleware(AuthMiddleware)

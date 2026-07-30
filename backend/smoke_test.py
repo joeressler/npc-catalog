@@ -67,7 +67,25 @@ def login() -> None:
     print("POST /auth/login/ OK")
 
 
+def request_root(path: str, *, expect_error: int | None = None):
+    url = f"{ROOT}{path}"
+    req = urllib.request.Request(url, method="GET")
+    try:
+        with urllib.request.urlopen(req) as resp:
+            payload = resp.read().decode()
+            return resp.status, json.loads(payload) if payload else None
+    except urllib.error.HTTPError as exc:
+        if expect_error is not None and exc.code == expect_error:
+            payload = exc.read().decode()
+            return exc.code, json.loads(payload) if payload else None
+        raise
+
+
 def main() -> int:
+    status, health = request_root("/health")
+    assert status == 200 and health == {"status": "ok"}, health
+    print("GET /health OK")
+
     status, denied = request("GET", "/campaigns/", authed=False, expect_error=401)
     assert status == 401, denied
     print("GET /campaigns/ unauthenticated → 401 OK")
@@ -87,6 +105,14 @@ def main() -> int:
     status, me = request("GET", "/auth/me/")
     assert status == 200 and me["username"] == AUTH_USERNAME
     print("GET /auth/me/ OK")
+
+    status, logged_out = request("POST", "/auth/logout/")
+    assert status == 200 and logged_out == {"ok": True}, logged_out
+    status, me_after = request("GET", "/auth/me/", expect_error=401)
+    assert status == 401, me_after
+    print("POST /auth/logout/ clears session OK")
+
+    login()
 
     status, campaigns = request("GET", "/campaigns/")
     assert status == 200, campaigns
