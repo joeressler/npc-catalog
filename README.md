@@ -47,6 +47,8 @@ Copy environment defaults:
 cp .env.example .env
 ```
 
+Set `AUTH_USERNAME`, `AUTH_PASSWORD`, and `AUTH_SECRET` in `.env` (defaults are `admin` / `admin` for local use). The UI shows a login screen; `/api` and `/media` reject unauthenticated requests.
+
 ### Backend only
 
 ```bash
@@ -56,7 +58,7 @@ alembic upgrade head
 uvicorn app.main:app --reload --port 8000
 ```
 
-Interactive OpenAPI docs: **http://127.0.0.1:8000/docs**
+Interactive OpenAPI docs: **http://127.0.0.1:8000/docs** (requires a valid session cookie after login).
 
 ### Frontend only
 
@@ -72,6 +74,9 @@ The dev server proxies `/api` and `/media` to the backend when configured in `pr
 
 | Method | Path | Description |
 |--------|------|-------------|
+| POST | `/api/auth/login/` | Sign in (sets session cookie) |
+| POST | `/api/auth/logout/` | Clear session cookie |
+| GET | `/api/auth/me/` | Current session user |
 | GET/POST | `/api/campaigns/` | List / create campaigns |
 | GET/PATCH/DELETE | `/api/campaigns/{id}/` | Campaign detail |
 | GET/POST | `/api/campaigns/{id}/npcs/` | NPCs in campaign |
@@ -97,4 +102,4 @@ The dev server proxies `/api` and `/media` to the backend when configured in `pr
 - **Frontend:** Angular (standalone), SCSS
 - **Backend:** FastAPI + SQLAlchemy + Alembic
 - **Database:** SQLite on Docker volume
-- **Auth:** None (single-user local tool)
+- **Auth:** Single shared username/password from `.env`; HttpOnly session cookie gates `/api` and `/media`

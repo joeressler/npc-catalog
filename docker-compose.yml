@@ -16,6 +16,14 @@ services:
 
       MEDIA_ROOT: /data/media
 
+      AUTH_USERNAME: ${AUTH_USERNAME:-admin}
+
+      AUTH_PASSWORD: ${AUTH_PASSWORD:-admin}
+
+      AUTH_SECRET: ${AUTH_SECRET:-dev-secret-change-me}
+
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+
     expose:
 
       - "8000"
@@ -43,4 +51,3 @@ services:
 volumes:
 
   npc_data:
-
