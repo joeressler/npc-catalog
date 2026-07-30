@@ -1,0 +1,38 @@
+<section class="login-shell view-enter">
+  <form class="login-panel glass-panel" (ngSubmit)="submit()">
+    <p class="eyebrow">Dungeon Master Toolkit</p>
+    <h1 class="brand brand-shimmer">NPC Catalog</h1>
+    <p class="login-copy">Sign in to open your campaign vault.</p>
+
+    <label class="field">
+      <span>Username</span>
+      <input
+        name="username"
+        type="text"
+        autocomplete="username"
+        [(ngModel)]="username"
+        required
+        autofocus
+      />
+    </label>
+
+    <label class="field">
+      <span>Password</span>
+      <input
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        [(ngModel)]="password"
+        required
+      />
+    </label>
+
+    @if (error) {
+      <p class="login-error" role="alert">{{ error }}</p>
+    }
+
+    <button type="submit" class="btn btn-primary" [disabled]="submitting">
+      {{ submitting ? 'Signing in…' : 'Sign in' }}
+    </button>
+  </form>
+</section>

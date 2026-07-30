@@ -1,46 +1,27 @@
 services:
-
   backend:
-
     build: ./backend
-
     volumes:
-
       - npc_data:/data
-
+    # Pass AUTH_* (and other) secrets from the project .env literally.
+    # Do not use ${AUTH_*} interpolation — `$` in passwords would be re-expanded.
+    env_file:
+      - .env
     environment:
-
-      DEBUG: ${DEBUG:-true}
-
+      # Docker volume paths override any relative SQLITE_PATH/MEDIA_ROOT in .env
       SQLITE_PATH: /data/db.sqlite3
-
       MEDIA_ROOT: /data/media
-
     expose:
-
       - "8000"
-
     restart: unless-stopped
-
-
 
   frontend:
-
     build: ./frontend
-
     ports:
-
       - "0314:80"
-
     depends_on:
-
       - backend
-
     restart: unless-stopped
 
-
-
 volumes:
-
   npc_data:
-
