@@ -41,13 +41,13 @@ Copy **encounters/sessions** when adding typical JSON CRUD—not campaigns/NPCs�
 
 ## Development
 
-Copy environment defaults:
+Copy environment defaults (required for Docker Compose — the backend loads auth secrets via `env_file: .env`):
 
 ```bash
 cp .env.example .env
 ```
 
-Set `AUTH_USERNAME`, `AUTH_PASSWORD`, and `AUTH_SECRET` in `.env` (defaults are `admin` / `admin` for local use). The UI shows a login screen; `/api` and `/media` reject unauthenticated requests.
+Edit `.env` and set `AUTH_USERNAME`, `AUTH_PASSWORD`, and `AUTH_SECRET`. Compose injects that file into the backend container; `SQLITE_PATH` / `MEDIA_ROOT` in Compose still point at the `/data` volume.
 
 ### Backend only
 
