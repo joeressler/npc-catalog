@@ -12,7 +12,7 @@
 
 ## Learned Workspace Facts
 
-- Stack is Angular (standalone) frontend, FastAPI + SQLAlchemy + Alembic backend, SQLite on a Docker volume (`npc_data`); no auth (single-user local tool).
+- Stack is Angular (standalone) frontend, FastAPI + SQLAlchemy + Alembic backend, SQLite on a Docker volume (`npc_data`); single shared login via `AUTH_USERNAME` / `AUTH_PASSWORD` in `.env` (HttpOnly session cookie gates `/api` and `/media`).
 - `docker compose up --build` serves the app at http://localhost:0314; data and uploaded images (campaigns, NPCs, locations) live under `/data` in the backend volume.
 - Backend was migrated from Django to FastAPI with a wipe/recreate cutover; Django admin is not part of the stack.
 - NPCs are campaign-scoped with core fields (name, aliases, role, alignment, location free-text, optional catalog location, faction, attitude, party relationship, tags) plus optional image and optional DM detail sections (appearance, voice, personality, motivation, secrets, knowledge, inventory, notes, session history).

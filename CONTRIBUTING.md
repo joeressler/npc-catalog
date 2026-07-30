@@ -1,6 +1,6 @@
 # Contributing
 
-NPC Catalog is a single-user local DM tool: Angular frontend + FastAPI backend + SQLite.
+NPC Catalog is a single-user local DM tool: Angular frontend + FastAPI backend + SQLite. Access is gated by a shared username/password from `.env` (session cookie).
 
 ## Layout
 

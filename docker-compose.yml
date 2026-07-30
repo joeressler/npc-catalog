@@ -1,46 +1,47 @@
 services:
-
   backend:
-
     build: ./backend
-
     volumes:
-
       - npc_data:/data
-
+    # Pass AUTH_* (and other) secrets from the project .env literally.
+    # Do not use ${AUTH_*} interpolation — `$` in passwords would be re-expanded.
+    env_file:
+      - .env
     environment:
-
-      DEBUG: ${DEBUG:-true}
-
+      # Docker volume paths override any relative SQLITE_PATH/MEDIA_ROOT in .env
       SQLITE_PATH: /data/db.sqlite3
-
       MEDIA_ROOT: /data/media
-
     expose:
-
       - "8000"
-
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     restart: unless-stopped
 
-
-
   frontend:
-
     build: ./frontend
-
     ports:
-
       - "31402:80"
 
     depends_on:
-
-      - backend
-
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
-
-
 volumes:
-
   npc_data:
-

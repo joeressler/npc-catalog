@@ -41,11 +41,13 @@ Copy **encounters/sessions** when adding typical JSON CRUD—not campaigns/NPCs�
 
 ## Development
 
-Copy environment defaults:
+Copy environment defaults (required for Docker Compose — the backend loads auth secrets via `env_file: .env`):
 
 ```bash
 cp .env.example .env
 ```
+
+Edit `.env` and set `AUTH_USERNAME`, `AUTH_PASSWORD`, and `AUTH_SECRET`. Compose injects that file into the backend container; `SQLITE_PATH` / `MEDIA_ROOT` in Compose still point at the `/data` volume.
 
 ### Backend only
 
@@ -56,7 +58,7 @@ alembic upgrade head
 uvicorn app.main:app --reload --port 8000
 ```
 
-Interactive OpenAPI docs: **http://127.0.0.1:8000/docs**
+Interactive OpenAPI docs: **http://127.0.0.1:8000/docs** (requires a valid session cookie after login).
 
 ### Frontend only
 
@@ -72,6 +74,9 @@ The dev server proxies `/api` and `/media` to the backend when configured in `pr
 
 | Method | Path | Description |
 |--------|------|-------------|
+| POST | `/api/auth/login/` | Sign in (sets session cookie) |
+| POST | `/api/auth/logout/` | Clear session cookie |
+| GET | `/api/auth/me/` | Current session user |
 | GET/POST | `/api/campaigns/` | List / create campaigns |
 | GET/PATCH/DELETE | `/api/campaigns/{id}/` | Campaign detail |
 | GET/POST | `/api/campaigns/{id}/npcs/` | NPCs in campaign |
@@ -97,4 +102,21 @@ The dev server proxies `/api` and `/media` to the backend when configured in `pr
 - **Frontend:** Angular (standalone), SCSS
 - **Backend:** FastAPI + SQLAlchemy + Alembic
 - **Database:** SQLite on Docker volume
-- **Auth:** None (single-user local tool)
+- **Auth:** Single shared username/password from `.env`; HttpOnly session cookie gates `/api` and `/media`
+
+## Production / port-forward
+
+This stack is a single-user DM tool. If you expose host port **0314** (router NAT, LAN, or tunnel):
+
+1. Copy `.env.example` → `.env` and set **strong unique** `AUTH_USERNAME`, `AUTH_PASSWORD`, and `AUTH_SECRET` (not the example `admin` / `dev-secret-change-me` values).
+2. Set `DEBUG=false`. With debug off, the backend **refuses to start** on empty or example credentials, and OpenAPI `/docs` is disabled.
+3. Forward **only** `0314` (frontend nginx). Do **not** publish backend `8000`.
+4. Prefer a VPN, Tailscale, or SSH tunnel over an open WAN port when you can.
+5. Cookie Secure flag:
+   - Plain HTTP port-forward → keep `AUTH_COOKIE_SECURE=false` (required for cookies to work).
+   - HTTPS terminator in front (Caddy, Cloudflare Tunnel, etc.) → set `AUTH_COOKIE_SECURE=true`.
+   - Do **not** enable HSTS while serving plain HTTP.
+6. Login is rate-limited (nginx + in-process lockout). Changing `AUTH_SECRET` invalidates all sessions — restart and sign in again.
+7. Backup the `npc_data` volume periodically (`/data/db.sqlite3` and `/data/media`), e.g. `docker compose cp backend:/data ./backup-data`.
+
+Health probe (also used by Compose healthchecks): `GET http://localhost:0314/health`.
