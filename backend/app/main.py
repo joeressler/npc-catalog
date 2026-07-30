@@ -7,7 +7,16 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings, validate_production_secrets
 from app.media import ensure_media_root
 from app.middleware_auth import AuthMiddleware
-from app.routers import auth, campaigns, encounters, graphs, locations, npcs, sessions, tags
+from app.routers import (
+    auth,
+    campaigns,
+    encounters,
+    graphs,
+    locations,
+    npcs,
+    sessions,
+    tags,
+)
 
 
 @asynccontextmanager
