@@ -1,6 +1,6 @@
 ## Learned User Preferences
 
-- Prefers a purple Frutiger Aero visual design for the NPC Catalog UI.
+- Prefers a purple Frutiger Aero visual design with whimsical fey-magic motion across menus and workflows (respect `prefers-reduced-motion`).
 - On Windows, prefer Command Prompt over PowerShell for Docker commands when PowerShell cannot run Docker.
 - For larger features, prefer plan-first then implement the attached plan without editing the plan file.
 - Search and filters (e.g. faction) should match partial/substring input, not only exact strings.
@@ -15,6 +15,8 @@
 - Stack is Angular (standalone) frontend, FastAPI + SQLAlchemy + Alembic backend, SQLite on a Docker volume (`npc_data`); single shared login via `AUTH_USERNAME` / `AUTH_PASSWORD` in `.env` (HttpOnly session cookie gates `/api` and `/media`).
 - `docker compose up --build` serves the app at http://localhost:0314; data and uploaded images (campaigns, NPCs, locations) live under `/data` in the backend volume.
 - Backend was migrated from Django to FastAPI with a wipe/recreate cutover; Django admin is not part of the stack.
+- FastAPI route dependencies use Annotated style (`DbSession = Annotated[Session, Depends(get_db)]` in `deps.py`); avoid `Depends()` / `Form()` / `File()` / `Query()` in parameter defaults.
+- Frontend nginx CSP must allow Angular’s production CSS preload `onload="this.media='all'"` via `script-src-attr 'unsafe-hashes'` and the matching sha256 hash, or styles stay stuck on `media=print`.
 - NPCs are campaign-scoped with core fields (name, aliases, role, alignment, location free-text, optional catalog location, faction, attitude, party relationship, tags) plus optional image and optional DM detail sections (appearance, voice, personality, motivation, secrets, knowledge, inventory, notes, session history).
 - Campaign sessions are a per-campaign numbered notes feature (story beats/paths, linked NPCs, notes, clues, secrets, optional linked encounters and locations).
 - Campaign encounters are reusable combat/set-piece notes (enemies, battlefield, objects, loot, linked NPCs) that can be cloned; not owned by sessions.
