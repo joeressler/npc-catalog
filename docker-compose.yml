@@ -30,7 +30,7 @@ services:
 
     ports:
 
-      - "0314:80"
+      - "31402:80"
 
     depends_on:
 
