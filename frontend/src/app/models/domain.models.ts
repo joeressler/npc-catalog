@@ -386,3 +386,22 @@ export const RELATION_POLARITIES: { value: RelationPolarity; label: string }[] =
   { value: 'neutral', label: 'Neutral' },
   { value: 'complex', label: 'Complex' },
 ];
+
+export type AiGenerateKind = 'npc' | 'location';
+
+export interface AiStatus {
+  enabled: boolean;
+  reachable: boolean;
+}
+
+export interface AiGenerateRequest {
+  kind: AiGenerateKind;
+  fields: Record<string, unknown>;
+  guidance?: string | null;
+}
+
+export interface AiGenerateResponse {
+  image_base64: string;
+  mime_type: string;
+  prompt_used: string;
+}

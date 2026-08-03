@@ -29,6 +29,9 @@ import {
   LocationSummary,
   LocationWritePayload,
   Tag,
+  AiGenerateRequest,
+  AiGenerateResponse,
+  AiStatus,
 } from '../models/domain.models';
 
 @Injectable({ providedIn: 'root' })
@@ -277,6 +280,14 @@ export class ApiService {
       return path;
     }
     return path.startsWith('/') ? path : `/${path}`;
+  }
+
+  getAiStatus(): Observable<AiStatus> {
+    return this.http.get<AiStatus>(`${this.base}/ai/status/`);
+  }
+
+  generateAiImage(payload: AiGenerateRequest): Observable<AiGenerateResponse> {
+    return this.http.post<AiGenerateResponse>(`${this.base}/ai/generate-image/`, payload);
   }
 
   private buildParams(filters: NPCFilters): HttpParams {

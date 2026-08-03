@@ -8,6 +8,7 @@ from app.config import settings, validate_production_secrets
 from app.media import ensure_media_root
 from app.middleware_auth import AuthMiddleware
 from app.routers import (
+    ai,
     auth,
     campaigns,
     encounters,
@@ -55,6 +56,7 @@ settings.media_root.mkdir(parents=True, exist_ok=True)
 app.mount("/media", StaticFiles(directory=str(settings.media_root)), name="media")
 
 app.include_router(auth.router, prefix="/api")
+app.include_router(ai.router, prefix="/api")
 app.include_router(campaigns.router, prefix="/api")
 app.include_router(graphs.campaign_graphs_router, prefix="/api")
 app.include_router(graphs.campaign_relation_types_router, prefix="/api")

@@ -6,11 +6,12 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
 import { ALIGNMENTS, AlignmentCode, LocationSummary, NPC, NPCWritePayload } from '../../models/domain.models';
 import { MarkdownFieldComponent } from '../../shared/markdown-field.component';
+import { AiImageGenerateComponent } from '../../shared/ai-image-generate/ai-image-generate.component';
 
 @Component({
   selector: 'app-npc-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, MarkdownFieldComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MarkdownFieldComponent, AiImageGenerateComponent],
   templateUrl: './npc-form.component.html',
   styleUrl: './npc-form.component.scss',
 })
@@ -141,6 +142,38 @@ export class NpcFormComponent implements OnInit, OnDestroy {
       URL.revokeObjectURL(this.previewUrl);
       this.previewUrl = null;
     }
+  }
+
+  /** Fields snapshot for ComfyUI prompt building (current form values). */
+  aiPromptFields(): Record<string, unknown> {
+    const raw = this.form.getRawValue();
+    return {
+      name: raw.name,
+      aliases: this.splitList(raw.aliases),
+      role_occupation: raw.role_occupation,
+      alignment: raw.alignment,
+      location: raw.location,
+      faction: raw.faction,
+      attitude: raw.attitude,
+      party_relationship: raw.party_relationship,
+      tags: this.splitList(raw.tags),
+      appearance: raw.appearance,
+      voice_mannerisms: raw.voice_mannerisms,
+      personality_traits: raw.personality_traits,
+      motivation_goal: raw.motivation_goal,
+      secret_hook: raw.secret_hook,
+      knowledge: raw.knowledge,
+      inventory: raw.inventory,
+    };
+  }
+
+  onAiImageChosen(file: File): void {
+    this.selectedFile = file;
+    this.imageCleared = false;
+    if (this.previewUrl) {
+      URL.revokeObjectURL(this.previewUrl);
+    }
+    this.previewUrl = URL.createObjectURL(file);
   }
 
   submit(): void {

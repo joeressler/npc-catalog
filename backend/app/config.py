@@ -20,10 +20,18 @@ class Settings(BaseSettings):
     auth_password: str = Field(default=INSECURE_AUTH_PASSWORD)
     auth_secret: str = Field(default=INSECURE_AUTH_SECRET)
     auth_cookie_secure: bool = False
+    # ComfyUI image generation (Docker production). Off by default for split-dev.
+    comfyui_enabled: bool = False
+    comfyui_url: str = ""
+    comfyui_timeout_seconds: int = 180
 
     @property
     def database_url(self) -> str:
         return f"sqlite:///{self.sqlite_path.as_posix()}"
+
+    @property
+    def comfyui_configured(self) -> bool:
+        return self.comfyui_enabled and bool(self.comfyui_url.strip())
 
 
 def validate_production_secrets(cfg: Settings | None = None) -> None:
