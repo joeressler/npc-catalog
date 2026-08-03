@@ -4,11 +4,12 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { ApiService } from '../../services/api.service';
+import { MarkdownFieldComponent } from '../../shared/markdown-field.component';
 
 @Component({
   selector: 'app-graph-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MarkdownFieldComponent],
   templateUrl: './graph-form.component.html',
   styleUrl: './graph-form.component.scss',
 })

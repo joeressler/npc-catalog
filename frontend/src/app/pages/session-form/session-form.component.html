@@ -28,9 +28,8 @@
           <label for="title">Title (optional)</label>
           <input id="title" type="text" formControlName="title" placeholder="Heist at the Docks" />
         </div>
-        <div class="field span-2">
-          <label for="overall_notes">Overall notes</label>
-          <textarea id="overall_notes" formControlName="overall_notes" rows="5"></textarea>
+        <div class="span-2">
+          <app-markdown-field formControlName="overall_notes" label="Overall notes" inputId="overall_notes" [rows]="5" />
         </div>
       </div>
     </section>

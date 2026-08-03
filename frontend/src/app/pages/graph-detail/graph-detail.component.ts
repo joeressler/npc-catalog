@@ -14,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import cytoscape, { Core, ElementDefinition } from 'cytoscape';
 
+import { MarkdownViewComponent } from '../../shared/markdown-view.component';
 import { ApiService } from '../../services/api.service';
 import {
   GraphDetail,
@@ -36,7 +37,7 @@ interface EndpointOption {
 @Component({
   selector: 'app-graph-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, MarkdownViewComponent],
   templateUrl: './graph-detail.component.html',
   styleUrl: './graph-detail.component.scss',
 })

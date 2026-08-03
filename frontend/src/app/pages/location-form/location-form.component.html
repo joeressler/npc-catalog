@@ -17,14 +17,14 @@
           <label for="title">Title</label>
           <input id="title" type="text" formControlName="title" placeholder="The Sunken Market" />
         </div>
-        <div class="field span-2">
-          <label for="description">Description</label>
-          <textarea
-            id="description"
+        <div class="span-2">
+          <app-markdown-field
             formControlName="description"
-            rows="4"
+            label="Description"
+            inputId="description"
+            [rows]="4"
             placeholder="Atmosphere, layout, who controls it…"
-          ></textarea>
+          />
         </div>
         <div class="field span-2">
           <label for="image">Location image (optional)</label>
@@ -81,15 +81,13 @@
                 </button>
               </div>
             </div>
-            <div class="field">
-              <label [for]="'object-desc-' + objectIndex">Interaction / notes</label>
-              <textarea
-                [id]="'object-desc-' + objectIndex"
-                formControlName="description"
-                rows="2"
-                placeholder="What can the party do here?"
-              ></textarea>
-            </div>
+            <app-markdown-field
+              formControlName="description"
+              label="Interaction / notes"
+              [inputId]="'object-desc-' + objectIndex"
+              [rows]="2"
+              placeholder="What can the party do here?"
+            />
           </article>
         }
       </div>
@@ -103,11 +101,13 @@
       <div class="line-items" formArrayName="loot">
         @for (control of loot.controls; track control; let lootIndex = $index) {
           <div class="line-item">
-            <textarea
+            <app-markdown-field
               [formControlName]="lootIndex"
-              rows="2"
+              label="Loot"
+              [inputId]="'loot-' + lootIndex"
+              [rows]="2"
               placeholder="Treasure, salvage, or resources commonly found in this area"
-            ></textarea>
+            />
             <div class="line-actions">
               <button
                 type="button"

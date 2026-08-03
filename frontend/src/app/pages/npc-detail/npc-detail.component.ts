@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
 import { NPC } from '../../models/domain.models';
+import { MarkdownViewComponent } from '../../shared/markdown-view.component';
 
 interface DossierSection {
   title: string;
@@ -14,7 +15,7 @@ interface DossierSection {
 @Component({
   selector: 'app-npc-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, MarkdownViewComponent],
   templateUrl: './npc-detail.component.html',
   styleUrl: './npc-detail.component.scss',
 })

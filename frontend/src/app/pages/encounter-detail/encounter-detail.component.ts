@@ -4,11 +4,12 @@ import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
 import { EncounterDetail } from '../../models/domain.models';
+import { MarkdownViewComponent } from '../../shared/markdown-view.component';
 
 @Component({
   selector: 'app-encounter-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, MarkdownViewComponent],
   templateUrl: './encounter-detail.component.html',
   styleUrl: './encounter-detail.component.scss',
 })

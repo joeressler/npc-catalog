@@ -9,7 +9,7 @@
         <p class="eyebrow">Encounter</p>
         <h1 class="page-title">{{ encounter.title }}</h1>
         @if (encounter.short_description.trim()) {
-          <p class="page-subtitle">{{ encounter.short_description }}</p>
+          <app-markdown-view class="page-subtitle" [content]="encounter.short_description" />
         }
       </div>
       <div class="actions">
@@ -49,7 +49,7 @@
     @if (encounter.battlefield_description.trim()) {
       <section class="section glass-panel">
         <h2>Battlefield</h2>
-        <div class="section-body">{{ encounter.battlefield_description }}</div>
+        <app-markdown-view class="section-body" [content]="encounter.battlefield_description" />
       </section>
     }
 
@@ -61,7 +61,7 @@
             <article class="object-block">
               <h3>{{ obj.name }}</h3>
               @if (obj.description.trim()) {
-                <p>{{ obj.description }}</p>
+                <app-markdown-view [content]="obj.description" />
               }
             </article>
           }
@@ -74,7 +74,7 @@
         <h2>Loot &amp; rewards</h2>
         <ul class="bullet-list">
           @for (item of encounter.loot; track item.id) {
-            <li>{{ item.description }}</li>
+            <li><app-markdown-view [content]="item.description" /></li>
           }
         </ul>
       </section>
@@ -83,7 +83,7 @@
     @if (encounter.further_notes.trim()) {
       <section class="section glass-panel">
         <h2>Further notes</h2>
-        <div class="section-body">{{ encounter.further_notes }}</div>
+        <app-markdown-view class="section-body" [content]="encounter.further_notes" />
       </section>
     }
 

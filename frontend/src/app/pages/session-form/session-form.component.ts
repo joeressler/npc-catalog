@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 
 import { ApiService } from '../../services/api.service';
+import { MarkdownFieldComponent } from '../../shared/markdown-field.component';
 import {
   EncounterSummary,
   LocationSummary,
@@ -21,7 +22,7 @@ import {
 @Component({
   selector: 'app-session-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MarkdownFieldComponent],
   templateUrl: './session-form.component.html',
   styleUrl: './session-form.component.scss',
 })

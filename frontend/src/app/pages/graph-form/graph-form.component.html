@@ -12,10 +12,7 @@
       <label for="name">Web name</label>
       <input id="name" type="text" formControlName="name" placeholder="Faction intrigue, Court romance…" />
     </div>
-    <div class="field">
-      <label for="notes">Notes (optional)</label>
-      <textarea id="notes" formControlName="notes" rows="4" placeholder="What this web tracks"></textarea>
-    </div>
+    <app-markdown-field formControlName="notes" label="Notes" inputId="notes" [rows]="4" placeholder="What this web tracks" />
 
     @if (error) {
       <p class="form-error">{{ error }}</p>

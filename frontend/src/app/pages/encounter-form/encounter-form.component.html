@@ -17,27 +17,31 @@
           <label for="title">Title</label>
           <input id="title" type="text" formControlName="title" placeholder="Ambush at Weathertop" />
         </div>
-        <div class="field span-2">
-          <label for="short_description">Short description</label>
-          <textarea
-            id="short_description"
+        <div class="span-2">
+          <app-markdown-field
             formControlName="short_description"
-            rows="2"
+            label="Short description"
+            inputId="short_description"
+            [rows]="2"
             placeholder="What is this encounter about?"
-          ></textarea>
+          />
         </div>
-        <div class="field span-2">
-          <label for="battlefield_description">Battlefield description</label>
-          <textarea
-            id="battlefield_description"
+        <div class="span-2">
+          <app-markdown-field
             formControlName="battlefield_description"
-            rows="4"
+            label="Battlefield description"
+            inputId="battlefield_description"
+            [rows]="4"
             placeholder="Terrain, cover, lighting, hazards…"
-          ></textarea>
+          />
         </div>
-        <div class="field span-2">
-          <label for="further_notes">Further notes</label>
-          <textarea id="further_notes" formControlName="further_notes" rows="4"></textarea>
+        <div class="span-2">
+          <app-markdown-field
+            formControlName="further_notes"
+            label="Further notes"
+            inputId="further_notes"
+            [rows]="4"
+          />
         </div>
       </div>
     </section>
@@ -141,15 +145,13 @@
                 </button>
               </div>
             </div>
-            <div class="field">
-              <label [for]="'object-desc-' + objectIndex">Interaction / notes</label>
-              <textarea
-                [id]="'object-desc-' + objectIndex"
-                formControlName="description"
-                rows="2"
-                placeholder="What can the party do with this?"
-              ></textarea>
-            </div>
+            <app-markdown-field
+              formControlName="description"
+              label="Interaction / notes"
+              [inputId]="'object-desc-' + objectIndex"
+              [rows]="2"
+              placeholder="What can the party do with this?"
+            />
           </article>
         }
       </div>
@@ -163,11 +165,13 @@
       <div class="line-items" formArrayName="loot">
         @for (control of loot.controls; track control; let lootIndex = $index) {
           <div class="line-item">
-            <textarea
+            <app-markdown-field
               [formControlName]="lootIndex"
-              rows="2"
+              label="Loot"
+              [inputId]="'loot-' + lootIndex"
+              [rows]="2"
               placeholder="Reward description for clearing the encounter"
-            ></textarea>
+            />
             <div class="line-actions">
               <button
                 type="button"

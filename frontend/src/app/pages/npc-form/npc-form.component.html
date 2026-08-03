@@ -88,41 +88,32 @@
 
       @if (dossierOpen) {
         <div class="grid dossier-grid">
-          <div class="field span-2">
-            <label for="appearance">Appearance</label>
-            <textarea id="appearance" formControlName="appearance"></textarea>
+          <div class="span-2">
+            <app-markdown-field formControlName="appearance" label="Appearance" inputId="appearance" />
           </div>
-          <div class="field span-2">
-            <label for="voice">Voice / Accent / Mannerisms</label>
-            <textarea id="voice" formControlName="voice_mannerisms"></textarea>
+          <div class="span-2">
+            <app-markdown-field formControlName="voice_mannerisms" label="Voice / Accent / Mannerisms" inputId="voice_mannerisms" />
           </div>
-          <div class="field span-2">
-            <label for="personality">Personality Traits</label>
-            <textarea id="personality" formControlName="personality_traits"></textarea>
+          <div class="span-2">
+            <app-markdown-field formControlName="personality_traits" label="Personality Traits" inputId="personality_traits" />
           </div>
-          <div class="field span-2">
-            <label for="motivation">Motivation / Goal</label>
-            <textarea id="motivation" formControlName="motivation_goal"></textarea>
+          <div class="span-2">
+            <app-markdown-field formControlName="motivation_goal" label="Motivation / Goal" inputId="motivation_goal" />
           </div>
-          <div class="field span-2">
-            <label for="secret">Secret / Hook</label>
-            <textarea id="secret" formControlName="secret_hook"></textarea>
+          <div class="span-2">
+            <app-markdown-field formControlName="secret_hook" label="Secret / Hook" inputId="secret_hook" />
           </div>
-          <div class="field span-2">
-            <label for="knowledge">Knowledge / What They Know</label>
-            <textarea id="knowledge" formControlName="knowledge"></textarea>
+          <div class="span-2">
+            <app-markdown-field formControlName="knowledge" label="Knowledge / What They Know" inputId="knowledge" />
           </div>
-          <div class="field span-2">
-            <label for="inventory">Inventory / Notable Items</label>
-            <textarea id="inventory" formControlName="inventory"></textarea>
+          <div class="span-2">
+            <app-markdown-field formControlName="inventory" label="Inventory / Notable Items" inputId="inventory" />
           </div>
-          <div class="field span-2">
-            <label for="notes">DM Notes</label>
-            <textarea id="notes" formControlName="dm_notes"></textarea>
+          <div class="span-2">
+            <app-markdown-field formControlName="dm_notes" label="DM Notes" inputId="dm_notes" />
           </div>
-          <div class="field span-2">
-            <label for="session">Session Log / Campaign History</label>
-            <textarea id="session" formControlName="session_log"></textarea>
+          <div class="span-2">
+            <app-markdown-field formControlName="session_log" label="Session Log / Campaign History" inputId="session_log" />
           </div>
         </div>
       }

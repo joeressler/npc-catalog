@@ -26,7 +26,6 @@
 }
 
 .section-body {
-  white-space: pre-wrap;
   line-height: 1.55;
 }
 
@@ -50,9 +49,8 @@
   font-size: 1.05rem;
 }
 
-.object-block p {
-  margin: 0;
-  white-space: pre-wrap;
+.object-block app-markdown-view {
+  display: block;
   line-height: 1.5;
   color: var(--aero-text-muted);
 }

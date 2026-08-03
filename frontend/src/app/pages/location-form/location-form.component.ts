@@ -9,6 +9,7 @@ import {
   Validators,
 } from '@angular/forms';
 
+import { MarkdownFieldComponent } from '../../shared/markdown-field.component';
 import { ApiService } from '../../services/api.service';
 import {
   LocationObject,
@@ -19,7 +20,7 @@ import {
 @Component({
   selector: 'app-location-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MarkdownFieldComponent],
   templateUrl: './location-form.component.html',
   styleUrl: './location-form.component.scss',
 })

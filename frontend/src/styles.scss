@@ -482,6 +482,149 @@ a:focus-visible {
   }
 }
 
+// Markdown rendering (detail views + field preview)
+.markdown-body {
+  line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+
+  > :first-child {
+    margin-top: 0;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+
+  p,
+  ul,
+  ol,
+  blockquote,
+  pre {
+    margin: 0 0 0.85rem;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 1.25rem 0 0.5rem;
+    font-family: var(--font-display);
+    line-height: 1.25;
+    color: var(--aero-text);
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+  }
+
+  h3 {
+    font-size: 1.15rem;
+  }
+
+  ul,
+  ol {
+    padding-left: 1.35rem;
+  }
+
+  li + li {
+    margin-top: 0.25rem;
+  }
+
+  blockquote {
+    padding: 0.5rem 0.85rem;
+    border-left: 3px solid var(--aero-lilac);
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    color: var(--aero-text-muted);
+  }
+
+  code {
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.3rem;
+    background: rgba(74, 45, 122, 0.1);
+    font-size: 0.9em;
+  }
+
+  pre {
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius-sm);
+    background: rgba(42, 31, 74, 0.08);
+    overflow-x: auto;
+
+    code {
+      padding: 0;
+      background: none;
+    }
+  }
+
+  a {
+    color: var(--aero-purple-deep);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  hr {
+    margin: 1rem 0;
+    border: none;
+    border-top: 1px solid rgba(74, 45, 122, 0.15);
+  }
+}
+
+.markdown-field-toggle {
+  display: inline-flex;
+  padding: 0.2rem;
+  gap: 0.15rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+}
+
+.markdown-field-toggle-btn {
+  padding: 0.35rem 0.75rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--aero-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--motion-fast) var(--ease-aero),
+    color var(--motion-fast) var(--ease-aero),
+    box-shadow var(--motion-fast) var(--ease-aero);
+}
+
+.markdown-field-toggle-btn:hover:not(:disabled) {
+  color: var(--aero-text);
+}
+
+.markdown-field-toggle-btn:focus-visible {
+  outline: 2px solid var(--aero-lilac);
+  outline-offset: 2px;
+}
+
+.markdown-field-toggle-btn.active {
+  color: var(--aero-text);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 8px rgba(74, 45, 122, 0.12);
+}
+
+.markdown-field-toggle-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.field.markdown-field textarea {
+  resize: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -9,6 +9,7 @@ import {
   Validators,
 } from '@angular/forms';
 
+import { MarkdownFieldComponent } from '../../shared/markdown-field.component';
 import { ApiService } from '../../services/api.service';
 import {
   EncounterEnemy,
@@ -20,7 +21,7 @@ import {
 @Component({
   selector: 'app-encounter-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MarkdownFieldComponent],
   templateUrl: './encounter-form.component.html',
   styleUrl: './encounter-form.component.scss',
 })

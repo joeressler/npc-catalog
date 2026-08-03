@@ -5,11 +5,12 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { ApiService } from '../../services/api.service';
 import { ALIGNMENTS, AlignmentCode, LocationSummary, NPC, NPCWritePayload } from '../../models/domain.models';
+import { MarkdownFieldComponent } from '../../shared/markdown-field.component';
 
 @Component({
   selector: 'app-npc-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MarkdownFieldComponent],
   templateUrl: './npc-form.component.html',
   styleUrl: './npc-form.component.scss',
 })

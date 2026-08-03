@@ -19,7 +19,7 @@
             · {{ current.edges.length }} relation{{ current.edges.length === 1 ? '' : 's' }}
           </p>
           @if (current.notes.trim()) {
-            <p class="page-subtitle">{{ current.notes }}</p>
+            <app-markdown-view [content]="current.notes" />
           }
         </div>
         <div class="header-actions">

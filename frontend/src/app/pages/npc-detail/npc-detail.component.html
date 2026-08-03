@@ -66,7 +66,9 @@
               <span>{{ section.open ? '−' : '+' }}</span>
             </button>
             @if (section.open) {
-              <div class="section-body">{{ section.content }}</div>
+              <div class="section-body">
+                <app-markdown-view [content]="section.content" />
+              </div>
             }
           </article>
         }

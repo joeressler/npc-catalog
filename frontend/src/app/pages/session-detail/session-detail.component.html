@@ -22,7 +22,9 @@
     @if (session.overall_notes.trim()) {
       <article class="section glass-panel">
         <h2>Overall notes</h2>
-        <div class="section-body">{{ session.overall_notes }}</div>
+        <div class="section-body">
+          <app-markdown-view [content]="session.overall_notes" />
+        </div>
       </article>
     }
 

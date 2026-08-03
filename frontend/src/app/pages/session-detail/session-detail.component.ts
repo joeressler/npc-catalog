@@ -4,11 +4,12 @@ import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
 import { SessionDetail } from '../../models/domain.models';
+import { MarkdownViewComponent } from '../../shared/markdown-view.component';
 
 @Component({
   selector: 'app-session-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, MarkdownViewComponent],
   templateUrl: './session-detail.component.html',
   styleUrl: './session-detail.component.scss',
 })

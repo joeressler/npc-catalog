@@ -4,11 +4,12 @@ import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
 import { LocationDetail } from '../../models/domain.models';
+import { MarkdownViewComponent } from '../../shared/markdown-view.component';
 
 @Component({
   selector: 'app-location-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, MarkdownViewComponent],
   templateUrl: './location-detail.component.html',
   styleUrl: './location-detail.component.scss',
 })

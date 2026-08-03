@@ -13,7 +13,7 @@
           <p class="eyebrow">Location</p>
           <h1 class="page-title">{{ location.title }}</h1>
           @if (location.description.trim()) {
-            <p class="page-subtitle">{{ location.description }}</p>
+            <app-markdown-view class="page-subtitle" [content]="location.description" />
           }
         </div>
       </div>
@@ -45,7 +45,7 @@
             <article class="object-block">
               <h3>{{ obj.name }}</h3>
               @if (obj.description.trim()) {
-                <p>{{ obj.description }}</p>
+                <app-markdown-view [content]="obj.description" />
               }
             </article>
           }
@@ -58,7 +58,7 @@
         <h2>Loot found here</h2>
         <ul class="bullet-list">
           @for (item of location.loot; track item.id) {
-            <li>{{ item.description }}</li>
+            <li><app-markdown-view [content]="item.description" /></li>
           }
         </ul>
       </section>
