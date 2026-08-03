@@ -1,0 +1,54 @@
+<div class="field markdown-field">
+  <div class="markdown-field-header">
+    <label [id]="inputId + '-label'" [for]="inputId">{{ label }}</label>
+    <div class="markdown-field-toggle" role="tablist" [attr.aria-label]="label + ' mode'">
+      <button
+        type="button"
+        role="tab"
+        class="markdown-field-toggle-btn"
+        [class.active]="mode === 'edit'"
+        [attr.aria-selected]="mode === 'edit'"
+        [disabled]="disabled"
+        (click)="setMode('edit')"
+      >
+        Edit
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="markdown-field-toggle-btn"
+        [class.active]="mode === 'preview'"
+        [attr.aria-selected]="mode === 'preview'"
+        [disabled]="disabled"
+        (click)="setMode('preview')"
+      >
+        Preview
+      </button>
+    </div>
+  </div>
+
+  @if (mode === 'edit') {
+    <textarea
+      [id]="inputId"
+      appAutosizeTextarea
+      [rows]="rows"
+      [placeholder]="placeholder"
+      [disabled]="disabled"
+      [value]="value"
+      (input)="onInput($event)"
+      (blur)="onBlur()"
+    ></textarea>
+  } @else {
+    @if (previewHtml) {
+      <div
+        class="markdown-body markdown-field-preview"
+        [attr.aria-labelledby]="inputId + '-label'"
+        [innerHTML]="previewHtml"
+      ></div>
+    } @else {
+      <div class="markdown-field-preview markdown-field-preview--empty" aria-live="polite">
+        Nothing to preview yet.
+      </div>
+    }
+  }
+</div>

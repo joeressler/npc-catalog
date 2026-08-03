@@ -1,0 +1,20 @@
+.markdown-field-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+}
+
+.markdown-field-preview {
+  min-height: 6rem;
+  padding: 0.72rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.markdown-field-preview--empty {
+  color: var(--aero-text-muted);
+  font-style: italic;
+}
