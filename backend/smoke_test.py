@@ -304,6 +304,13 @@ def main() -> int:
     assert status == 200 and global_list["count"] >= 1
     print("GET /npcs/ OK")
 
+    status, ai_status = request("GET", "/ai/status/")
+    assert status == 200
+    assert "enabled" in ai_status and "reachable" in ai_status
+    # Split-dev defaults leave ComfyUI off; Docker sets COMFYUI_ENABLED=true.
+    assert isinstance(ai_status["enabled"], bool)
+    print(f"GET /ai/status/ OK (enabled={ai_status['enabled']})")
+
     # Media path is gated the same way as /api.
     media_req = urllib.request.Request(f"{ROOT}/media/")
     try:

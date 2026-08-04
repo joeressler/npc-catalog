@@ -13,6 +13,8 @@ from app.config import (
     validate_production_secrets,
 )
 from app.media import resolve_media_path
+from app.services.ai_prompts import build_prompts
+from app.services.comfyui import SIZE_BY_KIND, build_workflow
 
 
 def test_validate_allows_debug_with_insecure_defaults() -> None:
@@ -86,6 +88,53 @@ def test_resolve_media_path_contains_under_root() -> None:
             media_mod.settings.media_root = original
 
 
+def test_ai_prompts_npc_and_location() -> None:
+    pos, neg = build_prompts(
+        "npc",
+        {
+            "name": "Mira",
+            "role_occupation": "dock witch",
+            "alignment": "CN",
+            "appearance": "salt-stained cloak, green eyes",
+            "secret_hook": "serves a drowned god",
+        },
+        guidance="moonlit pier",
+    )
+    assert "Mira" in pos
+    assert "dock witch" in pos
+    assert "moonlit pier" in pos
+    assert "blurry" in neg
+
+    loc_pos, loc_neg = build_prompts(
+        "location",
+        {
+            "title": "Sunken Market",
+            "description": "Lanterns over tidal stalls",
+            "objects": [{"name": "Tide bell", "description": "rings at dusk"}],
+            "loot": ["pearl dagger"],
+        },
+    )
+    assert "Sunken Market" in loc_pos
+    assert "Tide bell" in loc_pos
+    assert "landscape" in loc_pos
+    assert "portrait" in loc_neg
+
+
+def test_comfy_workflow_sizes() -> None:
+    workflow = build_workflow("npc", "a hero", "blurry", seed=42)
+    assert workflow["3"]["inputs"]["seed"] == 42
+    assert workflow["6"]["inputs"]["text"] == "a hero"
+    assert workflow["7"]["inputs"]["text"] == "blurry"
+    width, height = SIZE_BY_KIND["npc"]
+    assert workflow["5"]["inputs"]["width"] == width
+    assert workflow["5"]["inputs"]["height"] == height
+
+    landscape = build_workflow("location", "a place", "text", seed=1)
+    lw, lh = SIZE_BY_KIND["location"]
+    assert landscape["5"]["inputs"]["width"] == lw
+    assert landscape["5"]["inputs"]["height"] == lh
+
+
 def main() -> int:
     test_validate_allows_debug_with_insecure_defaults()
     print("validate_production_secrets DEBUG=true OK")
@@ -97,6 +146,10 @@ def main() -> int:
     print("validate_production_secrets strong secrets OK")
     test_resolve_media_path_contains_under_root()
     print("resolve_media_path containment OK")
+    test_ai_prompts_npc_and_location()
+    print("ai_prompts NPC/location OK")
+    test_comfy_workflow_sizes()
+    print("comfy workflow template OK")
     return 0
 
 

@@ -1,0 +1,70 @@
+@if (available) {
+  <div class="ai-image-generate">
+    <button
+      type="button"
+      class="btn btn-secondary btn-sm ai-trigger fey-glow"
+      [disabled]="disabled || generating"
+      (click)="openGenerate()"
+    >
+      {{ buttonLabel }}
+    </button>
+
+    @if (panelOpen) {
+      <div class="ai-panel-backdrop" (click)="cancel()" aria-hidden="true"></div>
+      <div
+        #panel
+        class="ai-panel glass-panel"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-label]="buttonLabel"
+      >
+        <header class="ai-panel-head">
+          <h3>{{ buttonLabel }}</h3>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="cancel()">Close</button>
+        </header>
+
+        @if (generating) {
+          <div class="ai-loading">
+            <div class="ai-orb" aria-hidden="true"></div>
+            <p>Weaving a {{ kind === 'npc' ? 'portrait' : 'landscape' }} from your notes…</p>
+            <p class="ai-hint">SDXL can take a minute or two on first run.</p>
+          </div>
+        } @else if (previewDataUrl) {
+          <div class="ai-preview">
+            <img [src]="previewDataUrl" [alt]="kind === 'npc' ? 'Generated portrait' : 'Generated landscape'" />
+          </div>
+        } @else if (error) {
+          <p class="ai-error">{{ error }}</p>
+        }
+
+        @if (showGuidance && !generating) {
+          <div class="field guidance-field">
+            <label for="ai-guidance">Guide the next attempt</label>
+            <textarea
+              id="ai-guidance"
+              rows="3"
+              [(ngModel)]="guidance"
+              placeholder="e.g. older elf with silver scars, twilight market lanterns…"
+            ></textarea>
+          </div>
+        }
+
+        <div class="ai-actions">
+          @if (previewDataUrl && !generating) {
+            <button type="button" class="btn btn-primary" (click)="save()">Save as image</button>
+            <button type="button" class="btn btn-secondary" (click)="tryAgain()">Try again</button>
+            <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+          } @else if (showGuidance && !generating) {
+            <button type="button" class="btn btn-primary" (click)="retryWithGuidance()">
+              Generate again
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+          } @else if (error && !generating) {
+            <button type="button" class="btn btn-primary" (click)="tryAgain()">Try again</button>
+            <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}

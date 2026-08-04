@@ -11,8 +11,13 @@ services:
       # Docker volume paths override any relative SQLITE_PATH/MEDIA_ROOT in .env
       SQLITE_PATH: /data/db.sqlite3
       MEDIA_ROOT: /data/media
+      COMFYUI_URL: http://comfyui:8188
+      COMFYUI_ENABLED: "true"
     expose:
       - "8000"
+    # Soft dependency: app stays usable while ComfyUI downloads SDXL / warms up.
+    depends_on:
+      - comfyui
     healthcheck:
       test:
         [
@@ -25,6 +30,51 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+    restart: unless-stopped
+
+  comfyui:
+    # CUDA 12.4 ComfyUI boot image; requires NVIDIA Container Toolkit on the host.
+    # Tags are suffix-based (cu124-slim / cu124-megapak); bare :cu124 does not exist.
+    image: yanwk/comfyui-boot:cu124-slim
+    volumes:
+      # Persist ComfyUI install across recreates; models/output overlay the large assets.
+      - comfyui_root:/root
+      - comfyui_models:/root/ComfyUI/models
+      - comfyui_output:/root/ComfyUI/output
+      - ./comfyui/entrypoint.sh:/custom-entrypoint.sh:ro
+    # Strip Windows CRLF from the bind-mounted script before exec (OneDrive/Git on Windows).
+    entrypoint:
+      [
+        "/bin/bash",
+        "-c",
+        "sed 's/\\r$//' /custom-entrypoint.sh > /tmp/comfy-entrypoint.sh && exec /bin/bash /tmp/comfy-entrypoint.sh",
+      ]
+    environment:
+      COMFYUI_MODELS_DIR: /root/ComfyUI/models
+      COMFYUI_CKPT_NAME: sd_xl_base_1.0.safetensors
+    # Internal only — never publish 8188 to the host.
+    expose:
+      - "8188"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8188/system_stats')",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      # First boot may clone ComfyUI and/or download SDXL (~6GB+).
+      start_period: 600s
     restart: unless-stopped
 
   frontend:
@@ -45,3 +95,6 @@ services:
 
 volumes:
   npc_data:
+  comfyui_root:
+  comfyui_models:
+  comfyui_output:

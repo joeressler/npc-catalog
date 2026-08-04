@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 
 import { MarkdownFieldComponent } from '../../shared/markdown-field.component';
+import { AiImageGenerateComponent } from '../../shared/ai-image-generate/ai-image-generate.component';
 import { ApiService } from '../../services/api.service';
 import {
   LocationObject,
@@ -20,7 +21,7 @@ import {
 @Component({
   selector: 'app-location-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, MarkdownFieldComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MarkdownFieldComponent, AiImageGenerateComponent],
   templateUrl: './location-form.component.html',
   styleUrl: './location-form.component.scss',
 })
@@ -116,6 +117,25 @@ export class LocationFormComponent implements OnInit, OnDestroy {
       URL.revokeObjectURL(this.previewUrl);
       this.previewUrl = null;
     }
+  }
+
+  aiPromptFields(): Record<string, unknown> {
+    const raw = this.form.getRawValue();
+    return {
+      title: raw.title,
+      description: raw.description,
+      loot: this.lootValues(),
+      objects: this.objectValues(),
+    };
+  }
+
+  onAiImageChosen(file: File): void {
+    this.selectedFile = file;
+    this.imageCleared = false;
+    if (this.previewUrl) {
+      URL.revokeObjectURL(this.previewUrl);
+    }
+    this.previewUrl = URL.createObjectURL(file);
   }
 
   addLoot(): void {

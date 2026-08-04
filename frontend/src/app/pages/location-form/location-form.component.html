@@ -29,6 +29,12 @@
         <div class="field span-2">
           <label for="image">Location image (optional)</label>
           <input id="image" type="file" accept="image/*" (change)="onFileSelected($event)" />
+          <app-ai-image-generate
+            kind="location"
+            [fields]="aiPromptFields()"
+            [disabled]="saving"
+            (imageChosen)="onAiImageChosen($event)"
+          />
           @if (previewUrl || currentImage) {
             <div class="image-preview">
               <img [src]="previewUrl || currentImage" alt="Location preview" />
