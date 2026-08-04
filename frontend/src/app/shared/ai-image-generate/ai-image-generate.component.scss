@@ -1,28 +1,28 @@
 .ai-image-generate {
+  position: relative;
   margin-top: 0.55rem;
+  z-index: 2;
 }
 
 .ai-trigger {
   position: relative;
 }
 
+/* Click-away only — no full-page blur so focus stays on the image field. */
 .ai-panel-backdrop {
   position: fixed;
   inset: 0;
   z-index: 40;
-  background: rgba(42, 31, 74, 0.35);
-  backdrop-filter: blur(2px);
-  animation: aiFadeIn var(--motion-fast) var(--ease-aero);
+  background: transparent;
 }
 
 .ai-panel {
-  position: fixed;
+  position: absolute;
   z-index: 50;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: calc(100% + 0.55rem);
+  left: 0;
   width: min(28rem, calc(100vw - 2rem));
-  max-height: calc(100vh - 2rem);
+  max-height: min(36rem, 70vh);
   overflow: auto;
   padding: 1.15rem 1.25rem 1.25rem;
   display: flex;
@@ -98,23 +98,14 @@
   gap: 0.55rem;
 }
 
-@keyframes aiFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 @keyframes aiRiseIn {
   from {
     opacity: 0;
-    transform: translate(-50%, -46%) scale(0.97);
+    transform: translateY(-0.4rem) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: none;
   }
 }
 
@@ -131,7 +122,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ai-panel-backdrop,
   .ai-panel,
   .ai-orb {
     animation: none;

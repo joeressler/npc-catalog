@@ -12,6 +12,7 @@
     @if (panelOpen) {
       <div class="ai-panel-backdrop" (click)="cancel()" aria-hidden="true"></div>
       <div
+        #panel
         class="ai-panel glass-panel"
         role="dialog"
         aria-modal="true"

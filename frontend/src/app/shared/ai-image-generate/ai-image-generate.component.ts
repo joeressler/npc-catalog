@@ -1,4 +1,14 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+  ViewChild,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -14,6 +24,8 @@ import { AiGenerateKind } from '../../models/domain.models';
 })
 export class AiImageGenerateComponent implements OnInit, OnDestroy {
   private readonly api = inject(ApiService);
+
+  @ViewChild('panel') panel?: ElementRef<HTMLElement>;
 
   @Input({ required: true }) kind!: AiGenerateKind;
   /** Current form field bag sent to the prompt builder. */
@@ -59,6 +71,7 @@ export class AiImageGenerateComponent implements OnInit, OnDestroy {
     this.error = '';
     this.previewDataUrl = null;
     this.runGenerate();
+    this.scrollPanelIntoView();
   }
 
   cancel(): void {
@@ -71,6 +84,8 @@ export class AiImageGenerateComponent implements OnInit, OnDestroy {
   }
 
   tryAgain(): void {
+    // Clear preview so actions switch from Save/Try again → Generate again.
+    this.previewDataUrl = null;
     this.showGuidance = true;
     this.error = '';
   }
@@ -80,6 +95,7 @@ export class AiImageGenerateComponent implements OnInit, OnDestroy {
       return;
     }
     this.previewDataUrl = null;
+    this.showGuidance = false;
     this.runGenerate();
   }
 
@@ -108,6 +124,7 @@ export class AiImageGenerateComponent implements OnInit, OnDestroy {
         next: (result) => {
           this.previewDataUrl = `data:${result.mime_type};base64,${result.image_base64}`;
           this.generating = false;
+          this.scrollPanelIntoView();
         },
         error: (err) => {
           const detail = err?.error?.detail;
@@ -118,6 +135,18 @@ export class AiImageGenerateComponent implements OnInit, OnDestroy {
           this.generating = false;
         },
       });
+  }
+
+  private scrollPanelIntoView(): void {
+    // Wait a tick so @if renders the panel before scrolling.
+    requestAnimationFrame(() => {
+      const el = this.panel?.nativeElement;
+      if (!el) {
+        return;
+      }
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      el.scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+    });
   }
 
   private dataUrlToFile(dataUrl: string, filename: string): File {

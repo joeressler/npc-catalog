@@ -34,12 +34,21 @@ services:
 
   comfyui:
     # CUDA 12.4 ComfyUI boot image; requires NVIDIA Container Toolkit on the host.
-    image: yanwk/comfyui-boot:cu124
+    # Tags are suffix-based (cu124-slim / cu124-megapak); bare :cu124 does not exist.
+    image: yanwk/comfyui-boot:cu124-slim
     volumes:
+      # Persist ComfyUI install across recreates; models/output overlay the large assets.
+      - comfyui_root:/root
       - comfyui_models:/root/ComfyUI/models
       - comfyui_output:/root/ComfyUI/output
       - ./comfyui/entrypoint.sh:/custom-entrypoint.sh:ro
-    entrypoint: ["/bin/bash", "/custom-entrypoint.sh"]
+    # Strip Windows CRLF from the bind-mounted script before exec (OneDrive/Git on Windows).
+    entrypoint:
+      [
+        "/bin/bash",
+        "-c",
+        "sed 's/\\r$//' /custom-entrypoint.sh > /tmp/comfy-entrypoint.sh && exec /bin/bash /tmp/comfy-entrypoint.sh",
+      ]
     environment:
       COMFYUI_MODELS_DIR: /root/ComfyUI/models
       COMFYUI_CKPT_NAME: sd_xl_base_1.0.safetensors
@@ -57,14 +66,14 @@ services:
       test:
         [
           "CMD",
-          "python",
+          "python3",
           "-c",
           "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8188/system_stats')",
         ]
       interval: 30s
       timeout: 10s
       retries: 10
-      # First boot may download SDXL (~6GB+).
+      # First boot may clone ComfyUI and/or download SDXL (~6GB+).
       start_period: 600s
     restart: unless-stopped
 
@@ -86,5 +95,6 @@ services:
 
 volumes:
   npc_data:
+  comfyui_root:
   comfyui_models:
   comfyui_output:
