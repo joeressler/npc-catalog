@@ -6,14 +6,16 @@
 - Search and filters (e.g. faction) should match partial/substring input, not only exact strings.
 - When overhauling the backend, prefer a fresh cutover (new schema, wipe/recreate data) over preserving Django admin or migrating legacy data.
 - Character relationship webs should be interactive visuals, support multiple named webs per campaign, directed and easy bidirectional relations, a synthetic Party node, and optional PC sub-nodes under Party for one-off PC–NPC ties.
-- Campaign sessions should auto-assign the next number; story beats are DM-orderable branching paths; clues and secrets are line items; overall notes are free text.
+- Campaign sessions should auto-assign the next number; story beats are DM-orderable branching paths; clues and secrets are line items; overall notes are free text; beats/paths, clues, secrets, and similar fields should use auto-growing textareas for easier typing.
 - Campaign encounters are reusable, cloneable set-pieces (title, short description, enemy quantities/types, battlefield text, objects/interaction points, loot line items, further notes) with soft NPC links; sessions can soft-link encounters without owning them.
 - Campaign locations are reusable place notes (title, description, optional image, loot line items, POIs/interactables) with soft NPC links; NPCs can optionally pick a catalog location via `location_id` while keeping free-text location notes; location detail shows Residents (FK) and Linked NPCs (soft); sessions can soft-link locations.
+- Large free-text DM fields should support Markdown with a mobile-first Edit/Preview toggle and auto-growing textareas.
+- AI image generation dialogs (portrait/landscape) should appear near the trigger button rather than as a mid-page modal that forces scrolling.
 
 ## Learned Workspace Facts
 
 - Stack is Angular (standalone) frontend, FastAPI + SQLAlchemy + Alembic backend, SQLite on a Docker volume (`npc_data`); single shared login via `AUTH_USERNAME` / `AUTH_PASSWORD` in `.env` (HttpOnly session cookie gates `/api` and `/media`).
-- `docker compose up --build` serves the app at http://localhost:0314; data and uploaded images (campaigns, NPCs, locations) live under `/data` in the backend volume.
+- `docker compose up --build` serves the app at http://localhost:0314; data and uploaded images (campaigns, NPCs, locations) live under `/data` in the backend volume; optional ComfyUI service (NVIDIA Container Toolkit, `yanwk/comfyui-boot`) generates NPC portraits and location landscapes when healthy—generate buttons appear only when `/api/ai/status/` reports configured and reachable.
 - Backend was migrated from Django to FastAPI with a wipe/recreate cutover; Django admin is not part of the stack.
 - FastAPI route dependencies use Annotated style (`DbSession = Annotated[Session, Depends(get_db)]` in `deps.py`); avoid `Depends()` / `Form()` / `File()` / `Query()` in parameter defaults.
 - Frontend nginx CSP must allow Angular’s production CSS preload `onload="this.media='all'"` via `script-src-attr 'unsafe-hashes'` and the matching sha256 hash, or styles stay stuck on `media=print`.
@@ -21,6 +23,8 @@
 - Campaign sessions are a per-campaign numbered notes feature (story beats/paths, linked NPCs, notes, clues, secrets, optional linked encounters and locations).
 - Campaign encounters are reusable combat/set-piece notes (enemies, battlefield, objects, loot, linked NPCs) that can be cloned; not owned by sessions.
 - Character graphs (relationship webs) are campaign-scoped; relation types are an editable set list; graph UI uses Cytoscape.
+- Large free-text form fields use shared `MarkdownField` / `MarkdownView` (marked + DOMPurify) with the autosize textarea directive; detail pages render sanitized Markdown.
+- Shell scripts must stay LF-ended (`.gitattributes` for `*.sh`); Windows CRLF breaks Docker/ComfyUI entrypoints under bash.
 
 ## Cursor Cloud specific instructions
 

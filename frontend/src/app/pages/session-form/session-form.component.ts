@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 
 import { ApiService } from '../../services/api.service';
+import { AutosizeTextareaDirective } from '../../shared/autosize-textarea.directive';
 import { MarkdownFieldComponent } from '../../shared/markdown-field.component';
 import {
   EncounterSummary,
@@ -22,7 +23,7 @@ import {
 @Component({
   selector: 'app-session-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, MarkdownFieldComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MarkdownFieldComponent, AutosizeTextareaDirective],
   templateUrl: './session-form.component.html',
   styleUrl: './session-form.component.scss',
 })

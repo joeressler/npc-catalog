@@ -86,7 +86,11 @@
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 0.65rem;
-  align-items: center;
+  align-items: start;
+}
+
+.line-item textarea {
+  width: 100%;
 }
 
 .line-index {

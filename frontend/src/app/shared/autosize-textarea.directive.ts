@@ -4,11 +4,12 @@ import {
   DoCheck,
   ElementRef,
   HostListener,
+  Input,
   OnDestroy,
   inject,
 } from '@angular/core';
 
-/** Grow a textarea to fit its content; min-height ~6rem, no manual resize. */
+/** Grow a textarea to fit its content; configurable min-height, no manual resize. */
 @Directive({
   selector: 'textarea[appAutosizeTextarea]',
   standalone: true,
@@ -18,11 +19,14 @@ export class AutosizeTextareaDirective implements AfterViewInit, DoCheck, OnDest
   private resizeObserver: ResizeObserver | null = null;
   private lastValue = '';
 
+  /** Minimum height before content grows the field (default suits dossier markdown fields). */
+  @Input() minHeight = '6rem';
+
   ngAfterViewInit(): void {
     const textarea = this.el.nativeElement;
     textarea.style.resize = 'none';
     textarea.style.overflow = 'hidden';
-    textarea.style.minHeight = '6rem';
+    textarea.style.minHeight = this.minHeight;
     this.lastValue = textarea.value;
     this.resize();
 

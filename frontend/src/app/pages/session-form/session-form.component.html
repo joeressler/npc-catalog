@@ -73,7 +73,13 @@
                 @for (beatControl of pathBeats(pathIndex).controls; track beatControl; let beatIndex = $index) {
                   <div class="line-item">
                     <span class="line-index">{{ beatIndex + 1 }}</span>
-                    <input type="text" [formControlName]="beatIndex" placeholder="What happens on this path?" />
+                    <textarea
+                      [formControlName]="beatIndex"
+                      appAutosizeTextarea
+                      [minHeight]="'2.75rem'"
+                      rows="2"
+                      placeholder="What happens on this path?"
+                    ></textarea>
                     <div class="line-actions">
                       <button type="button" class="btn btn-secondary btn-sm" (click)="movePathBeat(pathIndex, beatIndex, -1)" [disabled]="beatIndex === 0">Up</button>
                       <button type="button" class="btn btn-secondary btn-sm" (click)="movePathBeat(pathIndex, beatIndex, 1)" [disabled]="beatIndex === pathBeats(pathIndex).length - 1">Down</button>
@@ -96,7 +102,13 @@
       <div class="line-items" formArrayName="clues">
         @for (control of clues.controls; track control; let clueIndex = $index) {
           <div class="line-item">
-            <input type="text" [formControlName]="clueIndex" placeholder="Clue the party discovered" />
+            <textarea
+              [formControlName]="clueIndex"
+              appAutosizeTextarea
+              [minHeight]="'2.75rem'"
+              rows="2"
+              placeholder="Clue the party discovered"
+            ></textarea>
             <div class="line-actions">
               <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('clues', clueIndex, -1)" [disabled]="clueIndex === 0">Up</button>
               <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('clues', clueIndex, 1)" [disabled]="clueIndex === clues.length - 1">Down</button>
@@ -115,7 +127,13 @@
       <div class="line-items" formArrayName="secrets">
         @for (control of secrets.controls; track control; let secretIndex = $index) {
           <div class="line-item">
-            <input type="text" [formControlName]="secretIndex" placeholder="Secret only the DM should remember" />
+            <textarea
+              [formControlName]="secretIndex"
+              appAutosizeTextarea
+              [minHeight]="'2.75rem'"
+              rows="2"
+              placeholder="Secret only the DM should remember"
+            ></textarea>
             <div class="line-actions">
               <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('secrets', secretIndex, -1)" [disabled]="secretIndex === 0">Up</button>
               <button type="button" class="btn btn-secondary btn-sm" (click)="moveLineItem('secrets', secretIndex, 1)" [disabled]="secretIndex === secrets.length - 1">Down</button>
