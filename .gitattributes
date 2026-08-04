@@ -1,0 +1,2 @@
+# Shell scripts mounted into Linux containers must stay LF on Windows checkouts.
+*.sh text eol=lf
