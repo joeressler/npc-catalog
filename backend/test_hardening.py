@@ -165,6 +165,8 @@ def main() -> int:
     print("validate_production_secrets rejects empty secret OK")
     test_validate_accepts_strong_secrets_when_not_debug()
     print("validate_production_secrets strong secrets OK")
+    test_validate_rejects_insecure_player_password_when_not_debug()
+    print("validate_production_secrets rejects insecure player password OK")
     test_resolve_media_path_contains_under_root()
     print("resolve_media_path containment OK")
     test_ai_prompts_npc_and_location()

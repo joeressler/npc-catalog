@@ -210,7 +210,8 @@ def main() -> int:
     print("GET /tags/ OK")
 
     status, detail = request("GET", f"/npcs/{npc_id}/")
-    assert status == 200 and detail["session_log"] == ""
+    assert status == 200 and detail["session_log"] == "appeared in session 1"
+    assert detail["secret_hook"] == "serves the Valar in secret"
     print("GET /npcs/{id}/ OK")
 
     status, patched = request(
