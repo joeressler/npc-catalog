@@ -4,6 +4,7 @@ from sqlalchemy import select
 from app.deps import DbSession
 from app.mappers import serialize_relation_type
 from app.models import GraphEdge, RelationType
+from app.player_access import ensure_campaign_visible, is_player
 from app.routers.graphs.shared import campaign_relation_types_router, relation_types_router
 from app.schemas import RelationTypeRead, RelationTypeWrite, RelationTypeWritePartial
 from app.services.campaigns import get_campaign_or_404
@@ -23,7 +24,8 @@ def list_campaign_relation_types(
     db: DbSession,
     page: int = 1,
 ):
-    get_campaign_or_404(db, campaign_id)
+    campaign = get_campaign_or_404(db, campaign_id)
+    ensure_campaign_visible(campaign, for_player=is_player(request))
 
     stmt = (
         select(RelationType)

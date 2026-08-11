@@ -7,6 +7,7 @@ from app.deps import DbSession
 from app.mappers import serialize_campaign
 from app.media import save_campaign_image
 from app.models import NPC, Campaign
+from app.player_access import ensure_campaign_visible, is_player, parse_bool_form
 from app.schemas import CampaignRead
 from app.services.campaigns import (
     create_campaign as create_campaign_service,
@@ -30,12 +31,28 @@ def list_campaigns(
     db: DbSession,
     page: int = 1,
 ):
-    npc_count = (
-        select(func.count(NPC.id))
-        .where(NPC.campaign_id == Campaign.id)
-        .scalar_subquery()
-    )
-    stmt = select(Campaign, npc_count.label("npc_count")).order_by(Campaign.name.asc())
+    for_player = is_player(request)
+    if for_player:
+        npc_count = (
+            select(func.count(NPC.id))
+            .where(
+                NPC.campaign_id == Campaign.id,
+                NPC.player_visible.is_(True),
+            )
+            .scalar_subquery()
+        )
+        stmt = (
+            select(Campaign, npc_count.label("npc_count"))
+            .where(Campaign.player_visible.is_(True))
+            .order_by(Campaign.name.asc())
+        )
+    else:
+        npc_count = (
+            select(func.count(NPC.id))
+            .where(NPC.campaign_id == Campaign.id)
+            .scalar_subquery()
+        )
+        stmt = select(Campaign, npc_count.label("npc_count")).order_by(Campaign.name.asc())
 
     def serialize(row: tuple[Campaign, int]) -> dict:
         campaign, count = row[0], row[1]
@@ -50,6 +67,7 @@ def create_campaign(
     name: Annotated[str, Form()],
     db: DbSession,
     image: Annotated[UploadFile | None, File()] = None,
+    player_visible: Annotated[str | None, Form()] = None,
 ):
     ensure_unique_campaign_name(db, name=name)
 
@@ -57,7 +75,12 @@ def create_campaign(
     if image and image.filename:
         image_path = save_campaign_image(image)
 
-    campaign = create_campaign_service(db, name=name, image_path=image_path)
+    campaign = create_campaign_service(
+        db,
+        name=name,
+        image_path=image_path,
+        player_visible=parse_bool_form(player_visible, default=False),
+    )
     return serialize_campaign(campaign, request)
 
 
@@ -68,6 +91,7 @@ def get_campaign(
     db: DbSession,
 ):
     campaign = get_campaign_or_404(db, campaign_id)
+    ensure_campaign_visible(campaign, for_player=is_player(request))
     return serialize_campaign(campaign, request)
 
 
@@ -80,12 +104,16 @@ async def update_campaign(
     campaign = get_campaign_or_404(db, campaign_id)
 
     form = await request.form()
+    player_visible = None
+    if "player_visible" in form:
+        player_visible = parse_bool_form(form.get("player_visible"), default=False)
     campaign = update_campaign_fields(
         db,
         campaign,
         name=form.get("name"),
         image_field=form.get("image"),
         image_provided="image" in form,
+        player_visible=player_visible,
     )
     return serialize_campaign(campaign, request)
 

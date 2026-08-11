@@ -41,6 +41,7 @@ class LocationListRead(BaseModel):
     title: str
     description: str
     image: str | None = None
+    player_visible: bool = False
     npc_count: int
     created_at: datetime
     updated_at: datetime
@@ -52,6 +53,7 @@ class LocationDetailRead(BaseModel):
     title: str
     description: str
     image: str | None = None
+    player_visible: bool = False
     loot: list[LocationLootRead]
     objects: list[LocationObjectRead]
     npcs: list[LocationNpcRead]
@@ -63,6 +65,7 @@ class LocationDetailRead(BaseModel):
 class LocationWrite(BaseModel):
     title: str = Field(max_length=200)
     description: str = ""
+    player_visible: bool = False
     loot: list[str] = Field(default_factory=list)
     objects: list[LocationObjectWrite] = Field(default_factory=list)
     npc_ids: list[int] = Field(default_factory=list)
@@ -71,6 +74,7 @@ class LocationWrite(BaseModel):
 class LocationWritePartial(BaseModel):
     title: str | None = Field(default=None, max_length=200)
     description: str | None = None
+    player_visible: bool | None = None
     loot: list[str] | None = None
     objects: list[LocationObjectWrite] | None = None
     npc_ids: list[int] | None = None

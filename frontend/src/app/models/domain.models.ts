@@ -2,6 +2,7 @@ export interface Campaign {
   id: number;
   name: string;
   image: string | null;
+  player_visible?: boolean;
   npc_count?: number;
   created_at: string;
   updated_at: string;
@@ -36,6 +37,7 @@ export interface NPC {
   attitude: string;
   party_relationship: string;
   image: string | null;
+  player_visible?: boolean;
   appearance?: string;
   voice_mannerisms?: string;
   personality_traits?: string;
@@ -88,6 +90,7 @@ export interface NPCWritePayload {
   inventory?: string;
   dm_notes?: string;
   session_log?: string;
+  player_visible?: boolean;
   aliases?: string[];
   tags?: string[];
 }
@@ -277,6 +280,7 @@ export interface LocationSummary {
   title: string;
   description: string;
   image: string | null;
+  player_visible?: boolean;
   npc_count: number;
   created_at: string;
   updated_at: string;
@@ -292,6 +296,7 @@ export interface LocationDetail extends LocationSummary {
 export interface LocationWritePayload {
   title: string;
   description?: string;
+  player_visible?: boolean;
   loot?: string[];
   objects?: LocationObjectWrite[];
   npc_ids?: number[];
@@ -340,6 +345,7 @@ export interface GraphSummary {
   campaign: number;
   name: string;
   notes: string;
+  player_visible?: boolean;
   node_count: number;
   edge_count: number;
   created_at: string;
@@ -354,6 +360,7 @@ export interface GraphDetail extends Omit<GraphSummary, 'node_count' | 'edge_cou
 export interface GraphWritePayload {
   name: string;
   notes?: string;
+  player_visible?: boolean;
 }
 
 export interface GraphNodeWritePayload {

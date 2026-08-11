@@ -46,16 +46,25 @@
       </div>
       <div class="actions">
         <a [routerLink]="['/campaigns', npc.campaign]" class="btn btn-secondary">Back to Roster</a>
-        <a [routerLink]="['/npcs', npc.id, 'edit']" class="btn btn-primary">Edit</a>
-        <button type="button" class="btn btn-danger" (click)="deleteNpc()" [disabled]="deleting">
-          {{ deleting ? 'Deleting…' : 'Delete' }}
-        </button>
+        @if (auth.isDm()) {
+          @if (npc.player_visible) {
+            <span class="chip">Visible to players</span>
+          }
+          <a [routerLink]="['/npcs', npc.id, 'edit']" class="btn btn-primary">Edit</a>
+          <button type="button" class="btn btn-danger" (click)="deleteNpc()" [disabled]="deleting">
+            {{ deleting ? 'Deleting…' : 'Delete' }}
+          </button>
+        }
       </div>
     </header>
 
     @if (sections.length === 0) {
       <div class="empty-state glass-panel">
-        <p>No dossier fields filled in yet. Edit this NPC to add lore.</p>
+        @if (auth.isDm()) {
+          <p>No dossier fields filled in yet. Edit this NPC to add lore.</p>
+        } @else {
+          <p>No additional details for this character.</p>
+        }
       </div>
     } @else {
       <div class="sections">

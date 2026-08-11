@@ -1,9 +1,12 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, map, of, shareReplay, tap } from 'rxjs';
 
+export type AuthRole = 'dm' | 'player';
+
 interface AuthUser {
   username: string;
+  role: AuthRole;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -12,7 +15,11 @@ export class AuthService {
   private readonly base = '/api/auth';
 
   readonly username = signal<string | null>(null);
+  readonly role = signal<AuthRole | null>(null);
   readonly authenticated = signal(false);
+  readonly isDm = computed(() => this.role() === 'dm');
+  readonly isPlayer = computed(() => this.role() === 'player');
+  readonly isReadonly = computed(() => this.role() === 'player');
 
   private sessionCheck$: Observable<boolean> | null = null;
 
@@ -24,8 +31,7 @@ export class AuthService {
     if (!this.sessionCheck$) {
       this.sessionCheck$ = this.http.get<AuthUser>(`${this.base}/me/`).pipe(
         map((user) => {
-          this.username.set(user.username);
-          this.authenticated.set(true);
+          this.applyUser(user);
           return true;
         }),
         catchError(() => {
@@ -41,8 +47,7 @@ export class AuthService {
   login(username: string, password: string): Observable<AuthUser> {
     return this.http.post<AuthUser>(`${this.base}/login/`, { username, password }).pipe(
       tap((user) => {
-        this.username.set(user.username);
-        this.authenticated.set(true);
+        this.applyUser(user);
         this.sessionCheck$ = null;
       }),
     );
@@ -60,7 +65,14 @@ export class AuthService {
 
   clearLocalSession(): void {
     this.username.set(null);
+    this.role.set(null);
     this.authenticated.set(false);
     this.sessionCheck$ = null;
+  }
+
+  private applyUser(user: AuthUser): void {
+    this.username.set(user.username);
+    this.role.set(user.role === 'player' ? 'player' : 'dm');
+    this.authenticated.set(true);
   }
 }

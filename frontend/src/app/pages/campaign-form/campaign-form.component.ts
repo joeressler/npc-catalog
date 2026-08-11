@@ -29,6 +29,7 @@ export class CampaignFormComponent implements OnInit {
 
   form = this.fb.group({
     name: ['', [Validators.required, Validators.maxLength(200)]],
+    player_visible: [false],
   });
 
   ngOnInit(): void {
@@ -38,7 +39,10 @@ export class CampaignFormComponent implements OnInit {
       this.campaignId = Number(idParam);
       this.api.getCampaign(this.campaignId).subscribe({
         next: (campaign) => {
-          this.form.patchValue({ name: campaign.name });
+          this.form.patchValue({
+            name: campaign.name,
+            player_visible: !!campaign.player_visible,
+          });
           this.currentImage = this.api.mediaUrl(campaign.image);
         },
         error: () => {
@@ -67,11 +71,12 @@ export class CampaignFormComponent implements OnInit {
     this.saving = true;
     this.error = '';
     const name = this.form.value.name!.trim();
+    const playerVisible = !!this.form.value.player_visible;
 
     const request$ =
       this.editing && this.campaignId
-        ? this.api.updateCampaign(this.campaignId, name, this.selectedFile)
-        : this.api.createCampaign(name, this.selectedFile);
+        ? this.api.updateCampaign(this.campaignId, name, this.selectedFile, false, playerVisible)
+        : this.api.createCampaign(name, this.selectedFile, playerVisible);
 
     request$.subscribe({
       next: (campaign) => {

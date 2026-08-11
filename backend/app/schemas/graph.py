@@ -75,6 +75,7 @@ class GraphListRead(BaseModel):
     campaign: int
     name: str
     notes: str
+    player_visible: bool = False
     node_count: int
     edge_count: int
     created_at: datetime
@@ -86,6 +87,7 @@ class GraphDetailRead(BaseModel):
     campaign: int
     name: str
     notes: str
+    player_visible: bool = False
     nodes: list[GraphNodeRead]
     edges: list[GraphEdgeRead]
     created_at: datetime
@@ -95,11 +97,13 @@ class GraphDetailRead(BaseModel):
 class GraphWrite(BaseModel):
     name: str = Field(max_length=200)
     notes: str = ""
+    player_visible: bool = False
 
 
 class GraphWritePartial(BaseModel):
     name: str | None = Field(default=None, max_length=200)
     notes: str | None = None
+    player_visible: bool | None = None
 
 
 def dump_graph_partial(payload: GraphWritePartial) -> dict[str, Any]:

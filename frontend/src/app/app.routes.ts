@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard, guestGuard } from './guards/auth.guard';
+import { authGuard, dmGuard, guestGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -21,63 +21,87 @@ export const routes: Routes = [
       },
       {
         path: 'campaigns/new',
+        canActivate: [dmGuard],
         loadComponent: () =>
           import('./pages/campaign-form/campaign-form.component').then((m) => m.CampaignFormComponent),
       },
       {
         path: 'campaigns/:campaignId/edit',
+        canActivate: [dmGuard],
         loadComponent: () =>
           import('./pages/campaign-form/campaign-form.component').then((m) => m.CampaignFormComponent),
       },
       {
-        path: 'campaigns/:campaignId/sessions/new',
-        loadComponent: () =>
-          import('./pages/session-form/session-form.component').then((m) => m.SessionFormComponent),
-      },
-      {
-        path: 'campaigns/:campaignId/sessions/:sessionId/edit',
-        loadComponent: () =>
-          import('./pages/session-form/session-form.component').then((m) => m.SessionFormComponent),
-      },
-      {
-        path: 'campaigns/:campaignId/sessions/:sessionId',
-        loadComponent: () =>
-          import('./pages/session-detail/session-detail.component').then((m) => m.SessionDetailComponent),
-      },
-      {
         path: 'campaigns/:campaignId/sessions',
-        loadComponent: () =>
-          import('./pages/session-list/session-list.component').then((m) => m.SessionListComponent),
-      },
-      {
-        path: 'campaigns/:campaignId/encounters/new',
-        loadComponent: () =>
-          import('./pages/encounter-form/encounter-form.component').then((m) => m.EncounterFormComponent),
-      },
-      {
-        path: 'campaigns/:campaignId/encounters/:encounterId/edit',
-        loadComponent: () =>
-          import('./pages/encounter-form/encounter-form.component').then((m) => m.EncounterFormComponent),
-      },
-      {
-        path: 'campaigns/:campaignId/encounters/:encounterId',
-        loadComponent: () =>
-          import('./pages/encounter-detail/encounter-detail.component').then(
-            (m) => m.EncounterDetailComponent,
-          ),
+        canActivate: [dmGuard],
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./pages/session-list/session-list.component').then((m) => m.SessionListComponent),
+          },
+          {
+            path: 'new',
+            loadComponent: () =>
+              import('./pages/session-form/session-form.component').then((m) => m.SessionFormComponent),
+          },
+          {
+            path: ':sessionId/edit',
+            loadComponent: () =>
+              import('./pages/session-form/session-form.component').then((m) => m.SessionFormComponent),
+          },
+          {
+            path: ':sessionId',
+            loadComponent: () =>
+              import('./pages/session-detail/session-detail.component').then(
+                (m) => m.SessionDetailComponent,
+              ),
+          },
+        ],
       },
       {
         path: 'campaigns/:campaignId/encounters',
-        loadComponent: () =>
-          import('./pages/encounter-list/encounter-list.component').then((m) => m.EncounterListComponent),
+        canActivate: [dmGuard],
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./pages/encounter-list/encounter-list.component').then(
+                (m) => m.EncounterListComponent,
+              ),
+          },
+          {
+            path: 'new',
+            loadComponent: () =>
+              import('./pages/encounter-form/encounter-form.component').then(
+                (m) => m.EncounterFormComponent,
+              ),
+          },
+          {
+            path: ':encounterId/edit',
+            loadComponent: () =>
+              import('./pages/encounter-form/encounter-form.component').then(
+                (m) => m.EncounterFormComponent,
+              ),
+          },
+          {
+            path: ':encounterId',
+            loadComponent: () =>
+              import('./pages/encounter-detail/encounter-detail.component').then(
+                (m) => m.EncounterDetailComponent,
+              ),
+          },
+        ],
       },
       {
         path: 'campaigns/:campaignId/locations/new',
+        canActivate: [dmGuard],
         loadComponent: () =>
           import('./pages/location-form/location-form.component').then((m) => m.LocationFormComponent),
       },
       {
         path: 'campaigns/:campaignId/locations/:locationId/edit',
+        canActivate: [dmGuard],
         loadComponent: () =>
           import('./pages/location-form/location-form.component').then((m) => m.LocationFormComponent),
       },
@@ -93,11 +117,13 @@ export const routes: Routes = [
       },
       {
         path: 'campaigns/:campaignId/graphs/new',
+        canActivate: [dmGuard],
         loadComponent: () =>
           import('./pages/graph-form/graph-form.component').then((m) => m.GraphFormComponent),
       },
       {
         path: 'campaigns/:campaignId/graphs/:graphId/edit',
+        canActivate: [dmGuard],
         loadComponent: () =>
           import('./pages/graph-form/graph-form.component').then((m) => m.GraphFormComponent),
       },
@@ -118,6 +144,7 @@ export const routes: Routes = [
       },
       {
         path: 'campaigns/:campaignId/npcs/new',
+        canActivate: [dmGuard],
         loadComponent: () =>
           import('./pages/npc-form/npc-form.component').then((m) => m.NpcFormComponent),
       },
@@ -128,6 +155,7 @@ export const routes: Routes = [
       },
       {
         path: 'npcs/:npcId/edit',
+        canActivate: [dmGuard],
         loadComponent: () =>
           import('./pages/npc-form/npc-form.component').then((m) => m.NpcFormComponent),
       },

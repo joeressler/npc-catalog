@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import { Campaign, GraphSummary } from '../../models/domain.models';
 
 @Component({
@@ -14,6 +15,7 @@ import { Campaign, GraphSummary } from '../../models/domain.models';
 })
 export class GraphListComponent implements OnInit {
   private readonly api = inject(ApiService);
+  readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
 
   campaign: Campaign | null = null;

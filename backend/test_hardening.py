@@ -7,6 +7,8 @@ from pathlib import Path
 
 from app.config import (
     INSECURE_AUTH_PASSWORD,
+    INSECURE_AUTH_PLAYER_PASSWORD,
+    INSECURE_AUTH_PLAYER_USERNAME,
     INSECURE_AUTH_SECRET,
     INSECURE_AUTH_USERNAME,
     Settings,
@@ -62,9 +64,28 @@ def test_validate_accepts_strong_secrets_when_not_debug() -> None:
         debug=False,
         auth_username="dungeon-master",
         auth_password="correct-horse-battery-staple",
+        auth_player_username="table-player",
+        auth_player_password="player-horse-battery-staple",
         auth_secret="a-long-random-signing-secret",
     )
     validate_production_secrets(cfg)
+
+
+def test_validate_rejects_insecure_player_password_when_not_debug() -> None:
+    cfg = Settings(
+        debug=False,
+        auth_username="dungeon-master",
+        auth_password="correct-horse-battery-staple",
+        auth_player_username=INSECURE_AUTH_PLAYER_USERNAME,
+        auth_player_password=INSECURE_AUTH_PLAYER_PASSWORD,
+        auth_secret="a-long-random-signing-secret",
+    )
+    try:
+        validate_production_secrets(cfg)
+    except RuntimeError as exc:
+        assert "AUTH_PLAYER_PASSWORD" in str(exc) or "AUTH_PLAYER_USERNAME" in str(exc)
+    else:
+        raise AssertionError("expected RuntimeError for insecure player credentials")
 
 
 def test_resolve_media_path_contains_under_root() -> None:
@@ -144,6 +165,8 @@ def main() -> int:
     print("validate_production_secrets rejects empty secret OK")
     test_validate_accepts_strong_secrets_when_not_debug()
     print("validate_production_secrets strong secrets OK")
+    test_validate_rejects_insecure_player_password_when_not_debug()
+    print("validate_production_secrets rejects insecure player password OK")
     test_resolve_media_path_contains_under_root()
     print("resolve_media_path containment OK")
     test_ai_prompts_npc_and_location()

@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from app.deps import DbSession
 from app.mappers import serialize_session_detail, serialize_session_list
 from app.models import GameSession, SessionNPC
+from app.player_access import deny_players
 from app.schemas import (
     SessionDetailRead,
     SessionWrite,
@@ -29,7 +30,8 @@ campaign_sessions_router = APIRouter(prefix="/campaigns/{campaign_id}/sessions",
 
 
 @router.get("/sessions/{session_id}/", response_model=SessionDetailRead)
-def get_session(session_id: int, db: DbSession):
+def get_session(session_id: int, request: Request, db: DbSession):
+    deny_players(request)
     session = get_session_or_404(db, session_id)
     return serialize_session_detail(session)
 
@@ -80,6 +82,7 @@ def list_campaign_sessions(
     db: DbSession,
     page: int = 1,
 ):
+    deny_players(request)
     get_campaign_or_404(db, campaign_id)
     npc_count = (
         select(func.count(SessionNPC.npc_id))

@@ -15,9 +15,11 @@
       </div>
       <div class="header-actions">
         <a [routerLink]="['/campaigns', campaign.id]" class="btn btn-secondary">Back to Roster</a>
-        <a [routerLink]="['/campaigns', campaign.id, 'locations', 'new']" class="btn btn-primary">
-          Add Location
-        </a>
+        @if (auth.isDm()) {
+          <a [routerLink]="['/campaigns', campaign.id, 'locations', 'new']" class="btn btn-primary">
+            Add Location
+          </a>
+        }
       </div>
     </header>
 
@@ -27,10 +29,14 @@
       <p class="empty-state">{{ error }}</p>
     } @else if (locations.length === 0) {
       <div class="glass-panel empty-state">
-        <p>No locations yet. Map your first town, dungeon, or landmark.</p>
-        <a [routerLink]="['/campaigns', campaign.id, 'locations', 'new']" class="btn btn-primary">
-          Create First Location
-        </a>
+        @if (auth.isDm()) {
+          <p>No locations yet. Map your first town, dungeon, or landmark.</p>
+          <a [routerLink]="['/campaigns', campaign.id, 'locations', 'new']" class="btn btn-primary">
+            Create First Location
+          </a>
+        } @else {
+          <p>No locations are visible yet.</p>
+        }
       </div>
     } @else {
       <div class="location-list stagger-in">

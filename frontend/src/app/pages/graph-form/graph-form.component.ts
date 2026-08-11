@@ -28,6 +28,7 @@ export class GraphFormComponent implements OnInit {
   form = this.fb.group({
     name: ['', [Validators.required, Validators.maxLength(200)]],
     notes: [''],
+    player_visible: [false],
   });
 
   ngOnInit(): void {
@@ -45,6 +46,7 @@ export class GraphFormComponent implements OnInit {
           this.form.patchValue({
             name: graph.name,
             notes: graph.notes,
+            player_visible: !!graph.player_visible,
           });
         },
         error: () => {
@@ -75,6 +77,7 @@ export class GraphFormComponent implements OnInit {
     const payload = {
       name: this.form.value.name!.trim(),
       notes: this.form.value.notes?.trim() ?? '',
+      player_visible: !!this.form.value.player_visible,
     };
 
     const request =

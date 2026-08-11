@@ -54,6 +54,7 @@ export class NpcFormComponent implements OnInit, OnDestroy {
     inventory: [''],
     dm_notes: [''],
     session_log: [''],
+    player_visible: [false],
   });
 
   ngOnInit(): void {
@@ -109,6 +110,7 @@ export class NpcFormComponent implements OnInit, OnDestroy {
       inventory: npc.inventory,
       dm_notes: npc.dm_notes,
       session_log: npc.session_log,
+      player_visible: !!npc.player_visible,
     });
     this.dossierOpen = this.hasDossierContent();
   }
@@ -202,6 +204,7 @@ export class NpcFormComponent implements OnInit, OnDestroy {
       inventory: raw.inventory?.trim() || '',
       dm_notes: raw.dm_notes?.trim() || '',
       session_log: raw.session_log?.trim() || '',
+      player_visible: !!raw.player_visible,
       aliases: this.splitList(raw.aliases),
       tags: this.splitList(raw.tags),
     };

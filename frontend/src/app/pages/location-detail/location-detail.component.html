@@ -21,15 +21,20 @@
         <a [routerLink]="['/campaigns', location.campaign, 'locations']" class="btn btn-secondary">
           Back to Locations
         </a>
-        <a
-          [routerLink]="['/campaigns', location.campaign, 'locations', location.id, 'edit']"
-          class="btn btn-primary"
-        >
-          Edit
-        </a>
-        <button type="button" class="btn btn-danger" (click)="deleteLocation()" [disabled]="deleting">
-          {{ deleting ? 'Deleting…' : 'Delete' }}
-        </button>
+        @if (auth.isDm()) {
+          @if (location.player_visible) {
+            <span class="chip">Visible to players</span>
+          }
+          <a
+            [routerLink]="['/campaigns', location.campaign, 'locations', location.id, 'edit']"
+            class="btn btn-primary"
+          >
+            Edit
+          </a>
+          <button type="button" class="btn btn-danger" (click)="deleteLocation()" [disabled]="deleting">
+            {{ deleting ? 'Deleting…' : 'Delete' }}
+          </button>
+        }
       </div>
     </header>
 
@@ -53,7 +58,7 @@
       </section>
     }
 
-    @if (location.loot.length) {
+    @if (location.loot.length && auth.isDm()) {
       <section class="section glass-panel">
         <h2>Loot found here</h2>
         <ul class="bullet-list">
@@ -97,13 +102,17 @@
     @if (
       !location.description.trim() &&
       !location.objects.length &&
-      !location.loot.length &&
+      !(location.loot.length && auth.isDm()) &&
       !location.residents.length &&
       !location.npcs.length &&
       !imageUrl()
     ) {
       <div class="glass-panel empty-state">
-        <p>No details yet. Edit this location to add description, POIs, and loot.</p>
+        @if (auth.isDm()) {
+          <p>No details yet. Edit this location to add description, POIs, and loot.</p>
+        } @else {
+          <p>No additional details for this location.</p>
+        }
       </div>
     }
   }

@@ -40,6 +40,7 @@ class NPCWrite(BaseModel):
     inventory: str = ""
     dm_notes: str = ""
     session_log: str = ""
+    player_visible: bool = False
     aliases: list[str] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)
 
@@ -70,6 +71,7 @@ class NPCWritePartial(BaseModel):
     inventory: str | None = None
     dm_notes: str | None = None
     session_log: str | None = None
+    player_visible: bool | None = None
     aliases: list[str] | None = None
     tags: list[str] | None = None
 
@@ -94,6 +96,7 @@ class NPCListRead(BaseModel):
     attitude: str
     party_relationship: str
     image: str | None = None
+    player_visible: bool = False
     aliases: list[AliasRead]
     tags: list[TagRead]
     created_at: datetime

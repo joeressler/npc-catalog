@@ -1,4 +1,4 @@
-"""Env-credential session cookies for the single-user login gate."""
+"""Env-credential session cookies for DM and player login gates."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import hmac
 import threading
 import time
 from collections import defaultdict
-from typing import Final
+from typing import Final, Literal
 
 from starlette.requests import Request
 from starlette.responses import Response
@@ -17,6 +17,8 @@ from app.config import settings
 COOKIE_NAME: Final = "npc_session"
 SESSION_MAX_AGE_SECONDS: Final = 60 * 60 * 24 * 14  # 14 days
 COOKIE_SAMESITE: Final = "lax"
+
+Role = Literal["dm", "player"]
 
 # In-process login lockout (defense if backend port is ever published).
 LOGIN_MAX_FAILURES: Final = 10
@@ -39,6 +41,14 @@ def create_session_token(username: str) -> str:
     return f"{payload}:{signature}"
 
 
+def role_for_username(username: str) -> Role | None:
+    if hmac.compare_digest(username, settings.auth_username):
+        return "dm"
+    if hmac.compare_digest(username, settings.auth_player_username):
+        return "player"
+    return None
+
+
 def verify_session_token(token: str | None) -> str | None:
     if not token:
         return None
@@ -56,7 +66,7 @@ def verify_session_token(token: str | None) -> str | None:
     expected = hmac.new(_signing_key(), payload.encode("utf-8"), hashlib.sha256).hexdigest()
     if not hmac.compare_digest(expected, signature):
         return None
-    if not hmac.compare_digest(username, settings.auth_username):
+    if role_for_username(username) is None:
         return None
     return username
 
@@ -66,14 +76,19 @@ def _fixed_digest(value: str) -> bytes:
 
 
 def credentials_match(username: str, password: str) -> bool:
-    expected_user = settings.auth_username
-    expected_pass = settings.auth_password
-    if not expected_user or not expected_pass:
-        return False
-    # Hash first so compare_digest stays constant-time across unequal lengths.
-    user_ok = hmac.compare_digest(_fixed_digest(username), _fixed_digest(expected_user))
-    pass_ok = hmac.compare_digest(_fixed_digest(password), _fixed_digest(expected_pass))
-    return user_ok and pass_ok
+    candidates = (
+        (settings.auth_username, settings.auth_password),
+        (settings.auth_player_username, settings.auth_player_password),
+    )
+    for expected_user, expected_pass in candidates:
+        if not expected_user or not expected_pass:
+            continue
+        # Hash first so compare_digest stays constant-time across unequal lengths.
+        user_ok = hmac.compare_digest(_fixed_digest(username), _fixed_digest(expected_user))
+        pass_ok = hmac.compare_digest(_fixed_digest(password), _fixed_digest(expected_pass))
+        if user_ok and pass_ok:
+            return True
+    return False
 
 
 def client_ip(request: Request) -> str:
@@ -142,6 +157,13 @@ def session_username(request: Request) -> str | None:
     return verify_session_token(request.cookies.get(COOKIE_NAME))
 
 
+def session_role(request: Request) -> Role | None:
+    username = session_username(request)
+    if username is None:
+        return None
+    return role_for_username(username)
+
+
 def is_public_path(method: str, path: str) -> bool:
     if method == "OPTIONS":
         return True
@@ -154,3 +176,15 @@ def is_public_path(method: str, path: str) -> bool:
 
 def requires_auth(path: str) -> bool:
     return path.startswith("/api/") or path.startswith("/media/")
+
+
+def player_may_mutate(method: str, path: str) -> bool:
+    """Players may only mutate logout; everything else is readonly."""
+    if method in {"GET", "HEAD", "OPTIONS"}:
+        # Block AI image generation even if exposed as GET later.
+        if path.rstrip("/").endswith("/ai/generate-image"):
+            return False
+        return True
+    if path in {"/api/auth/logout", "/api/auth/logout/"}:
+        return True
+    return False

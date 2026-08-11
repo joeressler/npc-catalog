@@ -55,6 +55,7 @@ def serialize_campaign(campaign: Campaign, request: Request, *, npc_count: int |
         "id": campaign.id,
         "name": campaign.name,
         "image": image,
+        "player_visible": bool(campaign.player_visible),
         "created_at": campaign.created_at,
         "updated_at": campaign.updated_at,
     }
@@ -84,6 +85,7 @@ def serialize_npc_list(npc: NPC, request: Request | None = None) -> NPCListRead:
         attitude=npc.attitude,
         party_relationship=npc.party_relationship,
         image=image,
+        player_visible=bool(npc.player_visible),
         aliases=[AliasRead.model_validate(alias) for alias in npc.aliases],
         tags=[TagRead.model_validate(tag) for tag in npc.tags],
         created_at=npc.created_at,
@@ -91,8 +93,26 @@ def serialize_npc_list(npc: NPC, request: Request | None = None) -> NPCListRead:
     )
 
 
-def serialize_npc_detail(npc: NPC, request: Request | None = None) -> NPCDetailRead:
+def serialize_npc_detail(
+    npc: NPC,
+    request: Request | None = None,
+    *,
+    for_player: bool = False,
+) -> NPCDetailRead:
     base = serialize_npc_list(npc, request)
+    if for_player:
+        return NPCDetailRead(
+            **base.model_dump(),
+            appearance=npc.appearance,
+            voice_mannerisms=npc.voice_mannerisms,
+            personality_traits=npc.personality_traits,
+            motivation_goal="",
+            secret_hook="",
+            knowledge="",
+            inventory="",
+            dm_notes="",
+            session_log="",
+        )
     return NPCDetailRead(
         **base.model_dump(),
         appearance=npc.appearance,
@@ -261,11 +281,18 @@ def serialize_location_list(
     request: Request,
     *,
     npc_count: int | None = None,
+    for_player: bool = False,
 ) -> LocationListRead:
     linked = npc_count
     if linked is None:
-        resident_ids = {npc.id for npc in location.residents}
-        linked_ids = {npc.id for npc in location.npcs}
+        residents = [
+            npc for npc in location.residents if (not for_player or npc.player_visible)
+        ]
+        linked_npcs = [
+            npc for npc in location.npcs if (not for_player or npc.player_visible)
+        ]
+        resident_ids = {npc.id for npc in residents}
+        linked_ids = {npc.id for npc in linked_npcs}
         linked = len(resident_ids | linked_ids)
     return LocationListRead(
         id=location.id,
@@ -273,27 +300,47 @@ def serialize_location_list(
         title=location.title,
         description=location.description,
         image=build_media_url(str(request.base_url), location.image_path),
+        player_visible=bool(location.player_visible),
         npc_count=linked,
         created_at=location.created_at,
         updated_at=location.updated_at,
     )
 
 
-def serialize_location_detail(location: Location, request: Request) -> LocationDetailRead:
-    return LocationDetailRead(
-        id=location.id,
-        campaign=location.campaign_id,
-        title=location.title,
-        description=location.description,
-        image=build_media_url(str(request.base_url), location.image_path),
-        loot=[
+def serialize_location_detail(
+    location: Location,
+    request: Request,
+    *,
+    for_player: bool = False,
+) -> LocationDetailRead:
+    loot = []
+    if not for_player:
+        loot = [
             LocationLootRead(
                 id=item.id,
                 description=item.description,
                 sort_order=item.sort_order,
             )
             for item in location.loot
-        ],
+        ]
+    npcs = [
+        _serialize_location_npc(npc)
+        for npc in location.npcs
+        if not for_player or npc.player_visible
+    ]
+    residents = [
+        _serialize_location_npc(npc)
+        for npc in location.residents
+        if not for_player or npc.player_visible
+    ]
+    return LocationDetailRead(
+        id=location.id,
+        campaign=location.campaign_id,
+        title=location.title,
+        description=location.description,
+        image=build_media_url(str(request.base_url), location.image_path),
+        player_visible=bool(location.player_visible),
+        loot=loot,
         objects=[
             LocationObjectRead(
                 id=obj.id,
@@ -303,8 +350,8 @@ def serialize_location_detail(location: Location, request: Request) -> LocationD
             )
             for obj in location.objects
         ],
-        npcs=[_serialize_location_npc(npc) for npc in location.npcs],
-        residents=[_serialize_location_npc(npc) for npc in location.residents],
+        npcs=npcs,
+        residents=residents,
         created_at=location.created_at,
         updated_at=location.updated_at,
     )
@@ -330,13 +377,13 @@ def serialize_graph_node(node: GraphNode) -> GraphNodeRead:
     )
 
 
-def serialize_graph_edge(edge: GraphEdge) -> GraphEdgeRead:
+def serialize_graph_edge(edge: GraphEdge, *, for_player: bool = False) -> GraphEdgeRead:
     return GraphEdgeRead(
         id=edge.id,
         relation_type=RelationTypeRead.model_validate(edge.relation_type),
         from_endpoint=_serialize_endpoint(edge.from_node),
         to_endpoint=_serialize_endpoint(edge.to_node),
-        notes=edge.notes,
+        notes="" if for_player else edge.notes,
     )
 
 
@@ -345,12 +392,14 @@ def serialize_graph_list(
     *,
     node_count: int | None = None,
     edge_count: int | None = None,
+    for_player: bool = False,
 ) -> GraphListRead:
     return GraphListRead(
         id=graph.id,
         campaign=graph.campaign_id,
         name=graph.name,
-        notes=graph.notes,
+        notes="" if for_player else graph.notes,
+        player_visible=bool(graph.player_visible),
         node_count=node_count if node_count is not None else len(graph.nodes),
         edge_count=edge_count if edge_count is not None else len(graph.edges),
         created_at=graph.created_at,
@@ -358,14 +407,19 @@ def serialize_graph_list(
     )
 
 
-def serialize_graph_detail(graph: CharacterGraph) -> GraphDetailRead:
+def serialize_graph_detail(
+    graph: CharacterGraph,
+    *,
+    for_player: bool = False,
+) -> GraphDetailRead:
     return GraphDetailRead(
         id=graph.id,
         campaign=graph.campaign_id,
         name=graph.name,
-        notes=graph.notes,
+        notes="" if for_player else graph.notes,
+        player_visible=bool(graph.player_visible),
         nodes=[serialize_graph_node(node) for node in graph.nodes],
-        edges=[serialize_graph_edge(edge) for edge in graph.edges],
+        edges=[serialize_graph_edge(edge, for_player=for_player) for edge in graph.edges],
         created_at=graph.created_at,
         updated_at=graph.updated_at,
     )

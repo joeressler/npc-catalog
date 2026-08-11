@@ -26,6 +26,7 @@ def ensure_default_relation_types(db: Session, campaign_id: int) -> None:
 
 def graph_query_options(stmt: Select[tuple[CharacterGraph]]) -> Select[tuple[CharacterGraph]]:
     return stmt.options(
+        selectinload(CharacterGraph.campaign),
         selectinload(CharacterGraph.nodes).selectinload(GraphNode.npc),
         selectinload(CharacterGraph.edges).selectinload(GraphEdge.relation_type),
         selectinload(CharacterGraph.edges).selectinload(GraphEdge.from_node).selectinload(GraphNode.npc),

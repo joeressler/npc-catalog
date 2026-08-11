@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import { NPC } from '../../models/domain.models';
 import { MarkdownViewComponent } from '../../shared/markdown-view.component';
 
@@ -21,6 +22,7 @@ interface DossierSection {
 })
 export class NpcDetailComponent implements OnInit {
   private readonly api = inject(ApiService);
+  readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 

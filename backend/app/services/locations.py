@@ -61,6 +61,7 @@ def sync_npcs(db: Session, location: Location, npc_ids: list[int]) -> None:
 
 def location_query_options(stmt: Select[tuple[Location]]) -> Select[tuple[Location]]:
     return stmt.options(
+        selectinload(Location.campaign),
         selectinload(Location.loot),
         selectinload(Location.objects),
         selectinload(Location.npcs),
@@ -82,6 +83,7 @@ def apply_location_write(
     *,
     title: str | None = None,
     description: str | None = None,
+    player_visible: bool | None = None,
     partial: bool = False,
 ) -> None:
     if title is not None or not partial:
@@ -91,3 +93,5 @@ def apply_location_write(
         location.title = cleaned
     if description is not None or not partial:
         location.description = description if description is not None else location.description
+    if player_visible is not None or not partial:
+        location.player_visible = bool(player_visible) if player_visible is not None else location.player_visible

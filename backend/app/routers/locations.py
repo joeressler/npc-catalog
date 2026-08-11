@@ -17,6 +17,7 @@ from app.deps import DbSession
 from app.mappers import serialize_location_detail, serialize_location_list
 from app.media import delete_location_image, is_upload_file, save_location_image
 from app.models import NPC, Location, LocationNPC
+from app.player_access import ensure_campaign_visible, ensure_location_visible, is_player
 from app.schemas import LocationWrite, LocationWritePartial
 from app.services.campaigns import get_campaign_or_404
 from app.services.locations import (
@@ -75,8 +76,10 @@ def _apply_image_from_form(location: Location, form) -> None:
 
 @router.get("/locations/{location_id}/")
 def get_location(location_id: int, request: Request, db: DbSession):
+    for_player = is_player(request)
     location = get_location_or_404(db, location_id)
-    return serialize_location_detail(location, request)
+    ensure_location_visible(location, for_player=for_player)
+    return serialize_location_detail(location, request, for_player=for_player)
 
 
 @router.patch("/locations/{location_id}/")
@@ -90,6 +93,7 @@ async def update_location(location_id: int, request: Request, db: DbSession):
         location,
         title=data.get("title"),
         description=data.get("description"),
+        player_visible=data.get("player_visible") if "player_visible" in data else None,
         partial=True,
     )
 
@@ -122,7 +126,9 @@ def list_campaign_locations(
     db: DbSession,
     page: int = 1,
 ):
-    get_campaign_or_404(db, campaign_id)
+    for_player = is_player(request)
+    campaign = get_campaign_or_404(db, campaign_id)
+    ensure_campaign_visible(campaign, for_player=for_player)
     npc_count = (
         select(func.count(func.distinct(NPC.id)))
         .where(
@@ -136,11 +142,28 @@ def list_campaign_locations(
         .correlate(Location)
         .scalar_subquery()
     )
+    if for_player:
+        npc_count = (
+            select(func.count(func.distinct(NPC.id)))
+            .where(
+                NPC.player_visible.is_(True),
+                or_(
+                    NPC.location_id == Location.id,
+                    NPC.id.in_(
+                        select(LocationNPC.npc_id).where(LocationNPC.location_id == Location.id)
+                    ),
+                ),
+            )
+            .correlate(Location)
+            .scalar_subquery()
+        )
     stmt = (
         select(Location, npc_count.label("npc_count"))
         .where(Location.campaign_id == campaign_id)
         .order_by(Location.title.asc())
     )
+    if for_player:
+        stmt = stmt.where(Location.player_visible.is_(True))
 
     def serialize(row: tuple) -> dict:
         location, count = row[0], row[1]
@@ -148,6 +171,7 @@ def list_campaign_locations(
             location,
             request,
             npc_count=count,
+            for_player=for_player,
         ).model_dump()
 
     return paginate_select(db, request, stmt, page, serialize)
@@ -174,6 +198,7 @@ async def create_campaign_location(
         location,
         title=write_payload.title,
         description=write_payload.description,
+        player_visible=write_payload.player_visible,
         partial=False,
     )
     db.add(location)

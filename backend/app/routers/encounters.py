@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from app.deps import DbSession
 from app.mappers import serialize_encounter_detail, serialize_encounter_list
 from app.models import Encounter, EncounterEnemy, EncounterNPC
+from app.player_access import deny_players
 from app.schemas import (
     EncounterDetailRead,
     EncounterWrite,
@@ -30,7 +31,8 @@ campaign_encounters_router = APIRouter(
 
 
 @router.get("/encounters/{encounter_id}/", response_model=EncounterDetailRead)
-def get_encounter(encounter_id: int, db: DbSession):
+def get_encounter(encounter_id: int, request: Request, db: DbSession):
+    deny_players(request)
     encounter = get_encounter_or_404(db, encounter_id)
     return serialize_encounter_detail(encounter)
 
@@ -93,6 +95,7 @@ def list_campaign_encounters(
     db: DbSession,
     page: int = 1,
 ):
+    deny_players(request)
     get_campaign_or_404(db, campaign_id)
     enemy_count = (
         select(func.count(EncounterEnemy.id))

@@ -38,10 +38,16 @@ def ensure_unique_campaign_name(
     return trimmed
 
 
-def create_campaign(db: Session, *, name: str, image_path: str | None) -> Campaign:
+def create_campaign(
+    db: Session,
+    *,
+    name: str,
+    image_path: str | None,
+    player_visible: bool = False,
+) -> Campaign:
     trimmed = ensure_unique_campaign_name(db, name=name)
 
-    campaign = Campaign(name=trimmed, image_path=image_path)
+    campaign = Campaign(name=trimmed, image_path=image_path, player_visible=player_visible)
     db.add(campaign)
     db.flush()
     ensure_default_relation_types(db, campaign.id)
@@ -57,6 +63,7 @@ def update_campaign_fields(
     name: str | None,
     image_field: object,
     image_provided: bool,
+    player_visible: bool | None = None,
 ) -> Campaign:
     if not name or not str(name).strip():
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Name is required.")
@@ -66,6 +73,9 @@ def update_campaign_fields(
         name=str(name),
         exclude_campaign_id=campaign.id,
     )
+
+    if player_visible is not None:
+        campaign.player_visible = player_visible
 
     if image_provided:
         if isinstance(image_field, str) and image_field == "":

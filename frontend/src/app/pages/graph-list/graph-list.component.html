@@ -13,7 +13,9 @@
       </div>
       <div class="header-actions">
         <a [routerLink]="['/campaigns', campaign.id]" class="btn btn-secondary">Back to Roster</a>
-        <a [routerLink]="['/campaigns', campaign.id, 'graphs', 'new']" class="btn btn-primary">New Web</a>
+        @if (auth.isDm()) {
+          <a [routerLink]="['/campaigns', campaign.id, 'graphs', 'new']" class="btn btn-primary">New Web</a>
+        }
       </div>
     </header>
 
@@ -23,8 +25,12 @@
       <p class="empty-state">{{ error }}</p>
     } @else if (graphs.length === 0) {
       <div class="empty-state glass-panel">
-        <p>No relationship webs yet. Map how your NPCs feel about each other and the party.</p>
-        <a [routerLink]="['/campaigns', campaign.id, 'graphs', 'new']" class="btn btn-primary">Create First Web</a>
+        @if (auth.isDm()) {
+          <p>No relationship webs yet. Map how your NPCs feel about each other and the party.</p>
+          <a [routerLink]="['/campaigns', campaign.id, 'graphs', 'new']" class="btn btn-primary">Create First Web</a>
+        } @else {
+          <p>No relationship webs are visible yet.</p>
+        }
       </div>
     } @else {
       <div class="graph-list stagger-in">

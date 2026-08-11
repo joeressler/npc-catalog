@@ -24,10 +24,15 @@
         </div>
         <div class="header-actions">
           <a [routerLink]="['/campaigns', campaignId, 'graphs']" class="btn btn-secondary">All Webs</a>
-          <a [routerLink]="['/campaigns', campaignId, 'graphs', current.id, 'edit']" class="btn btn-secondary">Edit</a>
-          <button type="button" class="btn btn-danger" (click)="deleteGraph()" [disabled]="deleting">
-            {{ deleting ? 'Deleting…' : 'Delete' }}
-          </button>
+          @if (auth.isDm()) {
+            @if (current.player_visible) {
+              <span class="chip">Visible to players</span>
+            }
+            <a [routerLink]="['/campaigns', campaignId, 'graphs', current.id, 'edit']" class="btn btn-secondary">Edit</a>
+            <button type="button" class="btn btn-danger" (click)="deleteGraph()" [disabled]="deleting">
+              {{ deleting ? 'Deleting…' : 'Delete' }}
+            </button>
+          }
         </div>
       </header>
     }
@@ -36,12 +41,14 @@
       <div class="canvas-panel glass-panel">
         <div class="canvas-toolbar">
           <button type="button" class="btn btn-sm btn-secondary" (click)="fitView()">Fit view</button>
-          <button type="button" class="btn btn-sm btn-secondary" (click)="runLayout()">Auto layout</button>
+          @if (auth.isDm()) {
+            <button type="button" class="btn btn-sm btn-secondary" (click)="runLayout()">Auto layout</button>
+          }
         </div>
         <div #cyContainer class="cy-container" aria-label="Character relationship graph"></div>
       </div>
 
-      @if (graph) {
+      @if (graph && auth.isDm()) {
         <aside class="side-panel glass-panel stagger-in">
           @if (actionError) {
             <p class="panel-error">{{ actionError }}</p>
