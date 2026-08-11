@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter, map, startWith } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
   template: `
     <div class="fey-motes" aria-hidden="true">
       @for (mote of motes; track mote.id) {
@@ -20,6 +22,17 @@ import { RouterOutlet } from '@angular/router';
       }
     </div>
     <div class="app-frame">
+      @if (showSiteNav()) {
+        <nav class="site-nav glass-panel" aria-label="Primary">
+          <a routerLink="/" class="site-nav-brand">NPC Catalog</a>
+          <div class="site-nav-links">
+            <a routerLink="/" class="btn btn-secondary btn-sm" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
+              Campaigns
+            </a>
+            <a href="/trains/" class="btn btn-secondary btn-sm">South Side Rail</a>
+          </div>
+        </nav>
+      }
       <router-outlet />
     </div>
   `,
@@ -29,9 +42,66 @@ import { RouterOutlet } from '@angular/router';
       z-index: 1;
       min-height: 100vh;
     }
+
+    .site-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin: 0.75rem 1rem 0;
+      padding: 0.55rem 0.85rem;
+    }
+
+    .site-nav-brand {
+      font-family: var(--font-display, Georgia, serif);
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--aero-text);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .site-nav-brand:hover {
+      color: var(--aero-purple-deep);
+    }
+
+    .site-nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .site-nav-links a.is-active {
+      border-color: rgba(123, 92, 255, 0.65);
+      box-shadow: 0 0 0 1px rgba(196, 176, 255, 0.35);
+    }
+
+    @media (max-width: 640px) {
+      .site-nav {
+        margin: 0.5rem 0.65rem 0;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .site-nav-links {
+        justify-content: flex-start;
+      }
+    }
   `,
 })
 export class AppComponent {
+  private readonly router = inject(Router);
+
+  readonly showSiteNav = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map((event) => !event.urlAfterRedirects.startsWith('/login')),
+      startWith(!this.router.url.startsWith('/login')),
+    ),
+    { initialValue: !this.router.url.startsWith('/login') },
+  );
+
   readonly motes = [
     { id: 1, left: '8%', top: '18%', size: '6px', delay: '0s', duration: '16s' },
     { id: 2, left: '22%', top: '62%', size: '4px', delay: '2.5s', duration: '20s' },
