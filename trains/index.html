@@ -33,12 +33,11 @@
         <aside class="board-pane" aria-label="Arrivals board">
           <div class="board-header">
             <h2>Upcoming stops</h2>
-            <label class="filter">
-              Line
-              <select id="route-filter">
-                <option value="">All south side</option>
-              </select>
-            </label>
+            <div id="route-visibility" class="route-visibility">
+              <p class="filter-label">Visible lines</p>
+              <div id="route-visibility-list" class="route-visibility-list"></div>
+              <p id="route-visibility-note" class="filter-note" hidden></p>
+            </div>
           </div>
           <ul id="arrivals" class="arrivals"></ul>
         </aside>

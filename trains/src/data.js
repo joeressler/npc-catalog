@@ -72,8 +72,11 @@ export async function loadNetwork() {
 /**
  * Pull today's schedules for south-side routes and build trip timelines.
  */
-export async function loadSchedules(stops) {
-  const routeFilter = SOUTH_SIDE_ROUTES.join(',');
+export async function loadSchedules(stops, routeIds = SOUTH_SIDE_ROUTES) {
+  const ids = (routeIds?.length ? routeIds : SOUTH_SIDE_ROUTES).filter((id) =>
+    SOUTH_SIDE_ROUTES.includes(id),
+  );
+  const routeFilter = (ids.length ? ids : SOUTH_SIDE_ROUTES).join(',');
   const now = new Date();
   const date = bostonDate(now);
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -254,11 +257,14 @@ export function estimateTrainPosition(trip, now = Date.now()) {
 
 /**
  * Flat arrival board rows for stops still ahead of now.
+ * @param {Map} trips
+ * @param {number} now
+ * @param {Set<string>|null} visibleRouteIds
  */
-export function buildArrivalBoard(trips, now = Date.now(), routeFilter = '') {
+export function buildArrivalBoard(trips, now = Date.now(), visibleRouteIds = null) {
   const rows = [];
   for (const trip of trips.values()) {
-    if (routeFilter && trip.routeId !== routeFilter) continue;
+    if (visibleRouteIds && !visibleRouteIds.has(trip.routeId)) continue;
     for (const stop of trip.stops) {
       const when = stop.arrival ?? stop.departure;
       if (when == null || when < now - 60_000) continue;

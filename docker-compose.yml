@@ -82,8 +82,11 @@ services:
     environment:
       BACKEND_URL: http://backend:8000
       PORT: "3000"
+      TRAINS_SETTINGS_PATH: /data/visibility.json
       # Optional: raise MBTA rate limits — https://www.mbta.com/developers/v3-api
       MBTA_API_KEY: ${MBTA_API_KEY:-}
+    volumes:
+      - trains_data:/data
     expose:
       - "3000"
     depends_on:
@@ -117,6 +120,7 @@ services:
 
 volumes:
   npc_data:
+  trains_data:
   comfyui_root:
   comfyui_models:
   comfyui_output:

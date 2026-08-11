@@ -141,6 +141,54 @@ body {
   color: var(--muted);
 }
 
+.filter-label {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.filter-note {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.route-visibility-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 12rem;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.route-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.route-toggle input:disabled {
+  cursor: not-allowed;
+}
+
+.route-toggle:has(input:disabled) {
+  cursor: default;
+  opacity: 0.92;
+}
+
+.route-swatch {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
 .filter select {
   background: #0b1220;
   color: var(--ink);

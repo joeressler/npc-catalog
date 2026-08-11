@@ -29,11 +29,12 @@ export function createMap(containerId) {
   return { map, layers };
 }
 
-export function drawNetwork(layers, { routes, shapesByRoute, stops }) {
+export function drawNetwork(layers, { routes, shapesByRoute, stops }, visibleRouteIds = null) {
   layers.routes.clearLayers();
   layers.stops.clearLayers();
 
   for (const [routeId, shapes] of shapesByRoute.entries()) {
+    if (visibleRouteIds && !visibleRouteIds.has(routeId)) continue;
     const color = routes.get(routeId)?.color || ROUTE_COLORS[routeId] || '#80276c';
     for (const shape of shapes) {
       L.polyline(shape.polyline, {
