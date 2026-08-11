@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from app.deps import DbSession
 from app.mappers import serialize_graph_detail, serialize_graph_list
 from app.models import CharacterGraph, GraphEdge, GraphNode
+from app.player_access import ensure_campaign_visible, ensure_graph_visible, is_player
 from app.routers.graphs.shared import campaign_graphs_router, router
 from app.schemas import (
     GraphDetailRead,
@@ -21,9 +22,11 @@ from app.services.pagination import paginate_select
 
 
 @router.get("/graphs/{graph_id}/", response_model=GraphDetailRead)
-def get_graph(graph_id: int, db: DbSession):
+def get_graph(graph_id: int, request: Request, db: DbSession):
+    for_player = is_player(request)
     graph = get_graph_or_404(db, graph_id)
-    return serialize_graph_detail(graph)
+    ensure_graph_visible(graph, for_player=for_player)
+    return serialize_graph_detail(graph, for_player=for_player)
 
 
 @router.patch("/graphs/{graph_id}/", response_model=GraphDetailRead)
@@ -41,6 +44,8 @@ def update_graph(graph_id: int, payload: GraphWritePartial, db: DbSession):
         graph.name = data["name"].strip()
     if "notes" in data:
         graph.notes = data["notes"]
+    if "player_visible" in data and data["player_visible"] is not None:
+        graph.player_visible = bool(data["player_visible"])
 
     db.commit()
     graph = get_graph_or_404(db, graph_id)
@@ -61,7 +66,9 @@ def list_campaign_graphs(
     db: DbSession,
     page: int = 1,
 ):
-    get_campaign_or_404(db, campaign_id)
+    for_player = is_player(request)
+    campaign = get_campaign_or_404(db, campaign_id)
+    ensure_campaign_visible(campaign, for_player=for_player)
     node_count = (
         select(func.count(GraphNode.id))
         .where(GraphNode.graph_id == CharacterGraph.id)
@@ -77,10 +84,17 @@ def list_campaign_graphs(
         .where(CharacterGraph.campaign_id == campaign_id)
         .order_by(CharacterGraph.name.asc())
     )
+    if for_player:
+        stmt = stmt.where(CharacterGraph.player_visible.is_(True))
 
     def serialize(row: tuple[CharacterGraph, int, int]) -> dict:
         graph, nodes, edges = row[0], row[1], row[2]
-        return serialize_graph_list(graph, node_count=nodes, edge_count=edges).model_dump()
+        return serialize_graph_list(
+            graph,
+            node_count=nodes,
+            edge_count=edges,
+            for_player=for_player,
+        ).model_dump()
 
     return paginate_select(db, request, stmt, page, serialize)
 
@@ -98,6 +112,7 @@ def create_campaign_graph(
         campaign_id=campaign_id,
         name=payload.name.strip(),
         notes=payload.notes.strip(),
+        player_visible=payload.player_visible,
     )
     db.add(graph)
     # Seed relation types so webs created before the campaign-create seed still get defaults.

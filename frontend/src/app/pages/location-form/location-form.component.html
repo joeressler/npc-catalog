@@ -17,6 +17,12 @@
           <label for="title">Title</label>
           <input id="title" type="text" formControlName="title" placeholder="The Sunken Market" />
         </div>
+        <div class="field span-2">
+          <label class="checkbox-field" for="player_visible">
+            <input id="player_visible" type="checkbox" formControlName="player_visible" />
+            Visible to players
+          </label>
+        </div>
         <div class="span-2">
           <app-markdown-field
             formControlName="description"

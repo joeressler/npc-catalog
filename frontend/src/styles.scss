@@ -216,6 +216,20 @@ a:focus-visible {
   font-weight: 600;
 }
 
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.checkbox-field input {
+  width: auto;
+  margin: 0;
+}
+
 .page-shell {
   position: relative;
   z-index: 1;

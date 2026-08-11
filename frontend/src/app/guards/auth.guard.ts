@@ -29,3 +29,27 @@ export const guestGuard: CanActivateFn = () => {
     map((ok) => (ok ? router.createUrlTree(['/']) : true)),
   );
 };
+
+/** DM-only routes: create/edit forms and sessions/encounters. */
+export const dmGuard: CanActivateFn = (_route, state) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  return auth.ensureSession().pipe(
+    map((ok) => {
+      if (!ok) {
+        return router.createUrlTree(['/login'], {
+          queryParams: { returnUrl: state.url || '/' },
+        });
+      }
+      if (auth.isDm()) {
+        return true;
+      }
+      const match = state.url.match(/\/campaigns\/(\d+)/);
+      if (match) {
+        return router.createUrlTree(['/campaigns', match[1]]);
+      }
+      return router.createUrlTree(['/']);
+    }),
+  );
+};

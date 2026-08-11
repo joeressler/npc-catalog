@@ -9,6 +9,7 @@ from app.auth import (
     credentials_match,
     login_is_locked,
     record_login_failure,
+    role_for_username,
     session_username,
     set_session_cookie,
 )
@@ -38,7 +39,8 @@ def login(payload: LoginRequest, request: Request, response: Response):
         )
     clear_login_failures(ip, payload.username)
     set_session_cookie(response, payload.username)
-    return {"username": payload.username}
+    role = role_for_username(payload.username)
+    return {"username": payload.username, "role": role}
 
 
 @router.post("/logout/")
@@ -55,4 +57,4 @@ def me(request: Request):
             status_code=status.HTTP_401_UNAUTHORIZED,
             content={"detail": "Not authenticated"},
         )
-    return {"username": username}
+    return {"username": username, "role": role_for_username(username)}

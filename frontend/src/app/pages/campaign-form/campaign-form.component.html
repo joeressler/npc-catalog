@@ -16,6 +16,11 @@
       }
     </div>
 
+    <label class="checkbox-field" for="player_visible">
+      <input id="player_visible" type="checkbox" formControlName="player_visible" />
+      Visible to players
+    </label>
+
     <div class="field">
       <label for="image">Cover image (optional)</label>
       <input id="image" type="file" accept="image/*" (change)="onFileSelected($event)" />

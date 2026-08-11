@@ -13,9 +13,13 @@ BASE = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000/api"
 ROOT = BASE[: -len("/api")] if BASE.endswith("/api") else BASE.rsplit("/api", 1)[0]
 AUTH_USERNAME = os.environ.get("AUTH_USERNAME", "admin")
 AUTH_PASSWORD = os.environ.get("AUTH_PASSWORD", "admin")
+AUTH_PLAYER_USERNAME = os.environ.get("AUTH_PLAYER_USERNAME", "player")
+AUTH_PLAYER_PASSWORD = os.environ.get("AUTH_PLAYER_PASSWORD", "test")
 
 COOKIE_JAR = http.cookiejar.CookieJar()
 OPENER = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(COOKIE_JAR))
+PLAYER_COOKIE_JAR = http.cookiejar.CookieJar()
+PLAYER_OPENER = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(PLAYER_COOKIE_JAR))
 
 
 def request(
@@ -26,6 +30,7 @@ def request(
     *,
     authed: bool = True,
     expect_error: int | None = None,
+    opener=None,
 ):
     url = f"{BASE}{path}"
     headers = {}
@@ -44,7 +49,8 @@ def request(
         headers["Content-Type"] = "application/json"
 
     req = urllib.request.Request(url, data=body, headers=headers, method=method)
-    opener = OPENER if authed else urllib.request.build_opener()
+    if opener is None:
+        opener = OPENER if authed else urllib.request.build_opener()
     try:
         with opener.open(req) as resp:
             payload = resp.read().decode()
@@ -64,8 +70,40 @@ def login() -> None:
     )
     assert status == 200, body
     assert body["username"] == AUTH_USERNAME
+    assert body["role"] == "dm"
     print("POST /auth/login/ OK")
 
+
+def player_login() -> None:
+    status, body = request(
+        "POST",
+        "/auth/login/",
+        data={"username": AUTH_PLAYER_USERNAME, "password": AUTH_PLAYER_PASSWORD},
+        authed=False,
+        opener=PLAYER_OPENER,
+    )
+    assert status == 200, body
+    assert body["username"] == AUTH_PLAYER_USERNAME
+    assert body["role"] == "player"
+    print("POST /auth/login/ player OK")
+
+
+def player_request(
+    method: str,
+    path: str,
+    data: dict | None = None,
+    multipart: dict | None = None,
+    *,
+    expect_error: int | None = None,
+):
+    return request(
+        method,
+        path,
+        data=data,
+        multipart=multipart,
+        opener=PLAYER_OPENER,
+        expect_error=expect_error,
+    )
 
 def request_root(path: str, *, expect_error: int | None = None):
     url = f"{ROOT}{path}"
@@ -104,6 +142,7 @@ def main() -> int:
 
     status, me = request("GET", "/auth/me/")
     assert status == 200 and me["username"] == AUTH_USERNAME
+    assert me["role"] == "dm"
     print("GET /auth/me/ OK")
 
     status, logged_out = request("POST", "/auth/logout/")
@@ -120,9 +159,14 @@ def main() -> int:
     print("GET /campaigns/ OK")
 
     unique_name = f"Smoke Test Campaign {uuid.uuid4().hex[:8]}"
-    status, campaign = request("POST", "/campaigns/", multipart={"name": unique_name})
+    status, campaign = request(
+        "POST",
+        "/campaigns/",
+        multipart={"name": unique_name, "player_visible": "true"},
+    )
     assert status == 201, campaign
     assert campaign["id"] and campaign["name"] == unique_name
+    assert campaign["player_visible"] is True
     campaign_id = campaign["id"]
     print(f"POST /campaigns/ OK id={campaign_id}")
 
@@ -134,6 +178,13 @@ def main() -> int:
         "faction": "",
         "attitude": "Friendly",
         "party_relationship": "Ally",
+        "player_visible": True,
+        "secret_hook": "serves the Valar in secret",
+        "dm_notes": "DM only lore",
+        "motivation_goal": "guide the fellowship",
+        "knowledge": "knows the ring lore",
+        "inventory": "staff and pipe",
+        "session_log": "appeared in session 1",
         "aliases": ["Mithrandir", "Grey Pilgrim"],
         "tags": ["ally", "wizard"],
     }
@@ -310,6 +361,76 @@ def main() -> int:
     # Split-dev defaults leave ComfyUI off; Docker sets COMFYUI_ENABLED=true.
     assert isinstance(ai_status["enabled"], bool)
     print(f"GET /ai/status/ OK (enabled={ai_status['enabled']})")
+
+    # --- Player readonly + visibility ---
+    player_login()
+    status, player_me = player_request("GET", "/auth/me/")
+    assert status == 200 and player_me["role"] == "player"
+    print("GET /auth/me/ player OK")
+
+    status, player_campaigns = player_request("GET", "/campaigns/")
+    assert status == 200
+    assert any(c["id"] == campaign_id for c in player_campaigns["results"])
+    print("GET /campaigns/ player sees visible campaign OK")
+
+    status, player_npc = player_request("GET", f"/npcs/{npc_id}/")
+    assert status == 200, player_npc
+    assert player_npc["name"] == "Gandalf"
+    assert player_npc["secret_hook"] == ""
+    assert player_npc["dm_notes"] == ""
+    assert player_npc["motivation_goal"] == ""
+    assert player_npc["knowledge"] == ""
+    assert player_npc["inventory"] == ""
+    assert player_npc["session_log"] == ""
+    print("GET /npcs/{id}/ player redaction OK")
+
+    status, denied_sessions = player_request(
+        "GET",
+        f"/campaigns/{campaign_id}/sessions/",
+        expect_error=404,
+    )
+    assert status == 404, denied_sessions
+    print("GET sessions as player → 404 OK")
+
+    status, denied_encounters = player_request(
+        "GET",
+        f"/campaigns/{campaign_id}/encounters/",
+        expect_error=404,
+    )
+    assert status == 404, denied_encounters
+    print("GET encounters as player → 404 OK")
+
+    status, denied_write = player_request(
+        "PATCH",
+        f"/npcs/{npc_id}/",
+        multipart={"payload": json.dumps({"attitude": "Hostile"})},
+        expect_error=403,
+    )
+    assert status == 403, denied_write
+    print("PATCH as player → 403 OK")
+
+    status, hidden_npc = request(
+        "POST",
+        f"/campaigns/{campaign_id}/npcs/",
+        multipart={
+            "payload": json.dumps(
+                {
+                    "name": "Hidden Spy",
+                    "role_occupation": "Spy",
+                    "alignment": "NE",
+                    "attitude": "Hostile",
+                    "party_relationship": "Enemy",
+                    "player_visible": False,
+                }
+            )
+        },
+    )
+    assert status == 201, hidden_npc
+    status, missing = player_request("GET", f"/npcs/{hidden_npc['id']}/", expect_error=404)
+    assert status == 404, missing
+    print("GET invisible NPC as player → 404 OK")
+    status, _ = request("DELETE", f"/npcs/{hidden_npc['id']}/")
+    assert status == 204
 
     # Media path is gated the same way as /api.
     media_req = urllib.request.Request(f"{ROOT}/media/")

@@ -12,6 +12,10 @@
       <label for="name">Web name</label>
       <input id="name" type="text" formControlName="name" placeholder="Faction intrigue, Court romance…" />
     </div>
+    <label class="checkbox-field" for="player_visible">
+      <input id="player_visible" type="checkbox" formControlName="player_visible" />
+      Visible to players
+    </label>
     <app-markdown-field formControlName="notes" label="Notes" inputId="notes" [rows]="4" placeholder="What this web tracks" />
 
     @if (error) {

@@ -15,7 +15,7 @@ import { Campaign } from '../../models/domain.models';
 })
 export class CampaignListComponent implements OnInit {
   private readonly api = inject(ApiService);
-  private readonly auth = inject(AuthService);
+  readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   campaigns: Campaign[] = [];

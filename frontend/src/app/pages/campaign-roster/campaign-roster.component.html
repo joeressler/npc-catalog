@@ -13,15 +13,19 @@
       </div>
       <div class="header-actions stagger-in">
         <a routerLink="/" class="btn btn-secondary">All Campaigns</a>
-        <a [routerLink]="['/campaigns', campaign.id, 'edit']" class="btn btn-secondary">Edit</a>
-        <a [routerLink]="['/campaigns', campaign.id, 'sessions']" class="btn btn-secondary">Sessions</a>
-        <a [routerLink]="['/campaigns', campaign.id, 'encounters']" class="btn btn-secondary">Encounters</a>
+        @if (auth.isDm()) {
+          <a [routerLink]="['/campaigns', campaign.id, 'edit']" class="btn btn-secondary">Edit</a>
+          <a [routerLink]="['/campaigns', campaign.id, 'sessions']" class="btn btn-secondary">Sessions</a>
+          <a [routerLink]="['/campaigns', campaign.id, 'encounters']" class="btn btn-secondary">Encounters</a>
+        }
         <a [routerLink]="['/campaigns', campaign.id, 'locations']" class="btn btn-secondary">Locations</a>
         <a [routerLink]="['/campaigns', campaign.id, 'graphs']" class="btn btn-secondary">Relationship webs</a>
-        <button type="button" class="btn btn-danger" (click)="deleteCampaign()" [disabled]="deleting">
-          {{ deleting ? 'Deleting…' : 'Delete' }}
-        </button>
-        <a [routerLink]="['/campaigns', campaign.id, 'npcs', 'new']" class="btn btn-primary fey-glow">Add NPC</a>
+        @if (auth.isDm()) {
+          <button type="button" class="btn btn-danger" (click)="deleteCampaign()" [disabled]="deleting">
+            {{ deleting ? 'Deleting…' : 'Delete' }}
+          </button>
+          <a [routerLink]="['/campaigns', campaign.id, 'npcs', 'new']" class="btn btn-primary fey-glow">Add NPC</a>
+        }
       </div>
     </header>
 
@@ -66,7 +70,9 @@
     } @else if (npcs.length === 0) {
       <div class="empty-state glass-panel">
         <p>No NPCs match your filters yet.</p>
-        <a [routerLink]="['/campaigns', campaign.id, 'npcs', 'new']" class="btn btn-primary">Create First NPC</a>
+        @if (auth.isDm()) {
+          <a [routerLink]="['/campaigns', campaign.id, 'npcs', 'new']" class="btn btn-primary">Create First NPC</a>
+        }
       </div>
     } @else {
       <div class="npc-list stagger-in">

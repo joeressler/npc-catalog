@@ -4,7 +4,9 @@
     <h1 class="brand brand-shimmer">NPC Catalog</h1>
     <p class="hero-copy">Catalog every NPC as you invent them. Retrieve them instantly at the table.</p>
     <div class="hero-actions">
-      <a routerLink="/campaigns/new" class="btn btn-primary">New Campaign</a>
+      @if (auth.isDm()) {
+        <a routerLink="/campaigns/new" class="btn btn-primary">New Campaign</a>
+      }
       <button type="button" class="btn btn-secondary btn-sm" (click)="logout()">Sign out</button>
     </div>
   </header>
@@ -15,8 +17,12 @@
     <p class="empty-state">{{ error }}</p>
   } @else if (campaigns.length === 0) {
     <div class="empty-state glass-panel">
-      <p>No campaigns yet. Create your first adventure.</p>
-      <a routerLink="/campaigns/new" class="btn btn-primary">Create Campaign</a>
+      @if (auth.isDm()) {
+        <p>No campaigns yet. Create your first adventure.</p>
+        <a routerLink="/campaigns/new" class="btn btn-primary">Create Campaign</a>
+      } @else {
+        <p>No campaigns are visible yet.</p>
+      }
     </div>
   } @else {
     <div class="campaign-grid stagger-in">

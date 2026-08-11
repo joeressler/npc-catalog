@@ -16,6 +16,7 @@ import cytoscape, { Core, ElementDefinition } from 'cytoscape';
 
 import { MarkdownViewComponent } from '../../shared/markdown-view.component';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import {
   GraphDetail,
   GraphEdge,
@@ -45,6 +46,7 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('cyContainer') cyContainer!: ElementRef<HTMLDivElement>;
 
   private readonly api = inject(ApiService);
+  readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -556,12 +558,19 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       });
 
       this.cy.on('dragfree', 'node', (event) => {
+        if (this.auth.isPlayer()) {
+          return;
+        }
         const nodeId = Number(event.target.id().replace('node-', ''));
         if (Number.isNaN(nodeId)) {
           return;
         }
         this.persistNodePosition(nodeId, event.target.position());
       });
+
+      if (this.auth.isPlayer()) {
+        this.cy.nodes().ungrabify();
+      }
     });
 
     const missingPositions =
@@ -569,7 +578,11 @@ export class GraphDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       this.graph.nodes.every((node) => node.pos_x === null || node.pos_y === null);
 
     if (missingPositions) {
-      this.runLayout();
+      if (this.auth.isDm()) {
+        this.runLayout();
+      } else {
+        this.queueResizeAndFit();
+      }
     } else {
       this.queueResizeAndFit();
     }

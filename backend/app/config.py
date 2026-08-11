@@ -7,6 +7,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 INSECURE_AUTH_USERNAME = "admin"
 INSECURE_AUTH_PASSWORD = "admin"
 INSECURE_AUTH_SECRET = "dev-secret-change-me"
+INSECURE_AUTH_PLAYER_USERNAME = "player"
+INSECURE_AUTH_PLAYER_PASSWORD = "test"
 
 
 class Settings(BaseSettings):
@@ -18,6 +20,8 @@ class Settings(BaseSettings):
     page_size: int = 50
     auth_username: str = Field(default=INSECURE_AUTH_USERNAME)
     auth_password: str = Field(default=INSECURE_AUTH_PASSWORD)
+    auth_player_username: str = Field(default=INSECURE_AUTH_PLAYER_USERNAME)
+    auth_player_password: str = Field(default=INSECURE_AUTH_PLAYER_PASSWORD)
     auth_secret: str = Field(default=INSECURE_AUTH_SECRET)
     auth_cookie_secure: bool = False
     # ComfyUI image generation (Docker production). Off by default for split-dev.
@@ -43,6 +47,8 @@ def validate_production_secrets(cfg: Settings | None = None) -> None:
     problems: list[str] = []
     username = cfg.auth_username.strip()
     password = cfg.auth_password.strip()
+    player_username = cfg.auth_player_username.strip()
+    player_password = cfg.auth_player_password.strip()
     secret = cfg.auth_secret.strip()
 
     if not username:
@@ -55,6 +61,19 @@ def validate_production_secrets(cfg: Settings | None = None) -> None:
     elif password == INSECURE_AUTH_PASSWORD:
         problems.append("AUTH_PASSWORD is the insecure example value")
 
+    if not player_username:
+        problems.append("AUTH_PLAYER_USERNAME is empty")
+    elif player_username == INSECURE_AUTH_PLAYER_USERNAME and player_password == INSECURE_AUTH_PLAYER_PASSWORD:
+        problems.append("AUTH_PLAYER_USERNAME/AUTH_PLAYER_PASSWORD are the insecure example values")
+
+    if not player_password:
+        problems.append("AUTH_PLAYER_PASSWORD is empty")
+    elif player_password == INSECURE_AUTH_PLAYER_PASSWORD:
+        problems.append("AUTH_PLAYER_PASSWORD is the insecure example value")
+
+    if username and player_username and username == player_username:
+        problems.append("AUTH_USERNAME and AUTH_PLAYER_USERNAME must differ")
+
     if not secret:
         problems.append("AUTH_SECRET is empty")
     elif secret == INSECURE_AUTH_SECRET:
@@ -64,7 +83,8 @@ def validate_production_secrets(cfg: Settings | None = None) -> None:
         detail = "; ".join(problems)
         raise RuntimeError(
             f"Refusing to start with DEBUG=false and insecure auth config: {detail}. "
-            "Set strong unique AUTH_USERNAME, AUTH_PASSWORD, and AUTH_SECRET."
+            "Set strong unique AUTH_USERNAME, AUTH_PASSWORD, AUTH_PLAYER_USERNAME, "
+            "AUTH_PLAYER_PASSWORD, and AUTH_SECRET."
         )
 
 

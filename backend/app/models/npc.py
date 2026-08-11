@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, String, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -41,6 +41,7 @@ class NPC(Base):
     attitude: Mapped[str] = mapped_column(String(200))
     party_relationship: Mapped[str] = mapped_column(String(200))
     image_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    player_visible: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
     appearance: Mapped[str] = mapped_column(Text, default="")
     voice_mannerisms: Mapped[str] = mapped_column(Text, default="")
     personality_traits: Mapped[str] = mapped_column(Text, default="")

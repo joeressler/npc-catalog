@@ -47,18 +47,32 @@ export class ApiService {
     return this.http.get<Campaign>(`${this.base}/campaigns/${id}/`);
   }
 
-  createCampaign(name: string, image?: File | null): Observable<Campaign> {
+  createCampaign(
+    name: string,
+    image?: File | null,
+    playerVisible = false,
+  ): Observable<Campaign> {
     const form = new FormData();
     form.append('name', name);
+    form.append('player_visible', playerVisible ? 'true' : 'false');
     if (image) {
       form.append('image', image);
     }
     return this.http.post<Campaign>(`${this.base}/campaigns/`, form);
   }
 
-  updateCampaign(id: number, name: string, image?: File | null, clearImage = false): Observable<Campaign> {
+  updateCampaign(
+    id: number,
+    name: string,
+    image?: File | null,
+    clearImage = false,
+    playerVisible?: boolean,
+  ): Observable<Campaign> {
     const form = new FormData();
     form.append('name', name);
+    if (playerVisible !== undefined) {
+      form.append('player_visible', playerVisible ? 'true' : 'false');
+    }
     if (image) {
       form.append('image', image);
     } else if (clearImage) {

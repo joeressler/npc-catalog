@@ -46,6 +46,7 @@ export class LocationFormComponent implements OnInit, OnDestroy {
   form = this.fb.group({
     title: ['', Validators.required],
     description: [''],
+    player_visible: [false],
     loot: this.fb.array<string>([]),
     objects: this.fb.array<FormGroup>([]),
   });
@@ -72,6 +73,7 @@ export class LocationFormComponent implements OnInit, OnDestroy {
           this.form.patchValue({
             title: location.title,
             description: location.description,
+            player_visible: !!location.player_visible,
           });
           this.setLoot(location.loot.map((item) => item.description));
           this.setObjects(location.objects);
@@ -184,6 +186,7 @@ export class LocationFormComponent implements OnInit, OnDestroy {
     const payload: LocationWritePayload = {
       title: raw.title?.trim() || '',
       description: raw.description?.trim() || '',
+      player_visible: !!raw.player_visible,
       loot: this.lootValues(),
       objects: this.objectValues(),
       npc_ids: [...this.selectedNpcIds],

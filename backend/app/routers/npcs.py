@@ -17,7 +17,8 @@ from sqlalchemy import select
 from app.deps import DbSession
 from app.mappers import serialize_npc_detail, serialize_npc_list
 from app.media import delete_npc_image, is_upload_file, save_npc_image
-from app.models import NPC
+from app.models import NPC, Campaign
+from app.player_access import ensure_campaign_visible, ensure_npc_visible, is_player
 from app.schemas import NPCDetailRead, NPCWrite, NPCWritePartial, dump_partial
 from app.services.campaigns import get_campaign_or_404
 from app.services.npcs import (
@@ -90,6 +91,15 @@ def _apply_image_from_form(npc: NPC, form) -> None:
         npc.image_path = save_npc_image(image_field)
 
 
+def _player_npc_stmt(stmt, *, for_player: bool):
+    if not for_player:
+        return stmt
+    return stmt.join(NPC.campaign).where(
+        NPC.player_visible.is_(True),
+        Campaign.player_visible.is_(True),
+    )
+
+
 @router.get("/npcs/")
 def list_npcs(
     request: Request,
@@ -103,6 +113,7 @@ def list_npcs(
     faction: str | None = None,
     ordering: Annotated[str | None, Query()] = None,
 ):
+    for_player = is_player(request)
     stmt = npc_query_options(select(NPC))
     stmt = apply_npc_filters(
         stmt,
@@ -113,6 +124,7 @@ def list_npcs(
         location=location,
         faction=faction,
     )
+    stmt = _player_npc_stmt(stmt, for_player=for_player)
     stmt = apply_npc_ordering(stmt, ordering)
     return paginate_select(
         db,
@@ -126,8 +138,10 @@ def list_npcs(
 
 @router.get("/npcs/{npc_id}/", response_model=NPCDetailRead)
 def get_npc(npc_id: int, request: Request, db: DbSession):
+    for_player = is_player(request)
     npc = get_npc_or_404(db, npc_id)
-    return serialize_npc_detail(npc, request)
+    ensure_npc_visible(npc, for_player=for_player)
+    return serialize_npc_detail(npc, request, for_player=for_player)
 
 
 @router.patch("/npcs/{npc_id}/", response_model=NPCDetailRead)
@@ -178,7 +192,9 @@ def list_campaign_npcs(
     faction: str | None = None,
     ordering: Annotated[str | None, Query()] = None,
 ):
-    get_campaign_or_404(db, campaign_id)
+    for_player = is_player(request)
+    campaign = get_campaign_or_404(db, campaign_id)
+    ensure_campaign_visible(campaign, for_player=for_player)
     stmt = npc_query_options(select(NPC))
     stmt = apply_npc_filters(
         stmt,
@@ -189,6 +205,8 @@ def list_campaign_npcs(
         location=location,
         faction=faction,
     )
+    if for_player:
+        stmt = stmt.where(NPC.player_visible.is_(True))
     stmt = apply_npc_ordering(stmt, ordering)
     return paginate_select(
         db,

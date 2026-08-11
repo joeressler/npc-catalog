@@ -47,7 +47,9 @@ Copy environment defaults (required for Docker Compose — the backend loads aut
 cp .env.example .env
 ```
 
-Edit `.env` and set `AUTH_USERNAME`, `AUTH_PASSWORD`, and `AUTH_SECRET`. Compose injects that file into the backend container; `SQLITE_PATH` / `MEDIA_ROOT` in Compose still point at the `/data` volume.
+Edit `.env` and set `AUTH_USERNAME`, `AUTH_PASSWORD`, `AUTH_PLAYER_USERNAME`, `AUTH_PLAYER_PASSWORD`, and `AUTH_SECRET`. Compose injects that file into the backend container; `SQLITE_PATH` / `MEDIA_ROOT` in Compose still point at the `/data` volume.
+
+Default local logins: DM `admin`/`admin`, player `player`/`test` (readonly; only sees items marked **Visible to players**). Sessions and encounters are never player-visible.
 
 ### Backend only
 
@@ -76,7 +78,7 @@ The dev server proxies `/api` and `/media` to the backend when configured in `pr
 |--------|------|-------------|
 | POST | `/api/auth/login/` | Sign in (sets session cookie) |
 | POST | `/api/auth/logout/` | Clear session cookie |
-| GET | `/api/auth/me/` | Current session user |
+| GET | `/api/auth/me/` | Current session user (`username`, `role`: `dm` \| `player`) |
 | GET/POST | `/api/campaigns/` | List / create campaigns |
 | GET/PATCH/DELETE | `/api/campaigns/{id}/` | Campaign detail |
 | GET/POST | `/api/campaigns/{id}/npcs/` | NPCs in campaign |
@@ -111,7 +113,7 @@ The dev server proxies `/api` and `/media` to the backend when configured in `pr
 
 This stack is a single-user DM tool. If you expose host port **0314** (router NAT, LAN, or tunnel):
 
-1. Copy `.env.example` → `.env` and set **strong unique** `AUTH_USERNAME`, `AUTH_PASSWORD`, and `AUTH_SECRET` (not the example `admin` / `dev-secret-change-me` values).
+1. Copy `.env.example` → `.env` and set **strong unique** `AUTH_USERNAME`, `AUTH_PASSWORD`, `AUTH_PLAYER_USERNAME`, `AUTH_PLAYER_PASSWORD`, and `AUTH_SECRET` (not the example `admin` / `player` / `test` / `dev-secret-change-me` values).
 2. Set `DEBUG=false`. With debug off, the backend **refuses to start** on empty or example credentials, and OpenAPI `/docs` is disabled.
 3. Forward **only** `0314` (frontend nginx). Do **not** publish backend `8000` or ComfyUI `8188`.
 4. Prefer a VPN, Tailscale, or SSH tunnel over an open WAN port when you can.

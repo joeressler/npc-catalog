@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime } from 'rxjs/operators';
 
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import { ALIGNMENTS, Campaign, NPC, Tag } from '../../models/domain.models';
 
 @Component({
@@ -17,6 +18,7 @@ import { ALIGNMENTS, Campaign, NPC, Tag } from '../../models/domain.models';
 export class CampaignRosterComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ApiService);
+  readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
