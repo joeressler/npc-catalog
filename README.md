@@ -29,6 +29,7 @@ docker compose up --build
 | FastAPI app | `backend/app/` (`routers/` → `services/` → `models/` / `schemas/` / `mappers.py`) |
 | Migrations | `backend/alembic/versions/` |
 | SQLite + media | Docker volume `npc_data` → `/data` |
+| South Side CR dashboard | `trains/` (served at `/trains/` via nginx → trains container) |
 
 **Contributing:** see [CONTRIBUTING.md](CONTRIBUTING.md) for layout, request shapes, and how to add a feature.
 
@@ -70,7 +71,20 @@ npm install
 npm start
 ```
 
-The dev server proxies `/api` and `/media` to the backend when configured in `proxy.conf.json`. See [frontend/README.md](frontend/README.md).
+The dev server proxies `/api`, `/media`, and `/trains` when configured in `proxy.conf.json`. See [frontend/README.md](frontend/README.md).
+
+### South Side trains dashboard
+
+Requires the backend (for the shared login cookie). In a third terminal:
+
+```bash
+cd trains
+npm install
+npm run build
+BACKEND_URL=http://127.0.0.1:8000 npm start
+```
+
+Open **http://localhost:3000/trains/** (or **http://localhost:4200/trains/** via the frontend proxy) after signing in. Schedules refresh every 5 minutes from the MBTA V3 API (optional `MBTA_API_KEY` in `.env`).
 
 ## API
 
@@ -106,8 +120,9 @@ The dev server proxies `/api` and `/media` to the backend when configured in `pr
 - **Frontend:** Angular (standalone), SCSS
 - **Backend:** FastAPI + SQLAlchemy + Alembic
 - **Database:** SQLite on Docker volume
-- **Auth:** Single shared username/password from `.env`; HttpOnly session cookie gates `/api` and `/media`
+- **Auth:** Single shared username/password from `.env`; HttpOnly session cookie gates `/api`, `/media`, and `/trains`
 - **AI images (Docker):** ComfyUI + SDXL on an NVIDIA GPU (internal service; not published)
+- **Trains:** Node service at `/trains/` — South Side Commuter Rail shapes + schedule dashboard (MBTA V3)
 
 ## Production / port-forward
 

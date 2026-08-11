@@ -77,6 +77,26 @@ services:
       start_period: 600s
     restart: unless-stopped
 
+  trains:
+    build: ./trains
+    environment:
+      BACKEND_URL: http://backend:8000
+      PORT: "3000"
+      # Optional: raise MBTA rate limits — https://www.mbta.com/developers/v3-api
+      MBTA_API_KEY: ${MBTA_API_KEY:-}
+    expose:
+      - "3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
   frontend:
     build: ./frontend
     ports:
@@ -84,6 +104,8 @@ services:
 
     depends_on:
       backend:
+        condition: service_healthy
+      trains:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/health"]
