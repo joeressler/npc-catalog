@@ -1,3 +1,5 @@
+from typing import Any
+
 from sqlalchemy import Select, delete, func, or_, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
@@ -117,16 +119,40 @@ def get_npc_or_404(db: Session, npc_id: int) -> NPC:
     return npc
 
 
+def npc_location_id_error(db: Session, *, campaign_id: int, location_id: int | None) -> str | None:
+    """Return a field error message for a bad catalog location, or None if valid."""
+    if location_id is None:
+        return None
+    catalog_location = db.get(Location, location_id)
+    if catalog_location is None:
+        return "Catalog location not found."
+    if catalog_location.campaign_id != campaign_id:
+        return "Catalog location must belong to the NPC's campaign."
+    return None
+
+
 def validate_npc_location_id(db: Session, *, campaign_id: int, location_id: int | None) -> None:
     from fastapi import HTTPException, status
 
-    if location_id is None:
-        return
-    catalog_location = db.get(Location, location_id)
-    if catalog_location is None:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Catalog location not found.")
-    if catalog_location.campaign_id != campaign_id:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            detail="Catalog location must belong to the NPC's campaign.",
-        )
+    message = npc_location_id_error(db, campaign_id=campaign_id, location_id=location_id)
+    if message:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=message)
+
+
+def create_npc_from_write(
+    db: Session,
+    *,
+    campaign_id: int,
+    fields: dict[str, Any],
+    aliases: list[str],
+    tags: list[str],
+    image_path: str | None = None,
+) -> NPC:
+    npc = NPC(campaign_id=campaign_id, image_path=image_path)
+    for key, value in fields.items():
+        setattr(npc, key, value)
+    db.add(npc)
+    db.flush()
+    sync_aliases(db, npc, aliases)
+    sync_tags(db, npc, tags)
+    return npc

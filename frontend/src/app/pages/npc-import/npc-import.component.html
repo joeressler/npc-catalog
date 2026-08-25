@@ -1,0 +1,167 @@
+<section class="page-shell view-enter">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Campaign</p>
+      <h1 class="page-title">Import NPCs</h1>
+      <p class="page-subtitle">
+        {{ campaign ? campaign.name : 'Load a JSON roster into this campaign.' }}
+      </p>
+    </div>
+    <a [routerLink]="['/campaigns', campaignId]" class="btn btn-secondary">Back to Roster</a>
+  </header>
+
+  <ol class="wizard-steps glass-panel" aria-label="Import steps">
+    <li [class.active]="step === 'prepare'" [class.done]="step === 'results'">
+      <span class="step-index">1</span>
+      Prepare JSON
+    </li>
+    <li [class.active]="step === 'results'">
+      <span class="step-index">2</span>
+      Review results
+    </li>
+  </ol>
+
+  @if (step === 'prepare') {
+    <div class="wizard-grid stagger-in">
+      <section class="glass-panel template-panel">
+        <div class="section-head">
+          <div>
+            <h2>Template</h2>
+            <p class="hint">Copy this object, then duplicate the character entry for each NPC.</p>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm fey-glow" (click)="copyTemplate()">
+            {{ copied ? 'Copied' : 'Copy template' }}
+          </button>
+        </div>
+        <pre class="template-json" tabindex="0">{{ templateJson }}</pre>
+        <dl class="legend">
+          <div>
+            <dt>Required</dt>
+            <dd>name, role_occupation, alignment, attitude, party_relationship</dd>
+          </div>
+          <div>
+            <dt>Optional</dt>
+            <dd>
+              location, location_id, faction, player_visible, aliases, tags, appearance,
+              voice_mannerisms, personality_traits, motivation_goal, secret_hook, knowledge,
+              inventory, dm_notes, session_log
+            </dd>
+          </div>
+          <div>
+            <dt>Alignment</dt>
+            <dd>
+              @for (item of alignments; track item.code; let last = $last) {
+                <code>{{ item.code }}</code>{{ last ? '' : ', ' }}
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Notes</dt>
+            <dd>
+              <code>location_id</code> must be a catalog location in this campaign. Portraits are not
+              part of JSON import. Unknown keys are reported as field errors.
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="glass-panel editor-panel">
+        <div class="section-head">
+          <div>
+            <h2>Your JSON</h2>
+            <p class="hint">Paste an object with a characters array, or a bare array of characters.</p>
+          </div>
+          <label class="btn btn-secondary btn-sm file-btn">
+            Choose .json file
+            <input type="file" accept=".json,application/json" (change)="onFileSelected($event)" />
+          </label>
+        </div>
+        <div class="field">
+          <label class="visually-hidden" for="import-json">Character JSON</label>
+          <textarea
+            id="import-json"
+            name="importJson"
+            appAutosizeTextarea
+            minHeight="16rem"
+            spellcheck="false"
+            [(ngModel)]="jsonText"
+            placeholder='{ "characters": [ { "name": "…", "role_occupation": "…" } ] }'
+          ></textarea>
+        </div>
+        @if (error) {
+          <p class="form-error">{{ error }}</p>
+        }
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn btn-primary fey-glow"
+            (click)="importCharacters()"
+            [disabled]="importing"
+          >
+            {{ importing ? 'Importing…' : 'Import characters' }}
+          </button>
+        </div>
+      </section>
+    </div>
+  } @else if (result) {
+    <section class="results-panel stagger-in">
+      <div class="summary glass-panel">
+        <div>
+          <h2>Import finished</h2>
+          <p class="hint">Valid characters were created even when others had errors.</p>
+        </div>
+        <div class="summary-chips">
+          <span class="chip created-chip">{{ result.created_count }} created</span>
+          <span class="chip" [class.failed-chip]="result.failed_count">
+            {{ result.failed_count }} failed
+          </span>
+        </div>
+      </div>
+
+      @if (result.created.length) {
+        <section class="glass-panel result-block">
+          <h3>Created</h3>
+          <ul class="created-list">
+            @for (npc of result.created; track npc.id) {
+              <li>
+                <span class="result-index">Character {{ npc.index + 1 }}</span>
+                <a [routerLink]="['/npcs', npc.id]" class="character-link">{{ npc.name }}</a>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (result.failed.length) {
+        <section class="failed-list">
+          <h3>Needs attention</h3>
+          @for (entry of result.failed; track entry.index) {
+            <article class="glass-panel failed-card">
+              <h4>{{ characterLabel(entry.index, entry.name) }}</h4>
+              <ul>
+                @for (issue of entry.errors; track $index) {
+                  <li>
+                    <span class="field-name">{{ fieldLabel(issue.field) }}</span>
+                    <span>{{ issue.message }}</span>
+                  </li>
+                }
+              </ul>
+            </article>
+          }
+        </section>
+      } @else {
+        <p class="empty-state glass-panel">Every character in this batch was created.</p>
+      }
+
+      <div class="form-actions">
+        @if (result.failed_count) {
+          <button type="button" class="btn btn-primary" (click)="editFailed()">
+            Fix failed characters
+          </button>
+        }
+        <button type="button" class="btn btn-secondary" (click)="importMore()">Import more</button>
+        <a [routerLink]="['/campaigns', campaignId]" class="btn btn-secondary">Back to roster</a>
+      </div>
+    </section>
+  }
+</section>

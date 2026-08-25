@@ -95,6 +95,57 @@ export interface NPCWritePayload {
   tags?: string[];
 }
 
+export interface NPCImportFieldError {
+  field: string | null;
+  message: string;
+}
+
+export interface NPCImportCreated {
+  id: number;
+  name: string;
+  index: number;
+}
+
+export interface NPCImportFailed {
+  index: number;
+  name: string | null;
+  errors: NPCImportFieldError[];
+}
+
+export interface NPCImportResult {
+  created_count: number;
+  failed_count: number;
+  created: NPCImportCreated[];
+  failed: NPCImportFailed[];
+}
+
+export const NPC_IMPORT_TEMPLATE = {
+  characters: [
+    {
+      name: 'Character name',
+      role_occupation: 'Role or occupation',
+      alignment: 'N' as AlignmentCode,
+      attitude: 'Neutral',
+      party_relationship: 'Unknown',
+      location: '',
+      location_id: null as number | null,
+      faction: '',
+      player_visible: false,
+      aliases: [] as string[],
+      tags: [] as string[],
+      appearance: '',
+      voice_mannerisms: '',
+      personality_traits: '',
+      motivation_goal: '',
+      secret_hook: '',
+      knowledge: '',
+      inventory: '',
+      dm_notes: '',
+      session_log: '',
+    },
+  ],
+};
+
 export const ALIGNMENTS: { code: AlignmentCode; label: string }[] = [
   { code: 'LG', label: 'Lawful Good' },
   { code: 'NG', label: 'Neutral Good' },

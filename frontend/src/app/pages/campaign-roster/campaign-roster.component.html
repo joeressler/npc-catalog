@@ -24,6 +24,9 @@
           <button type="button" class="btn btn-danger" (click)="deleteCampaign()" [disabled]="deleting">
             {{ deleting ? 'Deleting…' : 'Delete' }}
           </button>
+          <a [routerLink]="['/campaigns', campaign.id, 'npcs', 'import']" class="btn btn-secondary">
+            Import NPCs
+          </a>
           <a [routerLink]="['/campaigns', campaign.id, 'npcs', 'new']" class="btn btn-primary fey-glow">Add NPC</a>
         }
       </div>
@@ -71,7 +74,10 @@
       <div class="empty-state glass-panel">
         <p>No NPCs match your filters yet.</p>
         @if (auth.isDm()) {
-          <a [routerLink]="['/campaigns', campaign.id, 'npcs', 'new']" class="btn btn-primary">Create First NPC</a>
+          <div class="empty-actions">
+            <a [routerLink]="['/campaigns', campaign.id, 'npcs', 'new']" class="btn btn-primary">Create First NPC</a>
+            <a [routerLink]="['/campaigns', campaign.id, 'npcs', 'import']" class="btn btn-secondary">Import NPCs</a>
+          </div>
         }
       </div>
     } @else {

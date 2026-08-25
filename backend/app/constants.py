@@ -11,6 +11,9 @@ ALIGNMENT_DISPLAY: dict[str, str] = {
 }
 
 VALID_ALIGNMENTS = frozenset(ALIGNMENT_DISPLAY.keys())
+ALIGNMENT_CODES_DISPLAY = ", ".join(ALIGNMENT_DISPLAY.keys())
+
+NPC_IMPORT_MAX_CHARACTERS = 200
 
 RELATION_POLARITIES = frozenset({"positive", "negative", "neutral", "complex"})
 VALID_NODE_KINDS = frozenset({"npc", "party", "pc"})
