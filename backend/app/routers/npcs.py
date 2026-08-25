@@ -14,17 +14,31 @@ from fastapi import (
 from pydantic import ValidationError
 from sqlalchemy import select
 
+from app.constants import NPC_IMPORT_MAX_CHARACTERS
 from app.deps import DbSession
 from app.mappers import serialize_npc_detail, serialize_npc_list
 from app.media import delete_npc_image, is_upload_file, save_npc_image
 from app.models import NPC, Campaign
 from app.player_access import ensure_campaign_visible, ensure_npc_visible, is_player
-from app.schemas import NPCDetailRead, NPCWrite, NPCWritePartial, dump_partial
+from app.schemas import (
+    NPCDetailRead,
+    NPCImportCreated,
+    NPCImportFailed,
+    NPCImportFieldError,
+    NPCImportItem,
+    NPCImportResult,
+    NPCWrite,
+    NPCWritePartial,
+    dump_partial,
+    format_import_field_errors,
+)
 from app.services.campaigns import get_campaign_or_404
 from app.services.npcs import (
     apply_npc_filters,
     apply_npc_ordering,
+    create_npc_from_write,
     get_npc_or_404,
+    npc_location_id_error,
     npc_query_options,
     sync_aliases,
     sync_tags,
@@ -241,12 +255,152 @@ async def create_campaign_npc(
     if image and image.filename:
         image_path = save_npc_image(image)
 
-    npc = NPC(campaign_id=campaign_id, image_path=image_path)
-    _apply_write_fields(npc, write_payload)
-    db.add(npc)
-    db.flush()
-    sync_aliases(db, npc, write_payload.aliases)
-    sync_tags(db, npc, write_payload.tags)
+    npc = create_npc_from_write(
+        db,
+        campaign_id=campaign_id,
+        fields=write_payload.model_dump(exclude={"aliases", "tags", "campaign"}),
+        aliases=write_payload.aliases,
+        tags=write_payload.tags,
+        image_path=image_path,
+    )
     db.commit()
     npc = get_npc_or_404(db, npc.id)
     return serialize_npc_detail(npc, request)
+
+
+def _peek_import_name(item: object) -> str | None:
+    if isinstance(item, dict):
+        name = item.get("name")
+        if isinstance(name, str) and name.strip():
+            return name.strip()
+    return None
+
+
+def _character_failed(
+    *,
+    index: int,
+    name: str | None,
+    errors: list[NPCImportFieldError],
+) -> NPCImportFailed:
+    return NPCImportFailed(index=index, name=name, errors=errors)
+
+
+@campaign_npcs_router.post("/import/", response_model=NPCImportResult)
+async def import_campaign_npcs(
+    campaign_id: int,
+    request: Request,
+    db: DbSession,
+):
+    get_campaign_or_404(db, campaign_id)
+    raw = await request.body()
+    if not raw.strip():
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Payload is required.")
+    try:
+        body = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Invalid JSON payload.") from exc
+
+    if isinstance(body, list):
+        items = body
+    elif isinstance(body, dict):
+        if "characters" not in body:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail="Payload must include a characters array.",
+            )
+        if not isinstance(body["characters"], list):
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail="characters must be a JSON array.",
+            )
+        items = body["characters"]
+    else:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail="Payload must be a JSON object with a characters array, or a JSON array of characters.",
+        )
+
+    if len(items) > NPC_IMPORT_MAX_CHARACTERS:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail=f"Import is limited to {NPC_IMPORT_MAX_CHARACTERS} characters at a time.",
+        )
+
+    created: list[NPCImportCreated] = []
+    failed: list[NPCImportFailed] = []
+
+    for index, item in enumerate(items):
+        name_hint = _peek_import_name(item)
+        if not isinstance(item, dict):
+            failed.append(
+                _character_failed(
+                    index=index,
+                    name=name_hint,
+                    errors=[
+                        NPCImportFieldError(
+                            field=None,
+                            message="Character must be a JSON object.",
+                        )
+                    ],
+                )
+            )
+            continue
+
+        try:
+            payload = NPCImportItem.model_validate(item)
+        except ValidationError as exc:
+            failed.append(
+                _character_failed(
+                    index=index,
+                    name=name_hint,
+                    errors=format_import_field_errors(exc.errors()),
+                )
+            )
+            continue
+
+        location_error = npc_location_id_error(
+            db,
+            campaign_id=campaign_id,
+            location_id=payload.location_id,
+        )
+        if location_error:
+            failed.append(
+                _character_failed(
+                    index=index,
+                    name=payload.name,
+                    errors=[NPCImportFieldError(field="location_id", message=location_error)],
+                )
+            )
+            continue
+
+        try:
+            with db.begin_nested():
+                npc = create_npc_from_write(
+                    db,
+                    campaign_id=campaign_id,
+                    fields=payload.model_dump(exclude={"aliases", "tags"}),
+                    aliases=payload.aliases,
+                    tags=payload.tags,
+                )
+            created.append(NPCImportCreated(id=npc.id, name=npc.name, index=index))
+        except Exception:
+            failed.append(
+                _character_failed(
+                    index=index,
+                    name=payload.name,
+                    errors=[
+                        NPCImportFieldError(
+                            field=None,
+                            message="Could not create this character.",
+                        )
+                    ],
+                )
+            )
+
+    db.commit()
+    return NPCImportResult(
+        created_count=len(created),
+        failed_count=len(failed),
+        created=created,
+        failed=failed,
+    )
