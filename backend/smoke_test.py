@@ -209,6 +209,115 @@ def main() -> int:
     assert status == 200 and tags["count"] >= 2
     print("GET /tags/ OK")
 
+    valid_import = {
+        "name": "Mira Vale",
+        "role_occupation": "Scout",
+        "alignment": "CG",
+        "attitude": "Wary",
+        "party_relationship": "Ally",
+        "location": "River dock",
+        "faction": "Marshwardens",
+        "aliases": ["River-eye"],
+        "tags": ["scout"],
+        "appearance": "wind-chapped and keen-eyed",
+    }
+    missing_attitude = {
+        "name": "No Attitude",
+        "role_occupation": "Guard",
+        "alignment": "LN",
+        "party_relationship": "Neutral",
+    }
+    bad_alignment = {
+        "name": "Bad Align",
+        "role_occupation": "Cultist",
+        "alignment": "ZZ",
+        "attitude": "Hostile",
+        "party_relationship": "Enemy",
+    }
+    unknown_field = {
+        "name": "Typo Role",
+        "role_occupation": "Scribe",
+        "alignment": "N",
+        "attitude": "Curious",
+        "party_relationship": "Unknown",
+        "role": "oops",
+    }
+    bad_location = {
+        "name": "Lost Soul",
+        "role_occupation": "Wanderer",
+        "alignment": "CN",
+        "attitude": "Skittish",
+        "party_relationship": "Stranger",
+        "location_id": 999999,
+    }
+    status, imported = request(
+        "POST",
+        f"/campaigns/{campaign_id}/npcs/import/",
+        data={
+            "characters": [
+                valid_import,
+                missing_attitude,
+                bad_alignment,
+                unknown_field,
+                bad_location,
+                "not-an-object",
+            ]
+        },
+    )
+    assert status == 200, imported
+    assert imported["created_count"] == 1, imported
+    assert imported["failed_count"] == 5, imported
+    assert imported["created"][0]["name"] == "Mira Vale"
+    assert imported["created"][0]["index"] == 0
+    failed_by_index = {entry["index"]: entry for entry in imported["failed"]}
+    assert "This field is required." in [
+        err["message"] for err in failed_by_index[1]["errors"] if err["field"] == "attitude"
+    ]
+    assert any(
+        err["field"] == "alignment" and "Invalid alignment code." in err["message"]
+        for err in failed_by_index[2]["errors"]
+    )
+    assert any(
+        err["field"] == "role" and err["message"] == "Unknown field."
+        for err in failed_by_index[3]["errors"]
+    )
+    assert any(
+        err["field"] == "location_id" and "not found" in err["message"].lower()
+        for err in failed_by_index[4]["errors"]
+    )
+    assert failed_by_index[5]["errors"][0]["field"] is None
+    assert "JSON object" in failed_by_index[5]["errors"][0]["message"]
+    mira_id = imported["created"][0]["id"]
+    status, mira = request("GET", f"/npcs/{mira_id}/")
+    assert status == 200 and mira["name"] == "Mira Vale"
+    assert mira["aliases"][0]["name"] == "River-eye"
+    print("POST /campaigns/{id}/npcs/import/ mixed batch OK")
+
+    status, bare = request(
+        "POST",
+        f"/campaigns/{campaign_id}/npcs/import/",
+        data=[
+            {
+                "name": "Bare Array NPC",
+                "role_occupation": "Courier",
+                "alignment": "NG",
+                "attitude": "Helpful",
+                "party_relationship": "Ally",
+            }
+        ],
+    )
+    assert status == 200 and bare["created_count"] == 1 and bare["failed_count"] == 0, bare
+    print("POST /campaigns/{id}/npcs/import/ bare array OK")
+
+    status, malformed = request(
+        "POST",
+        f"/campaigns/{campaign_id}/npcs/import/",
+        data={"nope": []},
+        expect_error=400,
+    )
+    assert status == 400, malformed
+    print("POST /campaigns/{id}/npcs/import/ malformed envelope → 400 OK")
+
     status, detail = request("GET", f"/npcs/{npc_id}/")
     assert status == 200 and detail["session_log"] == "appeared in session 1"
     assert detail["secret_hook"] == "serves the Valar in secret"
@@ -409,6 +518,15 @@ def main() -> int:
     )
     assert status == 403, denied_write
     print("PATCH as player → 403 OK")
+
+    status, denied_import = player_request(
+        "POST",
+        f"/campaigns/{campaign_id}/npcs/import/",
+        data={"characters": []},
+        expect_error=403,
+    )
+    assert status == 403, denied_import
+    print("POST import as player → 403 OK")
 
     status, hidden_npc = request(
         "POST",

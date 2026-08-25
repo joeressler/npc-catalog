@@ -36,6 +36,7 @@ docker compose up --build
 ### Request shapes
 
 - **Campaigns & NPCs:** `multipart/form-data` (supports image upload).
+- **NPC bulk import:** JSON body (`POST /api/campaigns/{id}/npcs/import/`).
 - **Sessions, encounters, graphs, relation types, nodes, edges:** JSON bodies.
 
 Copy **encounters/sessions** when adding typical JSON CRUD—not campaigns/NPCs—unless you need uploads.
@@ -96,6 +97,7 @@ Open **http://localhost:3000/trains/** (or **http://localhost:4200/trains/** via
 | GET/POST | `/api/campaigns/` | List / create campaigns |
 | GET/PATCH/DELETE | `/api/campaigns/{id}/` | Campaign detail |
 | GET/POST | `/api/campaigns/{id}/npcs/` | NPCs in campaign |
+| POST | `/api/campaigns/{id}/npcs/import/` | Bulk JSON NPC import (creates valid characters; returns per-field errors for the rest) |
 | GET/PATCH/DELETE | `/api/npcs/{id}/` | NPC detail |
 | GET | `/api/tags/` | All tags |
 | GET | `/api/npcs/?q=&alignment=&tag=&location=&faction=` | Filter NPCs |
