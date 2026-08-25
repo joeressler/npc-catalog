@@ -143,6 +143,12 @@ export const routes: Routes = [
           import('./pages/campaign-roster/campaign-roster.component').then((m) => m.CampaignRosterComponent),
       },
       {
+        path: 'campaigns/:campaignId/npcs/import',
+        canActivate: [dmGuard],
+        loadComponent: () =>
+          import('./pages/npc-import/npc-import.component').then((m) => m.NpcImportComponent),
+      },
+      {
         path: 'campaigns/:campaignId/npcs/new',
         canActivate: [dmGuard],
         loadComponent: () =>

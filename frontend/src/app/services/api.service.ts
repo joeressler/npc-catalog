@@ -15,6 +15,7 @@ import {
   GraphWritePayload,
   NPC,
   NPCFilters,
+  NPCImportResult,
   NPCWritePayload,
   PaginatedResponse,
   RelationType,
@@ -123,6 +124,13 @@ export class ApiService {
 
   deleteNpc(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/npcs/${id}/`);
+  }
+
+  importCampaignNpcs(campaignId: number, payload: unknown): Observable<NPCImportResult> {
+    return this.http.post<NPCImportResult>(
+      `${this.base}/campaigns/${campaignId}/npcs/import/`,
+      payload,
+    );
   }
 
   getTags(): Observable<PaginatedResponse<Tag>> {

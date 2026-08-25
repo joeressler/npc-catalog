@@ -95,6 +95,10 @@
   align-items: center;
 }
 
-.empty-state .btn {
+.empty-state .empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
   margin-top: 0.75rem;
 }
